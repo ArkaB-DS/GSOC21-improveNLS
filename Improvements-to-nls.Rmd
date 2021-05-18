@@ -1,0 +1,213 @@
+## Background
+
+nls() is the primary nonlinear modelling tool in base R. It has a great
+many features, but it is about two decades old and has a number of 
+weaknesses, as well as some gaps in documentation. Recently, the 
+proposing mentor for this project has submitted a patch that overcomes
+one of the deficiencies in nls() and, furthermore, does this in a way
+that allows legacy operation to continue as the default.
+
+This project aims at providing documentation and possible patches to
+incorporate other improvements, including better diagnostics to assist
+users to understand when output results may be inadequate.
+
+## Related work
+
+Packages nlsr and minpack.lm both address the lack of Levenberg-Marquardt
+stabilization in nls(), which uses a plain Gauss-Newton solver to 
+carry out the internal iterations to solve the underlying nonlinear
+least squares problem. nlsr also offers analytic/symbolic derivatives
+which improve can improve the solution or allow it to be found. However,
+users frequently do not discover these packages, or do not understand 
+some of the details. Merging some of the advantages of these packages
+into nls() would likely give users better quality output.
+
+Package optimx offers access to a number of nonlinear optimization
+packages. These can be used to minimize (weighted) sum of squares
+objective functions, but generally are not as efficient at finding
+the solutions.
+
+## Details of your coding project
+
+Two particular tasks are to merge the analytic derivatives of nlsr
+into the model parsing (to compute the Jacobian used in the Gauss-Newton
+equations for nonlinear least squares) and the addition of a Levenberg-
+Marquardt stabilization of the solution of those equations.
+
+The first stage work would be to find ways to incorporate such ideas.
+A second stage is to work out how to allow the changes to be activated
+only by easily-executed user actions, so that legacy behaviour is 
+retained, as nls() has a large number of reverse dependencies.
+
+Clearly, any code patches require parallel documentations, and there
+should be a development vignette to allow for ongoing maintenance. (At
+the moment, nls() is not very well documented from this perspective.)
+
+Tests can and probably should be simple extensions of existing tests
+for nls() and/or nlsr and minpack.lm.
+
+## Expected impact
+
+If successful, the changes will modernize an important tool in base R.
+
+## Mentors
+
+MENTORS: 
+- EVALUATING MENTOR: John C. Nash, nashjc@uottawa.ca. I have been a 
+	mentor and also an Org Admin for R's Google Summer of Code for 
+	over a decade. One of the creators of packages nlsr and optimx
+	among others, and author of several books on nonlinear optimization
+	and numerical computing.
+- Other Mentor: ?? to be arranged
+
+## Tests -- (TBA -- in process)
+
+
+Some data for the tests.
+
+```
+time          y
+    5  0.0074203
+    6  0.3188325
+    7  0.2815891
+    8 -0.3171173
+    9 -0.0305409
+   10  0.2266773
+   11 -0.0216102
+   12  0.2319695
+   13 -0.1082007
+   14  0.2246899
+   15  0.6144181
+   16  1.1655192
+   17  1.8038330
+   18  2.7644418
+   19  4.1104270
+   20  5.0470456
+   21  6.1896092
+   22  6.4128618
+   23  7.2974793
+   24  7.8965245
+   25  8.4364991
+   26  8.8252770
+   27  8.9836204
+   28  9.6607736
+   29  9.1746182
+   30  9.5348823
+   31 10.0421165
+   32  9.8477874
+   33  9.2886090
+   34  9.3169916
+   35  9.6270209
+```
+
+### Easy: 
+
+Estimate, or try to estimate, a logistic sigmoid growth curve to this data.
+
+### Medium: 
+
+Estimate, or try to estimate, the alternative form of the 3 parameter logistic
+growth curve
+
+$$ y = a / (1 + b * exp(-c * time)) $$
+Can you explain why this is more difficult to estimate?
+
+### Hard: 
+
+Convert the problem to one that uses a **function** for the residuals (and ideally
+the Jacobian) and solve
+the nonlinear least squares problem with a suitable tool from packages `nlsr` and
+`minpack.lm`. 
+
+Show how to do this with both analytic Jacobian and one or more approximations.
+
+
+## Solutions of tests
+
+### Easy
+
+```{r testsoleasy}
+rm(list=ls())
+mydata<-read.table("test1data.txt", header=TRUE)
+# I have put data in file test1data.txt
+# print(mydata)
+tsol1<-nls(y ~ SSlogis(time, Asym, xmid, scal), data=mydata)
+print(tsol1)
+pry <- predict(tsol1)
+print(pry)
+ttime<-mydata$time
+y<-mydata$y
+plot(ttime,y, type='p')
+# plot.new()
+lines(ttime, pry, type="l")
+# plot(mydata$time,pry)
+# points(mydata$time,pry)
+```
+
+### Medium
+
+```{r testsolmedium}
+frm <- y ~ a/(1 + b * exp(-c*time))
+# from data, asymptote is about 10, so a=10 to start.
+# Could also do some transformation to get approx b and c.
+tmed1a <- try(nls(frm, data=mydata, start=c(a=10, b=1, c=1)))
+tmed1b <- try(nls(frm, data=mydata, start=c(a=10, b=1, c=.1)))
+print(tmed1b)
+require(nlsr)
+tmed2a <- try(nlxb(frm, data=mydata, start=c(a=10, b=1, c=1)))
+tmed2b <- try(nlxb(frm, data=mydata, start=c(a=10, b=1, c=.1)))
+print(tmed2b)
+require(minpack.lm)
+tmed3a <- try(nlsLM(frm, data=mydata, start=c(a=10, b=1, c=1)))
+tmed3b <- try(nlsLM(frm, data=mydata, start=c(a=10, b=1, c=.1)))
+print(tmed3b)
+```
+Note that the singular values imply this is a VERY difficult problem to solve.
+
+### Hard
+
+```{r testsolhard}
+logist3.res  <-  function(x){ # scaled Hobbs weeds problem -- residual
+  # This variant uses looping
+  if(length(x) != 3) stop("logist3.res -- parameter vector n!=3")
+  y  <-  mydata$y
+  tt  <-  mydata$time
+  res  <-  x[1]/(1+x[2]*exp(-x[3]*tt)) - y
+}
+
+logist3.jac  <-  function(x) { # scaled Hobbs weeds problem -- Jacobian
+  jj  <-  matrix(0.0, length(mydata$time), 3)
+  tt  <-  mydata$time
+  ii  <-  1:length(tt)
+  yy  <-  exp(-x[3]*tt)
+  zz  <-  1.0/(1+x[2]*yy)
+  jj[ii,1]   <-   zz
+  jj[ii,2]   <-   -x[1]*zz*zz*yy
+  jj[ii,3]   <-   x[1]*zz*zz*yy*x[2]*tt
+  attr(jj, "gradient") <- jj
+  jj
+}
+# Make sure function is checked!
+stvec<-c(a=10, b=1, c=0.1)
+print(logist3.res(stvec))
+Jac <- logist3.jac(stvec)
+print(Jac) # test it
+require(numDeriv)
+Jnum<-jacobian(logist3.res, stvec)
+cat("max(abs(deviation from numDeriv)) = ", max(abs(Jac-Jnum)),"\n")
+
+thard1 <- nlfb(start=stvec, logist3.res, jacfn=logist3.jac)
+print(thard1)
+thard1n <- nlfb(start=stvec, logist3.res, control=list(japprox="jafwd"))
+print(thard1n)
+## thard2 <- nls.lm(par=stvec, logist3.res, jacfn=logist3.jac, lower=rep(-Inf,3), upper=rep(Inf,3))
+thard2 <- nls.lm(par=stvec, fn=logist3.res, jac=logist3.jac)
+print(thard2)
+summary(thard2)
+thard2n <- nls.lm(par=stvec, fn=logist3.res)
+print(thard2n)
+summary(thard2n)
+coef(thard1)-coef(thard1n)
+coef(thard2)-coef(thard2n)
+coef(thard2)-coef(thard1)
+```

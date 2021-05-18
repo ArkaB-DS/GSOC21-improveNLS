@@ -1,0 +1,87 @@
+---
+title: "Working Document for the Improvement to nls() GSOC project"
+author: 
+  - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+  - John C. Nash, University of Ottawa
+  - Heather Turner, ???
+date: "2021-5-18"
+bibliography: ImproveNLS.bib
+output: 
+  pdf_document:
+    keep_tex: false
+---
+
+## Abstract
+
+nls() is the primary nonlinear modeling tool in base R. It has a great
+many features, but it is about two decades old and has a number of 
+weaknesses, as well as some gaps in documentation. This document is an
+ongoing record of work under the Google Summer of Code 2021 of the
+first author. As such it is NOT meant to be a finished academic 
+report, but a form of extended diary of activity, issues and results.
+
+## 2021-5-18
+
+By email, a Google Meet was set up for May 19 at noon Ottawa time. JN 
+downloaded the latest version of `R-devel.tar.gz` and unpacked it into
+a directory `~/vmshare/R-devel` which is shared with a VirtualBox VM
+of Kubuntu 20.04 (Focal Fossa), a long-term support version of Linux.
+Opening a terminal inside this VM, it was possible to build and run
+this version of R.
+
+```
+cd /media/sf_vmshare/R-devel/
+./configure
+make
+sudo make install
+[admin password]
+R
+```
+
+This launched the development version of R correctly.
+
+JN also set up this document.
+
+### Agenda for May 19
+
+- check Meet is working
+- introductions
+- start linux VM install if an iso is available. May want to check that
+  VirtualBox Guest additions is available and that the shared directory works,
+  as these sometimes require some attention to permissions and ownership etc.
+- Consider early goals to for possible nls() changes. See below.
+- Set objectives for next two weeks
+- Set next online meeting
+
+### Possible early goals
+
+- Get a VM running under VirtualBox and install build tools. See
+  https://support.rstudio.com/hc/en-us/articles/218004217-Building-R-from-source
+  I did NOT need more than ./configure in my build, as I am not building a server
+  version.
+- Try the build. (Cheer loudly when it works!)
+- Explore and document the R source for nls-related code. In particular, we want
+
+  -- to list the files that have such code or calls to it
+
+  -- to note, if possible, what each does
+
+  -- to note, in particular, where nls() solves the Gauss-Newton equations, as we
+     will want to modify these sections to augment them to allow a Marquardt
+     stabilization.
+     
+  -- to note, in particular, where nls() computes the Jacobian and/or Hessian for
+     the nonlinear least squares problem. In package `nlsr`, there are tools that
+     allow an expression for the model to be parsed and processed to compute the
+     Jacobian using symbolic or automatic derivatives. This may or may not be 
+     feasible for `nls()`. However, we may be able to improve the approximation
+     used.
+     
+- Augment this document to record what has been done and results or problems.
+
+- Add to the bibliography file specified. This is taken from another work, but
+  as Rmarkdown only uses the references it needs, it will serve as a template.
+  
+- AB can ask for pointers to references to add to this document or to subsidiary
+  documents we will create as necessary to describe parts of the work if required.
+  
