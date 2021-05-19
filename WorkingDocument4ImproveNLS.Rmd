@@ -184,7 +184,7 @@ $$    x[k+1]  =  x[k]  -   H^{-1}  g$$
 where $H$ is the Hessian and $g$ is the gradient at $x[k]$. We can 
 rewrite this as a solution, at each iteration, of 
   
->>>>>>> 10bf74516c497d55a6a6b5bd4eb059ceb52bd344
+
 $$    H \delta = -g$$
 
 with
@@ -215,7 +215,7 @@ This iteration frequently fails. The approximation of the Hessian
 by the Jacobian inner-product is one reason, but there is also
 the possibility that the sum of squares function is not
 "quadratic" enough that the unit step reduces it. @Hartley61
-introduced a line search along delta, while @Marq63 suggested
+introduced a line search along delta, while @Marquardt1963 suggested
 replacing $J' J$ with $(J' J + \lambda * D)$ where $D$ is a diagonal
 matrix intended to partially approximate the omitted portion of
 the Hessian. 
@@ -229,7 +229,7 @@ $$    \delta = - g / \lambda$$
 gives a version of the steepest descents algorithm. Using the 
 diagonal of $J' J$, we have a scaled version of this 
 (see \url{https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm};
-@Levenberg44 predated Marquardt, but the latter seems to
+@Levenberg1944 predated Marquardt, but the latter seems to
 have done the practical work that brought the approach to general attention.)
 
 @jn77ima found that on low precision machines, it
@@ -339,7 +339,7 @@ If we augment $J$ with a square matrix $sqrt(\lambda D)$ whose diagonal elements
 square roots of $\lambda$ times the diagonal elements of $D$, and augment the vector $r$ with $n$ zeros
 where $n$ is the column dimension of $J$ and $D$, we achieve our goal. 
 
-Typically we can use $D = 1_n$ (the identity of order $n$), but @Marq63 showed that using the 
+Typically we can use $D = 1_n$ (the identity of order $n$), but @Marquardt1963 showed that using the 
 diagonal elements of $J^T J$ for $D$ results in a useful implicit scaling of the parameters.
 @jn77ima pointed out that on computers with limited arithmetic (which now are rare since the 
 IEEE 754 standard appeared in 1985), underflow might
