@@ -2,9 +2,9 @@
 title: "Working Document for the Improvement to nls() GSOC project"
 author: 
   - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
-  - John C. Nash, University of Ottawa
-  - Heather Turner, ???
-date: "2021-5-18"
+  - John C. Nash, University of Ottawa, Canada
+  - Heather Turner, University of Warwick, UK
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 bibliography: ImproveNLS.bib
 output: 
   pdf_document:
@@ -148,36 +148,7 @@ and $n$ parameters $x$. Hence the function is
 $$    f(x) = \sum_i({r_i}^2)$$
 
 Newton's method starts with an original set of parameters $x[0]$.
-At a given iteraion, which could be the first, we want to solve
-
-$$    x[k+1]  =  x[k]  -   H^{-1}  g$$
-   
-where $H$ is the Hessian and $g$ is the gradient at $x[k]$. We can 
-rewrite this as a solution, at each iteration, of 
-  
-<<<<<<< HEAD
-=======
-## From `nlsr` vignette `nlsr-devdoc.Rmd`
-
-### 5. Implementation of nonlinear least squares methods
-
-This section is a review of approaches to solving the nonlinear least
-squares problem that underlies nonlinear regression modelling. In particular,
-we look at using a QR decomposition for the Levenberg-Marquardt stabilization
-of the solution of the Gauss-Newton equations.
-
-### Gauss-Newton variants
-
-Nonlinear least squares methods are mostly founded on some or
-other variant of the Gauss-Newton algorithm. The function we
-wish to minimize is the sum of squares of the (nonlinear) 
-residuals $r(x)$ where there are $m$ observations (elements of $r$)
-and $n$ parameters $x$. Hence the function is
-
-$$    f(x) = \sum_i({r_i}^2)$$
-
-Newton's method starts with an original set of parameters $x[0]$.
-At a given iteraion, which could be the first, we want to solve
+At a given iteration, which could be the first, we want to solve
 
 $$    x[k+1]  =  x[k]  -   H^{-1}  g$$
    
