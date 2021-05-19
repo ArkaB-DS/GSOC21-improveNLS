@@ -1,0 +1,355 @@
+---
+title: "Working Document for the Improvement to nls() GSOC project"
+author: 
+  - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+  - John C. Nash, University of Ottawa
+  - Heather Turner, ???
+date: "2021-5-18"
+bibliography: ImproveNLS.bib
+output: 
+  pdf_document:
+    keep_tex: false
+---
+
+## Abstract
+
+nls() is the primary nonlinear modeling tool in base R. It has a great
+many features, but it is about two decades old and has a number of 
+weaknesses, as well as some gaps in documentation. This document is an
+ongoing record of work under the Google Summer of Code 2021 of the
+first author. As such it is NOT meant to be a finished academic 
+report, but a form of extended diary of activity, issues and results.
+
+## 2021-5-18
+
+By email, a Google Meet was set up for May 19 at noon Ottawa time. JN 
+downloaded the latest version of `R-devel.tar.gz` and unpacked it into
+a directory `~/vmshare/R-devel` which is shared with a VirtualBox VM
+of Kubuntu 20.04 (Focal Fossa), a long-term support version of Linux.
+Opening a terminal inside this VM, it was possible to build and run
+this version of R.
+
+```
+cd /media/sf_vmshare/R-devel/
+./configure
+make
+sudo make install
+[admin password]
+R
+```
+
+This launched the development version of R correctly.
+
+JN also set up this document.
+
+### Agenda for May 19
+
+- check Meet is working
+- introductions
+- start linux VM install if an iso is available. May want to check that
+  VirtualBox Guest additions is available and that the shared directory works,
+  as these sometimes require some attention to permissions and ownership etc.
+- Consider early goals to for possible nls() changes. See below.
+- Set objectives for next two weeks
+- Set next online meeting
+
+### Possible early goals
+
+- Get a VM running under VirtualBox and install build tools. See
+  https://support.rstudio.com/hc/en-us/articles/218004217-Building-R-from-source
+  I did NOT need more than ./configure in my build, as I am not building a server
+  version.
+- Try the build. (Cheer loudly when it works!)
+- Explore and document the R source for nls-related code. In particular, we want
+
+  -- to list the files that have such code or calls to it
+
+  -- to note, if possible, what each does
+
+  -- to note, in particular, where nls() solves the Gauss-Newton equations, as we
+     will want to modify these sections to augment them to allow a Marquardt
+     stabilization.
+     
+  -- to note, in particular, where nls() computes the Jacobian and/or Hessian for
+     the nonlinear least squares problem. In package `nlsr`, there are tools that
+     allow an expression for the model to be parsed and processed to compute the
+     Jacobian using symbolic or automatic derivatives. This may or may not be 
+     feasible for `nls()`. However, we may be able to improve the approximation
+     used.
+     
+- Augment this document to record what has been done and results or problems.
+
+- Add to the bibliography file specified. This is taken from another work, but
+  as Rmarkdown only uses the references it needs, it will serve as a template.
+  
+- AB can ask for pointers to references to add to this document or to subsidiary
+  documents we will create as necessary to describe parts of the work if required.
+
+## Some thoughts on how nls() code might be modified [JN: 2021-5-19]
+
+- R-core will veto any changes that do not leave existing tests and examples as
+  they are. Therefore we will be always thinking of ways to leave the default
+  behaviour as it is now. In the relative offset convergence test that was causing
+  small-residual problems to fail, JN suggested a small change to the test. In 
+  very simplified terms, the test is a ratio of 
+       `(new sum of squares)/(baseline sum of squares)`
+  When both these quantities are small, we risk zero/zero situation. Therefore,
+  a new control parameter `convTeestAdd` that has a default of 0 was introduced.
+  This can be set in the `nls.control()` function. It is added to the denominator
+  and allows the `nls()` function to complete satisfactorily when we have problems
+  where the fit is nearly exact. Thus we are seeking similar modifications that 
+  are invoked by setting new control parameters to non-default settings to get
+  new behaviour.
+  
+- In the material below on implementing nonlinear least squares, it should be
+  possible to have a zero valued default for the Marquardt parameter $\lambda$. 
+  As long as this zero value is preserved, the legacy behaviour is used.
+  Our decisions need to be careful in situations where we really do need the
+  Marquardt stabilization. That is, should we simply fail (legacy behavior),
+  should we override the legacy behaviour, since the user almost certainly
+  does not want an avoidable failure, or should we seek an additional control
+  that allows for more nuanced outcomes. Clearly thought is needed, and we will
+  need to find some examples to illustrate our arguments.
+
+- Note that nls() is a mix of several codes, using different solution tools.
+  We will need to decide where our modifications apply and document carefully.
+  JN opinion: we may want to postpone consideration of "port" and "plinear"
+  algorithms, but it would be useful to document what they do. The current
+  documentation suggests that bounds on parameters can only be used with
+  "port". 
+  
+- The derivative code to generate the Jacobian in nls() is (JN believes??)
+  a simple forward-difference code. This may be in C rather than R. It is
+  well-known that central differences, while they cost twice the computing 
+  effort, do a better job. Can we find a way to allow that easily?
+  
+- If there are bounds on parameters, the "step" taken in estimating differences
+  may violate bounds. This is an issue well-known to workers in optimization,
+  but not on the radar of most users. Clearly a "nasty". Can we do anything to
+  at least warn users in a way that is useful?
+  
+## From `nlsr` vignette `nlsr-devdoc.Rmd`
+
+### 5. Implementation of nonlinear least squares methods
+
+This section is a review of approaches to solving the nonlinear least
+squares problem that underlies nonlinear regression modelling. In particular,
+we look at using a QR decomposition for the Levenberg-Marquardt stabilization
+of the solution of the Gauss-Newton equations.
+
+### Gauss-Newton variants
+
+Nonlinear least squares methods are mostly founded on some or
+other variant of the Gauss-Newton algorithm. The function we
+wish to minimize is the sum of squares of the (nonlinear) 
+residuals $r(x)$ where there are $m$ observations (elements of $r$)
+and $n$ parameters $x$. Hence the function is
+
+$$    f(x) = \sum_i({r_i}^2)$$
+
+Newton's method starts with an original set of parameters $x[0]$.
+At a given iteraion, which could be the first, we want to solve
+
+$$    x[k+1]  =  x[k]  -   H^{-1}  g$$
+   
+where $H$ is the Hessian and $g$ is the gradient at $x[k]$. We can 
+rewrite this as a solution, at each iteration, of 
+  
+<<<<<<< HEAD
+=======
+## From `nlsr` vignette `nlsr-devdoc.Rmd`
+
+### 5. Implementation of nonlinear least squares methods
+
+This section is a review of approaches to solving the nonlinear least
+squares problem that underlies nonlinear regression modelling. In particular,
+we look at using a QR decomposition for the Levenberg-Marquardt stabilization
+of the solution of the Gauss-Newton equations.
+
+### Gauss-Newton variants
+
+Nonlinear least squares methods are mostly founded on some or
+other variant of the Gauss-Newton algorithm. The function we
+wish to minimize is the sum of squares of the (nonlinear) 
+residuals $r(x)$ where there are $m$ observations (elements of $r$)
+and $n$ parameters $x$. Hence the function is
+
+$$    f(x) = \sum_i({r_i}^2)$$
+
+Newton's method starts with an original set of parameters $x[0]$.
+At a given iteraion, which could be the first, we want to solve
+
+$$    x[k+1]  =  x[k]  -   H^{-1}  g$$
+   
+where $H$ is the Hessian and $g$ is the gradient at $x[k]$. We can 
+rewrite this as a solution, at each iteration, of 
+  
+>>>>>>> 10bf74516c497d55a6a6b5bd4eb059ceb52bd344
+$$    H \delta = -g$$
+
+with
+
+$$    x[k+1]  =  x[k] + \delta$$
+         
+For the particular sum of squares, the gradient is 
+
+$$    g(x) = 2 * r[k]$$
+
+and 
+
+$$    H(x) = 2 ( J' J  +  \sum_i(r_i * Z_i))$$
+
+where $J$ is the Jacobian (first derivatives of $r$ w.r.t. $x$)
+and $Z_i$ is the tensor of second derivatives of $r_i$ w.r.t. $x$).
+Note that $J'$ is the transpose of $J$. 
+
+The primary simplification of the Gauss-Newton method is to
+assume that the second term above is negligible. As there is
+a common factor of 2 on each side of the Newton iteration 
+after the simplification of the Hessian, the Gauss-Newton
+iteration equation is
+
+$$    (J' J)  \delta = - J' r$$
+           
+This iteration frequently fails. The approximation of the Hessian
+by the Jacobian inner-product is one reason, but there is also
+the possibility that the sum of squares function is not
+"quadratic" enough that the unit step reduces it. @Hartley61
+introduced a line search along delta, while @Marq63 suggested
+replacing $J' J$ with $(J' J + \lambda * D)$ where $D$ is a diagonal
+matrix intended to partially approximate the omitted portion of
+the Hessian. 
+
+Marquardt suggested $D = I$ (a unit matrix) or $D$ = (diagonal part
+of $J' J$). The former approach, when $\lambda$ is large enough that
+the iteration is essentially
+
+$$    \delta = - g / \lambda$$
+      
+gives a version of the steepest descents algorithm. Using the 
+diagonal of $J' J$, we have a scaled version of this 
+(see \url{https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm};
+@Levenberg44 predated Marquardt, but the latter seems to
+have done the practical work that brought the approach to general attention.)
+
+@jn77ima found that on low precision machines, it
+was common for diagonal elements of $J' J$ to underflow. A very
+small modification to solve 
+
+$$    (J' J + lambda * (D + phi * I)) * delta = - g $$
+    
+where $phi$ is a small number avoids most of these conditions. $phi = 1$ seems 
+to work quite well. We note that this modification would likely not have been 
+recognized had I not been working on machines with mediochre floating-point
+arithmetic -- a little more than 6 decimal digits of precision and no extended
+precision.
+
+### Choices
+
+Both `nlsr::nlxb()` and `minpack.lm::nlsLM` use a Levenberg-Marquardt stabilization of the iteration
+described above, with `nlsr` using the modification involving the $\phi$ control parameter. The
+complexities of the code in `minpack.lm` are such that I have relied largely on the documentation
+to judge how the iteration is accomplished. `nls()` uses a straightforward Gauss-Newton iteration,
+but rather than form the sum of squares and cross-products, uses a QR decomposition of the matrix
+$J$ that has been found by a forward difference approximation.
+
+
+(@jncnm79), solving
+
+$$ (J^T J + \lambda D)   \delta  = - J^T r $$
+
+where $D$ is some diagonal matrix and lambda is a number of modest size initially. Clearly
+for $\lambda = 0$ we have a Gauss-Newton method. Typically, the sum of squares of the residuals
+calculated at the "new" set of parameters is used as a criterion for keeping those parameter
+values. If so, the size of $\lambda$ is reduced. If not, we increase the size of $\lambda$ and
+compute a new $\delta$. Note that a new $J$, the expensive step in each iteration, is NOT
+required. 
+
+As for Gauss-Newton methods, the details of how to start, adjust and terminate the iteration
+lead to many variants, increased by different possibilities for specifying $D$. See
+@jncnm79.
+
+
+
+### Using matrix decompositions
+
+In @jncnm79, the iteration equation was solved as stated. However, this
+involves forming the sum of squares and cross products of $J$, a process that
+loses some numerical precision. A better way to solve the linear equations is
+to apply the QR decomposition to the matrix $J$ itself. However, we still need
+to incorporate the $lambda * I$ or $lambda * D$ adjustments. This is done by 
+adding rows to $J$ that are the square roots of the "pieces". We add 1 row for
+each diagonal element of $I$ and each diagonal element of $D$. 
+
+In each iteration, we reduce the $lambda$ parameter before solution. If the
+resulting sum of squares is not reduced, $lambda$ is increased, otherwise we
+move to the next iteration. Various authors (including the present one)
+have suggested different strategies for this. My current opinion is that
+a "quick" increase, say a factor of 10, and a "slow" decrease, say a factor
+of 0.2, work quite well. However, it is important to check that lambda has
+not got too small or underflowed before applying the increase factor. On
+the other hand, it is useful to be able to set lambda = 0 in the code so
+that a pure Gauss-Newton method can be evaluated with the program(s). The
+current code `nlfb()` uses the line
+
+   `if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps`
+   
+to ensure we get an increase. To force a Gauss-Newton algorithm, the 
+controls `laminc` and `lamdec` are set to 0.
+
+**The Levenberg-Marquardt adjustment to the Gauss-Newton approach is the
+second major improvement of `nlsr` (and also its predecessor `nlmrt` and 
+the package `minpack-lm`) over `nls()`.**
+
+`nls()` attempts to minimize a sum of squared residuals by a Gauss-Newton method. If we
+compute a Jacobian matrix $J$ and a vector of residuals $r$ from a vector of parameters $x$, 
+then we can define a linearized problem 
+
+$$  J^T J  \delta  = - J^T r $$
+
+This leads to an iteration where, from a set of starting parameters $x_0$, we compute
+
+$$ x_{i+1} = x_i + \delta$$
+
+This is commonly modified to use a step factor `step`
+
+$$ x_{i+1} = x_i + step * \delta$$
+
+It is in the mechanisms to choose the size of $step$ and to decide when to terminate the
+iteration that Gauss-Newton methods differ. Indeed, though I have tried several times, I
+find the very convoluted code behind `nls()` very difficult to decipher. Unfortunately, its
+authors have now (as far as I am aware) all ceased to maintain the code.
+
+
+We could implement the methods using the equations above. However, the accumulation of
+inner products in $J^T J$ occasions some numerical error, and it is generally both safer
+and more efficient to use matrix decompositions. In particular, if we form the QR decomposition
+of $J$
+
+$$  Q R = J$$
+    
+where Q is an orthonormal matrix and R is Right or Upper triangular, we can easily
+solve
+
+$$  R \delta = Q^T r$$
+for which the solution is also the solution of the Gauss-Newton equations.
+But how do we get the Marquardt stabilization?
+
+If we augment $J$ with a square matrix $sqrt(\lambda D)$ whose diagonal elements are the
+square roots of $\lambda$ times the diagonal elements of $D$, and augment the vector $r$ with $n$ zeros
+where $n$ is the column dimension of $J$ and $D$, we achieve our goal. 
+
+Typically we can use $D = 1_n$ (the identity of order $n$), but @Marq63 showed that using the 
+diagonal elements of $J^T J$ for $D$ results in a useful implicit scaling of the parameters.
+@jn77ima pointed out that on computers with limited arithmetic (which now are rare since the 
+IEEE 754 standard appeared in 1985), underflow might
+cause a problem of very small elements in $D$ and proposed adding $\phi 1_n$ to the diagonals
+of $J^T J$ before multiplying by $\lambda$ in the Marquardt stabilization. This avoids some
+awkward cases with very little extra overhead. It is accomplished with the QR approach by
+appending $sqrt(\phi * \lambda)$ times a unit matrix $I_n$ to the matrix already augmented
+matrix. We must also append a further $n$ zeros to the augmented $r$. 
+
+### ======== End of extract on approaches to solving Gauss Newton equations =========
+
+## References
+
