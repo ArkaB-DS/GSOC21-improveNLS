@@ -73,8 +73,10 @@ We can use this in an iteration similar to the Newton iteration.
 
 ## Hartley's method
 
-Conditions for convergence of the Newton iteration and the Gauss-Newton iteration are rather a nuisance
-to verify, and in any case we want a solution. @Hartley61 proposed that rather than use an iteration
+Conditions for convergence of the Newton iteration and the Gauss-Newton 
+iteration are rather a nuisance
+to verify, and in any case we want a solution. 
+@Hartley61 proposed that rather than use an iteration
 
 $$ x \leftarrow x + \delta$$
 
@@ -136,7 +138,7 @@ There have been many proposed approaches to nonlinear least squares.
 
 ### Spiral 
 
-@Jones70Spiral is a method ...
+@Jones70Spiral is a method ... 
 
 
 # Sources of implementation variety
@@ -144,28 +146,43 @@ There have been many proposed approaches to nonlinear least squares.
 The sources of variety in implementation include:
 
 - programming language
+
 - possible operating environment features
+
 - solver for the least squares or linear equations sub-problems
+
 - stucture of storage for the solver, that is, compact or full
+
 - sequential or full creation of the Jacobian and residual, since
   it may be done in parts
+
 - how the Jacobian is computed or approximated
+
 - higher level presentation of the problem to the computer, as
   in R's `nls` or packages `minpack.lm` and `nlsr`.
 
 ## Programming language
 
-We have a versions of the Nashlib Algorithm 23 in BASIC, Fortran, Pascal, R, ....
-
-There may be dialects of these programming languages also.
+We have a versions of the Nashlib Algorithm 23 in BASIC, Fortran, Pascal, and R, 
+with Python pending. There may be dialects of these programming languages also,
+giving rise to other variations.
 
 ## Operating environment
 
-?? issues of how data is provided
+Generally, for modern computers, the operating system and its localization do not
+have much influence on the way in which we set up nonlinear least squares computations.
+I will comment below about some issues where speed and size of data storage may favour
+some approaches over others. However, such issues are less prominent today.
 
 ## Solver for the least squares or linear equations sub-problems
 
 ### Solution of the linear normal equations
+
+The Gauss-Newton or Marquardt eqations are a set of linear equations. Moreover, 
+the coefficient matrix is non-negative definite and symmetric. Thus it permits of
+both general and specialized methods for linear equations. Furthermore, one can also
+set up the solution without forming the $J' J$ matrix by using several matrix
+decomposition methods. Thus there are many possible procedures.
 
 - Gauss elimination with partial pivoting
 
