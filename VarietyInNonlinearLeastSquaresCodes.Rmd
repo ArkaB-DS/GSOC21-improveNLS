@@ -1,0 +1,408 @@
+---
+title: "Variety in the Implementation of Nonlinear Least Squares Program Codes"
+author: 
+   - John C Nash, retired professor, University of Ottawa
+date: "16/02/2021"
+output: 
+    pdf_document:
+        keep_tex: false
+        toc: true
+bibliography: ImproveNLS.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+## ??require(bookdown) # language engine to display text??
+```
+
+# Abstract
+
+There are many ways to structure a Gauss-Newton style nonlinear least squares
+program code. In organizing and documenting the nearly half-century of programs
+in the Nashlib collection associated with @jncnm79, the author realized that this
+variety could be an instructive subject for software designers.
+
+# Underlying algorithms
+
+## Gauss Newton 
+
+\url{https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm}
+
+In calculus we learn that a stationary point (local maximum, minimum
+or saddle point) of a function $f$ occurs where its gradient (or first
+derivative) is zero. In multiple dimensions, this is the same as
+having the gradient $g$ stationary. The so-called Newton method
+uses the second derivatives in the Hessian matrix $H$ defined as
+
+$$  H_{i,j} = \partial^2{f}/ {\partial{x_i} \partial{x_j}}$$
+where $f$ is a function of several variables $x_i$, where $i=1,...,n$, written
+collectively as $x$. The Newton equations are defined as 
+
+$$  H \delta = - g $$
+where $H$ and $g$ are evaluated at a guess or estimate of $x$. $x$ is then updated
+to 
+
+$$ x \leftarrow x + \delta $$
+
+and we iterate until there is no change in $x$.
+
+There are some adjustments When our function $f(x)$ can be written as a sum of squares
+
+$$  f(x) = \sum_{i-1}^n {r_i(x)^2} = r' r $$
+where the final vector product form is the one I favour because it is the least fussy to write.
+In particular, when we try to evaluate the Hessian of this sum of squares function, we see that it is
+
+$$ H_{j,k} = 2 \sum_{i-1}^n { { [ (\partial r_i/\partial{x_j} ) } ({\partial r_i/\partial{x_k} ) + r_i (\partial^2 r_i/{\partial{x_j} \partial{x_k} ) ]}}} $$
+
+If we define the **Jacobian** matrix
+
+$$ J_{i,j} = \partial r_i/\partial{x_j} $$
+then the gradient is 
+
+$$ g = 2 J' r $$
+and the first part of the Hessian is 
+
+$$  J' J $$
+
+Arguing that the residuals should be "small", Gauss proposed that the Newton equations could be approximated by ignoring
+the second term (using elements of the residual times second derivatives of the residual).  This gives the **Gauss-Newton**
+equations (cancelling the factor 2)
+
+$$ (J' J)  \delta  =  - J' r $$
+We can use this in an iteration similar to the Newton iteration.
+
+## Hartley's method
+
+Conditions for convergence of the Newton iteration and the Gauss-Newton iteration are rather a nuisance
+to verify, and in any case we want a solution. @Hartley61 proposed that rather than use an iteration
+
+$$ x \leftarrow x + \delta$$
+
+one could do a search along the direction $\delta$. Ideally we would want to minimize 
+
+$$ f(x + \alpha \delta) $$
+
+with respect to the (scalar) parameter $\delta$. However, typically a value of $\alpha$ that
+permits a reduction in the sum of squares $f(x)$ is accepted and the iteration repeated.
+Clearly there are many tactical choices that give rise to a variety of particular algorithms.
+One concern is that the direction $\delta$ gives no lower value of the sum of squares, since
+there is an approximation involved in using $J' J$ rather than $H$.
+
+## Marquardt
+
+@Marquardt1963 is perhaps one of the most important developments in nonlinear least squares
+apart from the Gauss-Newton method. There are several ways to view the method.
+
+First, considering that the $J' J$ may be effectively singular in the computational
+environment at hand, the Gauss-Newton method may be unable to compute a search
+step that reduces the sum of squared residuals. The right hand side of the 
+normal equations, that is, $g = - J' r$ is the gradient for the sum of squares.
+Thus a solution of 
+
+$$    1_n \delta = - g $$
+is clearly a downhill version of the gradient. And if we solve 
+
+$$  \lambda  1_n \delta =  - g $$
+various values of $\lambda$ will produce steps along the **steepest descents**
+direction. Solutions of the Levenberg-Marquardt equations
+
+$$ (J' J + \lambda 1_n)  \delta  =  - J' r $$
+can be thought of as yielding a step $\delta$ that merges the Gauss-Newton and 
+steepest-descents direction. This approach was actually first suggested by 
+@Levenberg1944, but it is my opinion that while the idea is sound, Levenberg 
+very likely never tested them in practice. Before computers were commonly
+available, this was not unusual, and many papers were written with computational
+ideas that were not tested or were given only cursory trial. 
+
+Practical Marquardt methods require us to specify an initial $\lambda$ and ways
+to adjust its value. For example, one could set an initial $\lambda$ of 0.0001
+and reduce it by multiplying it by 0.4 whenever a trial $x$ has a lower value
+of $f = r' r$ and is accepted to evaluate $J$ and $g$ for the next iteration.
+
+When a trial $x5 is not "lower", we do NOT accept it, but keep $J$ and $g$ but
+increase $\lambda$ by multiplying it by 10 before again computing a new trial $x$.
+
+The increase in $\lambda$ is repeated until there is either a "success" or the trial
+$x$ is unchanged from the current one, which implies the algorithm has converged.
+
+In this scheme, an algorithm is defined by the initial value, decrease factor and
+increase factor for $\lambda$, but there are a number of annoying computational 
+details concerning underflow or overflow and how we measure equivalence of 
+iterates.
+
+## Others
+
+There have been many proposed approaches to nonlinear least squares. 
+
+### Spiral 
+
+@Jones70Spiral is a method ...
+
+
+# Sources of implementation variety
+
+The sources of variety in implementation include:
+
+- programming language
+- possible operating environment features
+- solver for the least squares or linear equations sub-problems
+- stucture of storage for the solver, that is, compact or full
+- sequential or full creation of the Jacobian and residual, since
+  it may be done in parts
+- how the Jacobian is computed or approximated
+- higher level presentation of the problem to the computer, as
+  in R's `nls` or packages `minpack.lm` and `nlsr`.
+
+## Programming language
+
+We have a versions of the Nashlib Algorithm 23 in BASIC, Fortran, Pascal, R, ....
+
+There may be dialects of these programming languages also.
+
+## Operating environment
+
+?? issues of how data is provided
+
+## Solver for the least squares or linear equations sub-problems
+
+### Solution of the linear normal equations
+
+- Gauss elimination with partial pivoting
+
+- Gauss elimination with complete pivoting
+
+- Variants of Gauss elimination that build matrix decompositions
+
+- Gauss-Jordan inversion
+
+- Choleski Decomposition and back substitution
+
+- Eigendecompositions of the SSCP
+
+### Solution of the least squares sub-problem by matrix decomposition
+
+- Householder
+
+- Givens
+
+- pivoting options
+
+- Marquardt and Marquardt Nash options
+
+- SVD approaches
+
+### Avoiding duplication of effort when increasing the $\lambda$ parameter
+
+How to do this??
+
+
+
+
+
+## Storage stucture
+
+J, J'J, If J'J, then vector form of lower triangle. ??
+
+If the choice of approach to Gauss-Newton or Marquardt is to build the normal
+equations and hence the sum of squares and cross products (SSCP) matrix, we
+know by construnction that this is a symmetric matrix and also positive definite.
+In this case, we can use algorithms that specifically take advantage of both these
+properties, namely Algorithms 7, 8 and 9 of Nashlib. Algorithms 7 and 8 are the
+Cholesky decomposition and back-solution using a vector of length `n*(n+1)/2`
+to store just the lower triangle of the SSCP matrix. Algorithm 9 inverts this
+matrix *in situ*. 
+
+The original @jncnm79 Algorithm 23 (Marquardt nonlinear least squares solution) computes
+the SSCP matrix $J' J$  and solves the Marquardt-Nash augmented normal equations
+with the Cholesky approach. This was continued in the Second Edition @nlacatvn1060620 and
+in @jnmws87. However, in the now defunct @jnnlmrt12 and successor @nlsr-manual, the choice
+has been to use a QR decomposition as described below in ???. The particular QR calculations
+are in these packages internal to R-base, complicating comparisons of storage, complexity
+and performance.
+
+
+Other storage approaches.
+
+
+## Sequential or full Jacobian computation
+
+We could compute a row of the Jacobian plus the corresponding residual element
+and process this before computing the next row etc. This means the full Jacobian
+does not have to be stored. In Nashlib, Algorithms 3 and 4, we used row-wise data 
+entry in linear least squares via Givens' triangularization (QR decompostition),
+with the possibility of extending the QR to a singular value decomposition.
+Forming the SSCP matrix can also be generated row-wise as well.
+
+
+## Analytic or approximate Jacobian
+
+Use of finite difference approximations??
+
+
+## Problem interfacing
+
+R allows the nonlinear least squares problem to be presented via a formula
+for the model. 
+
+# Saving storage
+
+The obvious ways to reduce storage are:
+
+- use a row-wise generation of the Jacobian in either a Givens' QR or SSCP approach.
+  This saves space for the Jacobian as well as as well as the working matrices of
+  the Gauss-Newton or Marquardt iterations;
+
+- if the number of parameters to estimate is large enough, then a normal equations
+  approach using a compact storage of the lower triangle of the SSCP matrix. 
+  However, the scale of the saving is really very small in comparison to 
+  the size of most programs.
+  
+
+# Measuring performance
+
+
+# Test problems
+
+```{r settest15}
+# set parameters
+set.seed(123456)
+a <- 1
+b <- 2
+c <- 3
+np <- 15
+tt <-1:np
+yy <- 100*a/(1+10*b*exp(-0.1*c*tt))
+plot.new()
+plot(tt, yy, type='l')
+set.seed(123456)
+ev <- runif(np)
+ev <- ev - mean(ev)
+y1 <- yy + ev
+points(tt,y1,type='p', col="green")
+y2 <- yy + 5*ev
+points(tt,y2,type='p', col="blue")
+y3 <- yy + 10*ev
+lg3d15 <- data.frame(tt, yy, y1, y2, y3)
+points(tt,y3,type='p', col="red")
+library(nlsr)
+sol0 <- nlxb(yy ~ a0/(1+b0*exp(-c0*tt)), data=lg3d15, start=list(a0=1, b0=1, c0=1))
+print(sol0)
+sol1 <- nlxb(y1 ~ a1/(1+b1*exp(-c1*tt)), data=lg3d15, start=list(a1=1, b1=1, c1=1))
+print(sol1)
+sol2 <- nlxb(y2 ~ a2/(2+b2*exp(-c2*tt)), data=lg3d15, start=list(a2=1, b2=1, c2=1))
+print(sol2)
+sol3 <- nlxb(y3 ~ a3/(3+b3*exp(-c3*tt)), data=lg3d15, start=list(a3=1, b3=1, c3=1))
+print(sol3)
+```
+
+
+The following is a larger dataset version of this test.
+
+```{r settest150, eval=FALSE}
+np <- 150
+tt <- (1:np)/10
+yy <- 100*a/(1+10*b*exp(-0.1*c*tt))
+set.seed(123456)
+ev <- runif(np)
+ev <- ev - mean(ev)
+y1 <- yy + ev
+y2 <- yy + 5*ev
+y3 <- yy + 10*ev
+lg3d150 <- data.frame(tt, yy, y1, y2, y3)
+np <- 1500
+tt <- (1:np)/100
+yy <- 100*a/(1+10*b*exp(-0.1*c*tt))
+set.seed(123456)
+ev <- runif(np)
+ev <- ev - mean(ev)
+y1 <- yy + ev
+y2 <- yy + 5*ev
+y3 <- yy + 10*ev
+lg3d1500 <- data.frame(tt, yy, y1, y2, y3)
+f0 <- yy ~ a0/(1+b0*exp(-c0*tt))
+f1 <- y1 ~ a1/(1+b1*exp(-c1*tt))
+f2 <- y2 ~ a2/(2+b2*exp(-c2*tt))
+f3 <- y3 ~ a3/(3+b3*exp(-c3*tt))
+```
+
+
+# Implementation comparisons
+
+Here want to explore the ideas.
+
+
+### Linear least squares and storage considerations
+
+Without going into too many details, we will present the linear least squares 
+problem as 
+
+$$    A x \tilde =  b $$
+
+In this case $A$ is an $m$ by $n$ matrix with $m >= n$ and $b$ a vector of lenght $m$.
+We write **residuals** as
+
+$$  r  =  A x - b  $$
+or as 
+
+$$  r_1  = b - A x  $$
+Then we wish to minimize the sum of squares $r' r$. This problem does not necessarily
+have a unique solution, but the **minimal length least squares solution** which is 
+the $x$ that has the smallest $x' x$ that also minimizes $r' r$ is unique.
+
+The historically traditional method for solving the linear least squares problem was
+to form the **normal equations**
+
+$$ A' A x  = A' b $$
+This was attractive to early computational workers, since while $A$ is $m$ by $n$, $A' A$
+is only $n$ by $n$. Unfortunately, this **sum of squares and cross-products** (SSCP) matrix
+can make the solution less reliable, and this is discussed with examples in @jncnm79 and
+@nlacatvn1060620.
+
+Another approach is to form a QR decomposition of $A$, for example with Givens rotations.
+
+$$ A =  Q R $$
+
+where $Q$ is orthogonal (by construction for plane rotations) and $R$ is upper triangular.
+We can rewrite our original form of the least squares problem as 
+
+$$  Q' A = Q' Q R = R \tilde= Q' b $$
+
+$R$ is an upper triangular matrix $R_n$ stacked on an $m-n$ by $n$ matrix of zeros. But 
+$z = Q' b$ can be thought of as $n$-vector $z_1$ stacked on ($m-n$)-vector $z_2$. 
+It can easily be shown (we won't do so here) that a least squares solution is the
+rather easily found (by back-substitution) solution of 
+
+$$  R_n x = z_1 $$
+and the minimal sum of squares turns out to be the cross-product $z_2' z_2$. Sometimes
+the elements of $z_2$ are called **uncorrelated residuals**. The solution for $x$ can
+actually be formed in the space used to store $z_1$ as a further storage saving,
+since back-substitution forms the elements of $x$ in reverse order.
+
+All this is very nice, but how can we use the ideas to both avoid forming the SSCP
+matrix and keep our storage requirements low? 
+
+Let us think of the row-wise application of the Givens transformations, and use a 
+working array that is $n+1$ by $n+1$. (We can actually add more columns if we have
+more than one $b$ vector.)
+
+Suppose we put the first $n+1$ rows of a merged $A | b$ working matrix into this
+storage and apply the row-wise Givens transformations until we have an $n$ by $n$
+upper triangular matrix in the first $n$ rows and columns of our working array.
+We further want row $n+1$ to have $n$ zeros (which is possible by simple transformations)
+and a single number in the $n+1$, $n+1$ position. This is the first element of $z_2$.
+We can write it out to external storage if was want to have it available, or else
+we can begin to accumulate the sum of squares. 
+
+We then put row $n+2$ of [$A | b$] into the bottom row of our working storage and
+eliminate the first $n$ columns of this row with Givens transformations. This
+gives us another element of $z_2$. Repeat until all the data has been processed.
+
+We can at this point solve for $x$. Algorithm 4, however, applies the one-sided
+Jacobi method to get a singular value decomposition of $A$ allowing of a minimal
+length least squares solution as well as some useful diagnostic information about
+the condition of our problem. This was also published as @LefkovitchNash1976.
+
+
+
+
+# References
