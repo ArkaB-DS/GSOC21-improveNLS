@@ -366,6 +366,51 @@ Then we wish to minimize the sum of squares $r' r$. This problem does not necess
 have a unique solution, but the **minimal length least squares solution** which is 
 the $x$ that has the smallest $x' x$ that also minimizes $r' r$ is unique.
 
+Let us set up a simple problem in R:
+
+```{r ls1, echo=TRUE}
+# simple linear least squares examples
+v <- 1:6
+v2 <- v^2
+vx <- v+5
+one <- rep(1,6)
+Ad <- data.frame(one, v, v2)
+A <- as.matrix(Ad)
+print(A)
+Ax <- as.matrix(data.frame(one, v, vx, v2))
+print(Ax)
+y <- -3 + v + v2
+print(y)
+set.seed(12345)
+ee <- rnorm(6)
+ee <- ee - mean(ee)
+ye <- y + 0.5*ee
+print(ye)
+sol1 <- lm.fit(A, y)
+print(sol1)
+crossprod(sol1$residuals)
+sol1e <- lm.fit(A,ye)
+print(sol1e)
+crossprod(sol1e$residuals)
+sol2<-lm.fit(Ax,y)
+# Note the NA in the coefficients -- Ax is effectively singular
+print(sol2)
+S2 <- sol2$coefficients
+J <- which(is.na(S2))
+S2[J]<-0
+crossprod(S2)
+Z<-svd(Ax)
+D1 <- 1/Z$d
+print(D1)
+D1[4]<-0 # to remove linear dependency (small singval)
+# minimum length LS solution
+minsol2 <- Z$v %*% (diag(D1) %*% (t(Z$u) %*% y))
+print(minsol2)
+crossprod(minsol2)
+
+```
+
+
 The historically traditional method for solving the linear least squares problem was
 to form the **normal equations**
 
