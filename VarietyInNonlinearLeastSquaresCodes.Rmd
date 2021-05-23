@@ -348,7 +348,7 @@ f3 <- y3 ~ a3/(3+b3*exp(-c3*tt))
 Here want to explore the ideas.
 
 
-### Linear least squares and storage considerations
+## Linear least squares and storage considerations
 
 Without going into too many details, we will present the linear least squares 
 problem as 
@@ -365,6 +365,8 @@ $$  r_1  = b - A x  $$
 Then we wish to minimize the sum of squares $r' r$. This problem does not necessarily
 have a unique solution, but the **minimal length least squares solution** which is 
 the $x$ that has the smallest $x' x$ that also minimizes $r' r$ is unique.
+
+### Example setup and run in lm()
 
 Let us set up a simple problem in R:
 
@@ -404,30 +406,26 @@ crossprod(S2)
 The above uses the intermediate code in function `lm.fit()`. This uses a QR solver, but
 it is written as a wrapper in C calling a Fortran routine (in the Fortran 77 dialect).
 
-?? put in the structure and where the code is located
+?? Should we put in the structure and where the code is located?
 
-```
+I believe that the structure of lm() predates the availability of the family
+of `qr.xxx()` functions for R. These allow us to access the QR approach 
+directly.
+
+```{r ls2, echo=TRUE}
 x <- qr.solve(A,y)
- x
-one   v  v2 
- -3   1   1 
- xe<-qr.solve(A, ye)
-> xe
-       one          v         v2 
--2.8019063  1.1456093  0.9533367 
-```
-```
-Z<-svd(Ax)
-D1 <- 1/Z$d
-print(D1)
-D1[4]<-0 # to remove linear dependency (small singval)
-# minimum length LS solution
-minsol2 <- Z$v %*% (diag(D1) %*% (t(Z$u) %*% y))
-print(minsol2)
-cat("Residual SS=",as.numeric(crossprod(minsol2)),"\n")
-
+print(x)
+xe<-qr.solve(A, ye)
+print(xe)
+# But then we get an error when we try to solve the singular system
+# This was NOT caught above.
+xx <- try(qr.solve(Ax,y))
+print(xx)
+xxe<-try(qr.solve(Ax, ye))
+print(xxe)
 ```
 
+## Traditional Normal equations approach
 
 The historically traditional method for solving the linear least squares problem was
 to form the **normal equations**
@@ -437,6 +435,95 @@ This was attractive to early computational workers, since while $A$ is $m$ by $n
 is only $n$ by $n$. Unfortunately, this **sum of squares and cross-products** (SSCP) matrix
 can make the solution less reliable, and this is discussed with examples in @jncnm79 and
 @nlacatvn1060620.
+
+```{r lm5, echo=TRUE}
+AtA <- t(A)%*%A
+print(AtA)
+Aty <- t(A)%*%y
+print(t(Aty))
+x<-solve(AtA,Aty)
+print(t(x))
+```
+
+Let us try this with the extended matrix `Ax`
+
+```{r lm6, echo=TRUE}
+AxA <- t(Ax)%*%Ax
+print(AxA)
+Axy <- t(Ax)%*%y
+print(t(Axy))
+xx<-try(solve(AxA,Axy))
+print(t(xx))
+```
+
+### Dealing with singularity
+
+The `lm.fit()` function has a parameter `singular.ok` which defaults to TRUE.
+By setting this to FALSE, we get.
+
+```{r lm3, echo=TRUE}
+sol2b<-try(lm.fit(Ax,y, singular.ok=FALSE))
+print(sol2b)
+```
+
+We've already seen above that the solution `sol2` has a size of 
+
+```{r num1}
+eval(as.numeric(crossprod(S2)))
+```
+
+The solution `sol2` is, it turns out, not unique, since the variables `v` and
+`vx` and `one` are related, namely
+
+```{r num2, echo=TRUE}
+print(vx - (v+5*one))
+```
+Thus we can find a "new" solution as follows and show (essentially) the same 
+residuals
+
+```{r num3, echo=TRUE}
+res2<-Ax%*%S2-y
+print(t(res2))
+print(S2)
+S2b<-S2+c(10,2,-2,0)
+res2b<-Ax%*%S2b-y
+print(t(res2b))
+cat("Sum of squares of S2b=", as.numeric(crossprod(S2b)),"\n")
+```
+
+An approximate solution via the normal equations can be found by adding a small diagonal matrix to the sum of squares and
+cross products `AxA`.
+
+```{r lm7, echo=TRUE}
+AxA <- AxA + diag(rep(1e-10,4))
+print(AxA)
+xxx<-try(solve(AxA,Axy))
+print(t(xxx))
+print(t(Ax %*% xxx - y))
+```
+
+We note that this solution is rather different from `S2` or `S2b`.
+
+### Minimum length least squares solution
+
+The minimum length least squares solution is found using the Moore-Penrose inverse of `Ax`
+?? need some refs?? which can be computed from the Singular Value Decomposition.
+
+```{r lm4, echo=TRUE}
+Z<-svd(Ax) # get the svd
+D1 <- 1/Z$d # invert S, the singular values diagonal matrix
+print(D1) 
+D1[4]<-0 # to remove linear dependency (small singvals are set to zero)
+# D1 is diagonal of S+ now
+# minimum length LS solution A+ = V S+ t(U)
+minsol2 <- Z$v %*% (diag(D1) %*% (t(Z$u) %*% y))
+print(minsol2)
+cat("SS of minsol2=",as.numeric(crossprod(minsol2)),"\n")
+resminsol<-Ax%*%minsol2-y
+print(t(resminsol))
+```
+
+
 
 Another approach is to form a QR decomposition of $A$, for example with Givens rotations.
 
@@ -481,8 +568,6 @@ We can at this point solve for $x$. Algorithm 4, however, applies the one-sided
 Jacobi method to get a singular value decomposition of $A$ allowing of a minimal
 length least squares solution as well as some useful diagnostic information about
 the condition of our problem. This was also published as @LefkovitchNash1976.
-
-
 
 
 # References

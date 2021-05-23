@@ -18,3 +18,40 @@ R-devel/src/library/stats/R/nls.R
           https://stackoverflow.com/questions/1695224/what-do-c-and-h-file-extensions-mean-to-c
           https://stackoverflow.com/questions/19114410/what-is-d-file-after-building-with-make
           nls_iter(... [approx line 90 of nls.c; seems to go to approx line 272]
+          Main iteration seems to start approx line 203, using a "for" loop that
+          terminates at maxIter. ?? Is "break" used when convergence occurs before
+          this limit is reached? Note that the first block in the "for" loop evaluates
+          'convNew' and compares to 'tolerance'.
+
+          The next step is an evaluation of "incr" in the R_GlobalEnv. ?? We need to
+          work out what this is doing, but I believe we will find it gets the Gauss-Newton
+          direction. 
+
+          There is then a "while" loop that does a backtrack search to shrink the step 
+          along the direction in the vector nIncr[] by progressively halving the stepsize
+          parameter 'fac' (Note that this name is used elsewhere with a different meaning e.g.,
+          in nlsModel.plinear in file nls.R). Thus we are not using the vanilla Gauss-Newton
+          method, but something akin to Hartley's 1961 approach. 
+          ==================================================================================
+          Sidebar1: Marquardt will need a DIFFERENT structure, which JN will work out with AB
+          once we are confident we understand the existing nls.R and nls.c files. JN believes
+          that the 'eval(incr, R_Globalenv)' is likely a key part of the computation. Can we
+          figure it out???
+          ==================================================================================
+          
+          numeric_deriv(... [approx line 280-372 of nls.c] is called from nls.R in numericDeriv
+          [approx line 24 of nls.R] and computes a derivative. It uses a rather simple forward
+          difference as far as JN can determine. ?? 
+          ==================================================================================
+          Sidebar2: A minor research exercise may be to set up some timings and tests using
+          microbenchmark to test the "speed" and accuracy of this routine compared to raw
+          R code (with or without safety checks) and the numDeriv package and the symbolic
+          derivatives in package nlsr. This could be an output of the project e.g., an R-Journal
+          or R-blog article. ?? AB to let JN know opinions on this. However, probably best done
+          as a "work on this when stuck trying other tasks". 
+          JN suspects this code is both poor in accuracy and not appreciably faster than other
+          approaches in plain R which are more maintainable. They are > 25 years old.
+          ==================================================================================
+          
+          
+          
