@@ -145,7 +145,7 @@ wish to minimize is the sum of squares of the (nonlinear)
 residuals $r(x)$ where there are $m$ observations (elements of $r$)
 and $n$ parameters $x$. Hence the function is
 
-$$    f(x) = \sum_i({r_i}^2)$$
+$$f(x) = \sum_i({r_i}^2)$$
 
 Newton's method starts with an original set of parameters $x[0]$.
 At a given iteration, which could be the first, we want to solve
@@ -207,9 +207,9 @@ have done the practical work that brought the approach to general attention.)
 was common for diagonal elements of $J' J$ to underflow. A very
 small modification to solve 
 
-$$    (J' J + lambda * (D + phi * I)) * delta = - g $$
+$$    (J' J + \lambda  (D + \phi  I))  \delta = - g $$
     
-where $phi$ is a small number avoids most of these conditions. $phi = 1$ seems 
+where $\phi$ is a small number avoids most of these conditions. $\phi = 1$ seems 
 to work quite well. We note that this modification would likely not have been 
 recognized had I not been working on machines with mediochre floating-point
 arithmetic -- a little more than 6 decimal digits of precision and no extended
@@ -248,16 +248,16 @@ In @jncnm79, the iteration equation was solved as stated. However, this
 involves forming the sum of squares and cross products of $J$, a process that
 loses some numerical precision. A better way to solve the linear equations is
 to apply the QR decomposition to the matrix $J$ itself. However, we still need
-to incorporate the $lambda * I$ or $lambda * D$ adjustments. This is done by 
+to incorporate the $\lambda I$ or $\lambda D$ adjustments. This is done by 
 adding rows to $J$ that are the square roots of the "pieces". We add 1 row for
 each diagonal element of $I$ and each diagonal element of $D$. 
 
-In each iteration, we reduce the $lambda$ parameter before solution. If the
-resulting sum of squares is not reduced, $lambda$ is increased, otherwise we
+In each iteration, we reduce the $\lambda$ parameter before solution. If the
+resulting sum of squares is not reduced, $\lambda$ is increased, otherwise we
 move to the next iteration. Various authors (including the present one)
 have suggested different strategies for this. My current opinion is that
 a "quick" increase, say a factor of 10, and a "slow" decrease, say a factor
-of 0.2, work quite well. However, it is important to check that lambda has
+of 0.2, work quite well. However, it is important to check that $\lambda$ has
 not got too small or underflowed before applying the increase factor. On
 the other hand, it is useful to be able to set lambda = 0 in the code so
 that a pure Gauss-Newton method can be evaluated with the program(s). The
@@ -302,22 +302,22 @@ $$  Q R = J$$
 where Q is an orthonormal matrix and R is Right or Upper triangular, we can easily
 solve
 
-$$  R \delta = Q^T r$$
+$$  R \delta = - Q^T r$$
 for which the solution is also the solution of the Gauss-Newton equations.
 But how do we get the Marquardt stabilization?
 
-If we augment $J$ with a square matrix $sqrt(\lambda D)$ whose diagonal elements are the
+If we augment $J$ with a square matrix $\sqrt{\lambda D}$ whose diagonal elements are the
 square roots of $\lambda$ times the diagonal elements of $D$, and augment the vector $r$ with $n$ zeros
 where $n$ is the column dimension of $J$ and $D$, we achieve our goal. 
 
-Typically we can use $D = 1_n$ (the identity of order $n$), but @Marquardt1963 showed that using the 
+Typically we can use $D = I_n$ (the identity of order $n$), but @Marquardt1963 showed that using the 
 diagonal elements of $J^T J$ for $D$ results in a useful implicit scaling of the parameters.
 @jn77ima pointed out that on computers with limited arithmetic (which now are rare since the 
 IEEE 754 standard appeared in 1985), underflow might
-cause a problem of very small elements in $D$ and proposed adding $\phi 1_n$ to the diagonals
+cause a problem of very small elements in $D$ and proposed adding $\phi I_n$ to the diagonals
 of $J^T J$ before multiplying by $\lambda$ in the Marquardt stabilization. This avoids some
 awkward cases with very little extra overhead. It is accomplished with the QR approach by
-appending $sqrt(\phi * \lambda)$ times a unit matrix $I_n$ to the matrix already augmented
+appending $\sqrt{\phi  \lambda}$ times a unit matrix $I_n$ to the matrix already augmented
 matrix. We must also append a further $n$ zeros to the augmented $r$. 
 
 ### ======== End of extract on approaches to solving Gauss Newton equations =========
