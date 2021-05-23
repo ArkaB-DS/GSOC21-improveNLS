@@ -1,0 +1,20 @@
+R-devel/src/library/stats/R/nls.R
+  --> nls() [approx line 452 of file nls.R]
+      Large number of statements to check the input.
+      Then an important statement [approx line 616 of file nls.R]
+      "m <-  " which creates the "model" object. This includes the
+      relative offset convergence test. Where should we document the
+      structure and use of "m" ??
+
+      ## Iterate  [approx line 621 of nls.R]
+      Here is critical part of the code for adding Marquardt or other
+      modification to the nls() function. 
+      The key work is, unfortunately, done in the line
+         convInfo <- .Call(C_nls_iter, m, ctrl, trace) [approx line 628 of nls.R]
+      --> R-devel/src/library/stats/src/nls.c (and associated nls.h and nls.d)
+         The associated files are part of the structure of code for C programs
+         (which JN does NOT normally do. We may want to get advice from someone who
+          programs in C.) Some possibly useful pages are
+          https://stackoverflow.com/questions/1695224/what-do-c-and-h-file-extensions-mean-to-c
+          https://stackoverflow.com/questions/19114410/what-is-d-file-after-building-with-make
+          nls_iter(... [approx line 90 of nls.c; seems to go to approx line 272]
