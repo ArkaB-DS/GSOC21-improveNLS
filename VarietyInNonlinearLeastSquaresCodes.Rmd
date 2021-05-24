@@ -113,26 +113,54 @@ direction. Solutions of the Levenberg-Marquardt equations
 $$ (J' J + \lambda 1_n)  \delta  =  - J' r $$
 can be thought of as yielding a step $\delta$ that merges the Gauss-Newton and 
 steepest-descents direction. This approach was actually first suggested by 
-@Levenberg1944, but it is my opinion that while the idea is sound, Levenberg 
+@Levenberg1944, but it is my opinion that while the ideas are sound, Levenberg 
 very likely never tested them in practice. Before computers were commonly
 available, this was not unusual, and many papers were written with computational
 ideas that were not tested or were given only cursory trial. 
 
 Practical Marquardt methods require us to specify an initial $\lambda$ and ways
-to adjust its value. For example, one could set an initial $\lambda$ of 0.0001
-and reduce it by multiplying it by 0.4 whenever a trial $x$ has a lower value
-of $f = r' r$ and is accepted to evaluate $J$ and $g$ for the next iteration.
+to adjust its value. For example, if $SS(x) = r' r = f(x)$ is the function to 
+minimize to "fit" our nonlinear model:
 
-When a trial $x5 is not "lower", we do NOT accept it, but keep $J$ and $g$ but
-increase $\lambda$ by multiplying it by 10 before again computing a new trial $x$.
+- set an initial $\lambda$ of 0.0001
 
-The increase in $\lambda$ is repeated until there is either a "success" or the trial
-$x$ is unchanged from the current one, which implies the algorithm has converged.
+- **A** Compute $J$ and $g$, set up Marquardt equations and find $\delta$
 
-In this scheme, an algorithm is defined by the initial value, decrease factor and
-increase factor for $\lambda$, but there are a number of annoying computational 
+- **B** compute new set of parameters $$x_{new} = x + \delta $$ 
+
+- if $x_{new} != x$, compute $SS(x_{new})$, else quit (**termination**)
+
+- if $$SS(x_{new}) < SS(x)$, replace $x$ with $x_{new}$, replace $\lambda$
+with $0.4*\lambda$, then retry from **A**
+
+- ELSE increase $\lambda$ to $10*\lambda$ and retry from **B** ($J$ and $g$ do
+  NOT need to be recomputed)
+  
+In this scheme, an algorithm is defined by the initial value, decrease factor (
+e.g., 0.4) and
+increase factor (e.g., 10) for $\lambda$, but there are a number of 
+annoying computational 
 details concerning underflow or overflow and how we measure equivalence of 
-iterates.
+iterates. That is, we need to ensure $\lambda$ is not so "small" that multiplying
+by 10 is meaningless, and we need to know what "not equal" means for floating
+point vectors in the arithmetic in use. 
+
+An example of choices to deal with these details:
+
+- if $\lambda$ is smaller than some pre-set tolerance, set it to the tolerance. 
+  (Otherwise do not worry if it is tiny, as long as the sum of squares still gets
+   reduced.)
+   
+- when comparing $x_{new}$ and $x5, we can use a modest number, e.g, 100.0 which
+we will call OFFSET. In the arithmetic of the system at hand, if the floating-point
+numbers $x_{new} + OFFSET} matches bit for bit $x + OFFSET$, then they are equal.
+
+Many practitioners dislike using IF statements (comparisons) of floating point
+numbers and I have had a number of exchanges with other workers over the years. 
+However, I have never seen any issues. When $x$ is tiny, we compare OFFSET to 
+itself and declare equality. When $x$ is very large, OFFSET does not change it and
+we compare $x$ with a value that is identical to it. Moreover, we use very little
+extra code.
 
 ## Others
 
