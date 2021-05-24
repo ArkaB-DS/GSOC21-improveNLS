@@ -101,10 +101,12 @@ step that reduces the sum of squared residuals. The right hand side of the
 normal equations, that is, $g = - J' r$ is the gradient for the sum of squares.
 Thus a solution of 
 
-$$    1_n \delta = - g $$
+<!-- Note mathbf use below -->
+
+$$    \mathbf{1}_n \delta = - g $$
 is clearly a downhill version of the gradient. And if we solve 
 
-$$  \lambda  1_n \delta =  - g $$
+$$  \lambda  \mathbf{1}_n \delta =  - g $$
 various values of $\lambda$ will produce steps along the **steepest descents**
 direction. Solutions of the Levenberg-Marquardt equations
 
@@ -427,8 +429,9 @@ print(xxe)
 
 ## Traditional Normal equations approach
 
-The historically traditional method for solving the linear least squares problem was
-to form the **normal equations**
+The historically traditional method for solving the **linear** least squares problem was
+to apply calculus to set the partial derivatives of the sum of squares with respect to
+each parameter to zero. This forms the **normal equations**
 
 $$ A' A x  = A' b $$
 This was attractive to early computational workers, since while $A$ is $m$ by $n$, $A' A$
