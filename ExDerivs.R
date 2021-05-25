@@ -49,4 +49,32 @@ nDfunsc<-try(numericDeriv(xeunsc, theta, rho=weedenv))
 ##    cannot coerce type 'closure' to vector of type 'double'
 nDfunsc<-try(numericDeriv(funsc, theta, rho=weedenv))
 
+y<-weeddata1$y
+tt<-weeddata1$tt
+# variables now in local environment
+## Error in numericDeriv(funsc, theta) : 
+##    cannot coerce type 'closure' to vector of type 'double'
+nDfunsc<-try(numericDeriv(funsc, theta))
+
+## Error in numericDeriv(xeunsc, theta, rho = weedenv) : 
+## 'list' object cannot be coerced to type 'double'
+nDfunsc<-try(numericDeriv(xeunsc, theta))
+
+# Error in formula.default(object, env = baseenv()) : invalid formula
+nDfunsc<-try(numericDeriv(as.formula(xeunsc), theta))
+
+formunsc<-formula(eunsc)
+str(formunsc)
+formunsc[1]
+formunsc[2]
+formunsc[3]
+
+## Error in numericDeriv(formunsc[3], theta) : object 'b1' not found
+nDfunsc<-try(numericDeriv(formunsc[3], theta))
+
+b1<-1
+b2<-1
+b3<-1
+## Error in numericDeriv(formunsc[3], theta) : attempt to apply non-function
+nDfunsc<-try(numericDeriv(formunsc[3], theta))
 
