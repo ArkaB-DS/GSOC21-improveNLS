@@ -1,0 +1,52 @@
+rm(list=ls()) # clear the workspace (does not completely remove things, need to restart R sometimes)
+require(nlsr)
+
+printsum <- function(xx){ print(summary(xx))}
+
+traceval  <-  TRUE  # traceval set TRUE to debug or give full history
+
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+
+cat("LOCAL DATA IN DATA FRAMES\n")
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+
+
+## 2021-5-25 try derivatives
+
+library(numDeriv)
+print(eunsc)
+funsc <- model2rjfun(eunsc, start1, data=weeddata1) # from nlsr: creates a function
+print(funsc(start1))
+# following gives an error "theta should be of type character"
+nDfunsc<-try(numericDeriv(eunsc, start1, weeddata1))
+print(nDfunsc)
+print(start1)
+
+theta <- c("b1", "b2", "b3")
+weedenv <- list2env(weeddata1)
+weedenv$prms <- start1
+# Following gives error
+## Error in numericDeriv(eunsc, theta, weedenv) : 
+## 'language' object cannot be coerced to type 'double'
+nDfunsc<-try(numericDeriv(eunsc, theta, weedenv))
+print(nDfunsc)
+str(theta)
+str(weedenv)
+print(weedenv)
+## try other ways
+xeunsc<-expression(eunsc)
+## Error in numericDeriv(xeunsc, theta, rho = weedenv) : 
+## 'list' object cannot be coerced to type 'double'
+nDfunsc<-try(numericDeriv(xeunsc, theta, rho=weedenv))
+## Error in numericDeriv(funsc, theta, rho = weedenv) : 
+##    cannot coerce type 'closure' to vector of type 'double'
+nDfunsc<-try(numericDeriv(funsc, theta, rho=weedenv))
+
+
