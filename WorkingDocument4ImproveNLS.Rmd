@@ -128,7 +128,7 @@ JN also set up this document.
   but not on the radar of most users. Clearly a "nasty". Can we do anything to
   at least warn users in a way that is useful?
   
-## From `nlsr` vignette `nlsr-devdoc.Rmd`
+## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
 ### 5. Implementation of nonlinear least squares methods
 
@@ -242,7 +242,7 @@ lead to many variants, increased by different possibilities for specifying $D$. 
 
 
 
-### Using matrix decompositions
+### Using matrix decompositions [2021-5-23 onwards]
 
 In @jncnm79, the iteration equation was solved as stated. However, this
 involves forming the sum of squares and cross products of $J$, a process that
@@ -321,6 +321,31 @@ appending $\sqrt{\phi  \lambda}$ times a unit matrix $I_n$ to the matrix already
 matrix. We must also append a further $n$ zeros to the augmented $r$. 
 
 ### ======== End of extract on approaches to solving Gauss Newton equations =========
+
+## Early explorations and setup of project [2021-5-24]
+
+This is essentially a diary entry. (?? AB you may want to add some notes too.)
+
+- AB working to secure his computer, set up VirtualBox and prepare a linux guest VM
+
+- AB has been looking at documents JN posted. Gitlab repo seems to be working OK.
+  On comment from HT, JN discovered (very overdue!) that Rstudio support for git
+  is very useful.
+
+- JN added document **VarietyInNonlinearLeastSquaresCodes.Rmd**. This is tangential to 
+  the project, but is an attempt to provide a panorama of the different ways in which
+  nonlinear least squares software has been set up over the years. JN will respond to
+  questions from other team members to try to make this explanatory document helpful
+  in understanding the existing nls() code and proposed changes. 
+
+- Section added above "From `nlsr` vignette `nlsr-devdoc.Rmd`"
+
+- In the "VarietyInNonlinearLeastSquaresCodes.Rmd" document, JN added a section on
+  different approaches to solving LINEAR least squares problems, since the inner
+  iteration of almost all nonlinear least squares methods involves such a sub-problem.
+  AB has been looking at this. It is currently a messy DRAFT section at 2021-5-25.
+
+- Meet scheduled for May 25
 
 ## References
 

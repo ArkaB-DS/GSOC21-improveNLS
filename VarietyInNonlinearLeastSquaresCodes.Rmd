@@ -244,8 +244,6 @@ How to do this??
 
 
 
-
-
 ## Storage stucture
 
 J, J'J, If J'J, then vector form of lower triangle. ??
@@ -392,6 +390,7 @@ $$  r  =  A x - b  $$
 or as 
 
 $$  r_1  = b - A x  $$
+
 Then we wish to minimize the sum of squares $r' r$. This problem does not necessarily
 have a unique solution, but the **minimal length least squares solution** which is 
 the $x$ that has the smallest $x' x$ that also minimizes $r' r$ is unique.
@@ -462,6 +461,8 @@ to apply calculus to set the partial derivatives of the sum of squares with resp
 each parameter to zero. This forms the **normal equations**
 
 $$ A' A x  = A' b $$
+
+
 This was attractive to early computational workers, since while $A$ is $m$ by $n$, $A' A$
 is only $n$ by $n$. Unfortunately, this **sum of squares and cross-products** (SSCP) matrix
 can make the solution less reliable, and this is discussed with examples in @jncnm79 and
@@ -558,19 +559,21 @@ print(t(resminsol))
 
 Another approach is to form a QR decomposition of $A$, for example with Givens rotations.
 
-$$ A =  Q R $$
+$$ A =  Q R$$
 
 where $Q$ is orthogonal (by construction for plane rotations) and $R$ is upper triangular.
 We can rewrite our original form of the least squares problem as 
 
-$$  Q' A = Q' Q R = R \tilde= Q' b $$
+$$  Q' A = Q' Q R = R \tilde= Q' b$$
+
 
 $R$ is an upper triangular matrix $R_n$ stacked on an $m-n$ by $n$ matrix of zeros. But 
 $z = Q' b$ can be thought of as $n$-vector $z_1$ stacked on ($m-n$)-vector $z_2$. 
 It can easily be shown (we won't do so here) that a least squares solution is the
 rather easily found (by back-substitution) solution of 
 
-$$  R_n x = z_1 $$
+$$  R_n x = z_1$$
+
 and the minimal sum of squares turns out to be the cross-product $z_2' z_2$. Sometimes
 the elements of $z_2$ are called **uncorrelated residuals**. The solution for $x$ can
 actually be formed in the space used to store $z_1$ as a further storage saving,
