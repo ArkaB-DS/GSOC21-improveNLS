@@ -331,6 +331,11 @@ This is essentially a diary entry. (?? AB you may want to add some notes too.)
 - AB has been looking at documents JN posted. Gitlab repo seems to be working OK.
   On comment from HT, JN discovered (very overdue!) that Rstudio support for git
   is very useful.
+  
+- JN set up nls-flowchart.txt for use by team. This is looking at R-devel.tar.gz
+  downloaded May 18, 2021. It is likely we can use any recent version, though at
+  some point we may need to be more precise. The purpose of this is to describe what
+  is going on in the nls() operations. 
 
 - JN added document **VarietyInNonlinearLeastSquaresCodes.Rmd**. This is tangential to 
   the project, but is an attempt to provide a panorama of the different ways in which
@@ -345,7 +350,19 @@ This is essentially a diary entry. (?? AB you may want to add some notes too.)
   iteration of almost all nonlinear least squares methods involves such a sub-problem.
   AB has been looking at this. It is currently a messy DRAFT section at 2021-5-25.
 
-- Meet scheduled for May 25
+- Meet scheduled for May 25;
+
+## Attempts to understand numericDeriv() [2021-5-24]
+
+JN has found it quite difficult to get a good understanding of the `numericDeriv()` function
+that appears in `nls.R` and calls material in `nls.c`. That this has proved difficult to use
+suggests the documentation is less than wonderful. However, the main reason is to set up
+tests and timings and compare to other approaches to computing the Jacobian in nonlinear
+least squares. ??Gut feeling: numericDeriv is really only set up to compute a Jacobian.
+?? Note: there is a "central" option. Can this be used with nls()? Why or why not?
+
+
+
 
 ## References
 
