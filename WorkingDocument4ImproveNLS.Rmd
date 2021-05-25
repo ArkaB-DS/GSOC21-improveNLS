@@ -361,6 +361,9 @@ tests and timings and compare to other approaches to computing the Jacobian in n
 least squares. ??Gut feeling: numericDeriv is really only set up to compute a Jacobian.
 ?? Note: there is a "central" option. Can this be used with nls()? Why or why not?
 
+A file ExDerivs.R has been added to the repo. It is NOT working as at 2021-5-25 with
+the numericDeriv function.
+
 
 
 
