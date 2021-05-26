@@ -48,7 +48,7 @@ and we iterate until there is no change in $x$.
 
 There are some adjustments When our function $f(x)$ can be written as a sum of squares
 
-$$  f(x) = \sum_{i-1}^n {r_i(x)^2} = r' r $$
+$$  f(x) = \sum_{i-1}^n {r_i(x)^2} = r^t r $$
 where the final vector product form is the one I favour because it is the least fussy to write.
 In particular, when we try to evaluate the Hessian of this sum of squares function, we see that it is
 
@@ -59,16 +59,16 @@ If we define the **Jacobian** matrix
 $$ J_{i,j} = \partial r_i/\partial{x_j} $$
 then the gradient is 
 
-$$ g = 2 J' r $$
+$$ g = 2 J^t r $$
 and the first part of the Hessian is 
 
-$$  J' J $$
+$$  J^t J $$
 
 Arguing that the residuals should be "small", Gauss proposed that the Newton equations could be approximated by ignoring
 the second term (using elements of the residual times second derivatives of the residual).  This gives the **Gauss-Newton**
 equations (cancelling the factor 2)
 
-$$ (J' J)  \delta  =  - J' r $$
+$$ (J^t J)  \delta  =  - J^t r $$
 We can use this in an iteration similar to the Newton iteration.
 
 ## Hartley's method
@@ -88,17 +88,17 @@ with respect to the (scalar) parameter $\delta$. However, typically a value of $
 permits a reduction in the sum of squares $f(x)$ is accepted and the iteration repeated.
 Clearly there are many tactical choices that give rise to a variety of particular algorithms.
 One concern is that the direction $\delta$ gives no lower value of the sum of squares, since
-there is an approximation involved in using $J' J$ rather than $H$.
+there is an approximation involved in using $J^t J$ rather than $H$.
 
 ## Marquardt
 
 @Marquardt1963 is perhaps one of the most important developments in nonlinear least squares
 apart from the Gauss-Newton method. There are several ways to view the method.
 
-First, considering that the $J' J$ may be effectively singular in the computational
+First, considering that the $J^t J$ may be effectively singular in the computational
 environment at hand, the Gauss-Newton method may be unable to compute a search
 step that reduces the sum of squared residuals. The right hand side of the 
-normal equations, that is, $g = - J' r$ is the gradient for the sum of squares.
+normal equations, that is, $g = - J^t r$ is the gradient for the sum of squares.
 Thus a solution of 
 
 <!-- Note mathbf use below -->
@@ -110,7 +110,7 @@ $$  \lambda  \mathbf{1}_n \delta =  - g $$
 various values of $\lambda$ will produce steps along the **steepest descents**
 direction. Solutions of the Levenberg-Marquardt equations
 
-$$ (J' J + \lambda 1_n)  \delta  =  - J' r $$
+$$ (J^t J + \lambda 1_n)  \delta  =  - J^t r $$
 can be thought of as yielding a step $\delta$ that merges the Gauss-Newton and 
 steepest-descents direction. This approach was actually first suggested by 
 @Levenberg1944, but it is my opinion that while the ideas are sound, Levenberg 
@@ -119,7 +119,7 @@ available, this was not unusual, and many papers were written with computational
 ideas that were not tested or were given only cursory trial. 
 
 Practical Marquardt methods require us to specify an initial $\lambda$ and ways
-to adjust its value. For example, if $SS(x) = r' r = f(x)$ is the function to 
+to adjust its value. For example, if $$SS(x) = r^t r = f(x)$$ is the function to 
 minimize to "fit" our nonlinear model:
 
 - set an initial $\lambda$ of 0.0001
@@ -189,7 +189,7 @@ The sources of variety in implementation include:
 - how the Jacobian is computed or approximated
 
 - higher level presentation of the problem to the computer, as
-  in R's `nls` or packages `minpack.lm` and `nlsr`.
+  in R^ts `nls` or packages `minpack.lm` and `nlsr`.
 
 ## Programming language
 
@@ -211,7 +211,7 @@ some approaches over others. However, such issues are less prominent today.
 The Gauss-Newton or Marquardt eqations are a set of linear equations. Moreover, 
 the coefficient matrix is non-negative definite and symmetric. Thus it permits of
 both general and specialized methods for linear equations. Furthermore, one can also
-set up the solution without forming the $J' J$ matrix by using several matrix
+set up the solution without forming the $J^t J$ matrix by using several matrix
 decomposition methods. Thus there are many possible procedures.
 
 - Gauss elimination with partial pivoting
@@ -246,7 +246,7 @@ How to do this??
 
 ## Storage stucture
 
-J, J'J, If J'J, then vector form of lower triangle. ??
+J, J^tJ, If J^tJ, then vector form of lower triangle. ??
 
 If the choice of approach to Gauss-Newton or Marquardt is to build the normal
 equations and hence the sum of squares and cross products (SSCP) matrix, we
@@ -258,7 +258,7 @@ to store just the lower triangle of the SSCP matrix. Algorithm 9 inverts this
 matrix *in situ*. 
 
 The original @jncnm79 Algorithm 23 (Marquardt nonlinear least squares solution) computes
-the SSCP matrix $J' J$  and solves the Marquardt-Nash augmented normal equations
+the SSCP matrix $J^t J$  and solves the Marquardt-Nash augmented normal equations
 with the Cholesky approach. This was continued in the Second Edition @nlacatvn1060620 and
 in @jnmws87. However, in the now defunct @jnnlmrt12 and successor @nlsr-manual, the choice
 has been to use a QR decomposition as described below in ???. The particular QR calculations
@@ -381,7 +381,7 @@ Here want to explore the ideas.
 Without going into too many details, we will present the linear least squares 
 problem as 
 
-$$    A x \tilde =  b $$
+$$  A x \tilde = b  $$
 
 In this case $A$ is an $m$ by $n$ matrix with $m >= n$ and $b$ a vector of lenght $m$.
 We write **residuals** as
@@ -391,7 +391,7 @@ or as
 
 $$  r_1  = b - A x  $$
 
-Then we wish to minimize the sum of squares $r' r$. This problem does not necessarily
+Then we wish to minimize the sum of squares $r^t r$. This problem does not necessarily
 have a unique solution, but the **minimal length least squares solution** which is 
 the $x$ that has the smallest $x' x$ that also minimizes $r' r$ is unique.
 
@@ -460,10 +460,10 @@ The historically traditional method for solving the **linear** least squares pro
 to apply calculus to set the partial derivatives of the sum of squares with respect to
 each parameter to zero. This forms the **normal equations**
 
-$$ A' A x  = A' b $$
+$$ A^t A x  = A^t b $$
 
 
-This was attractive to early computational workers, since while $A$ is $m$ by $n$, $A' A$
+This was attractive to early computational workers, since while $A$ is $m$ by $n$, $A^t A$
 is only $n$ by $n$. Unfortunately, this **sum of squares and cross-products** (SSCP) matrix
 can make the solution less reliable, and this is discussed with examples in @jncnm79 and
 @nlacatvn1060620.
@@ -523,7 +523,10 @@ print(t(res2b))
 cat("Sum of squares of S2b=", as.numeric(crossprod(S2b)),"\n")
 ```
 
-An approximate solution via the normal equations can be found by adding a small diagonal matrix to the sum of squares and
+### Approximate solution -- Ridge regression
+
+An approximate solution via the normal equations can be found by adding a small 
+diagonal matrix to the sum of squares and
 cross products `AxA`.
 
 ```{r lm7, echo=TRUE}
@@ -535,11 +538,48 @@ print(t(Ax %*% xxx - y))
 ```
 
 We note that this solution is rather different from `S2` or `S2b`.
+There is a large (and often misguided and confusing) literature 
+about this sort of approach under the title **ridge regression**.
+Note that the Marquardt stabilization of the Gauss-Newton equations
+uses the same general idea.
+
+### Dealing with singularity in QR solutions
+
+We already saw that we got errors when trying to use `qr.solve()`, but there
+are ways to use the QR decomposition that overcome the singularity. Here
+are some illustrations. Note that the size of the solution as measured by
+the sum of squares of the coefficients (ignoring the NA usng `na.rm=TRUE`)
+are different. Moreover, they are different from the minimum length solution
+in the next subsection.
+
+```{r qrsing1, echo=TRUE}
+## This fails
+xx <- try(qr.solve(Ax,y))
+print(xx)
+## So does this
+xxe<-try(qr.solve(Ax, ye))
+print(xxe)
+## Let us compute a QR decomposition, using LINPACK then LAPACK
+qrd1<-qr(Ax, LAPACK=FALSE)
+qrd2<-qr(Ax, LAPACK=TRUE)
+# and get the solutions
+xx1 <- try(qr.coef(qrd1,y))
+print(xx1)
+xx2 <- try(qr.coef(qrd2,y))
+print(xx2)
+# and computer the sum of squares of the coefficients (size of solution)
+try(sum(xx1^2))
+try(sum(xx1^2, na.rm=TRUE))
+try(sum(xx2^2))
+```
 
 ### Minimum length least squares solution
 
-The minimum length least squares solution is found using the Moore-Penrose inverse of `Ax`
-?? need some refs?? which can be computed from the Singular Value Decomposition.
+The minimum length least squares solution, which is unique, 
+is found using the Moore-Penrose inverse of `Ax`
+(the article https://en.wikipedia.org/wiki/Moore%E2%80%93Penrose_inverse gives a quite good
+overview) which can be computed from the Singular Value Decomposition. R has a function `svd()`
+which is adequate to our needs here.
 
 ```{r lm4, echo=TRUE}
 Z<-svd(Ax) # get the svd
@@ -555,26 +595,48 @@ resminsol<-Ax%*%minsol2-y
 print(t(resminsol))
 ```
 
+### QR decomposition variants
 
+There are a number of ways to compute a QR decomposition. 
 
-Another approach is to form a QR decomposition of $A$, for example with Givens rotations.
+- Householder transformations have good vector-computation performance and properties.
+  They use matrix transformations that can be called **reflections** to be used to
+  build the Q matrix as a product of these transformation matrices as the initial
+  rectangular matrix $A$ is rendered upper triangular, or $R$
+  
+- Givens' transformations are **plane rotations** that zero one element at a time of
+  the current working matrix that starts out as $A$. Once again, $Q$ is a product of
+  the transformations and $R$ the result of zeroing out sub-diagonal elements. 
+  
+- The Gram-Schmidt method, which has several forms, builds the Q matrix by 
+  subtracting a multiple of the first column of $A$ from the second and then 
+  normalizing those columns so their sum of squares is 1. The process is then 
+  applied to the third column by subtracting multiples of the first two. The $R$
+  matrix is formed from the norms and subtraction multipliers in the process. 
+  There are row- and column-wise approaches. 
+  See https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process 
+
+### Using a QR approach
+
+Let us try to form a QR decomposition of $A$, for example with Givens rotations.
 
 $$ A =  Q R$$
+
 
 where $Q$ is orthogonal (by construction for plane rotations) and $R$ is upper triangular.
 We can rewrite our original form of the least squares problem as 
 
-$$  Q' A = Q' Q R = R \tilde= Q' b$$
+$$  Q^t A = Q^t Q R = R \tilde= Q^t b$$
 
 
 $R$ is an upper triangular matrix $R_n$ stacked on an $m-n$ by $n$ matrix of zeros. But 
-$z = Q' b$ can be thought of as $n$-vector $z_1$ stacked on ($m-n$)-vector $z_2$. 
+$z = Q^t b$ can be thought of as $n$-vector $z_1$ stacked on ($m-n$)-vector $z_2$. 
 It can easily be shown (we won't do so here) that a least squares solution is the
 rather easily found (by back-substitution) solution of 
 
 $$  R_n x = z_1$$
 
-and the minimal sum of squares turns out to be the cross-product $z_2' z_2$. Sometimes
+and the minimal sum of squares turns out to be the cross-product $z_2^t z_2$. Sometimes
 the elements of $z_2$ are called **uncorrelated residuals**. The solution for $x$ can
 actually be formed in the space used to store $z_1$ as a further storage saving,
 since back-substitution forms the elements of $x$ in reverse order.
@@ -598,10 +660,34 @@ We then put row $n+2$ of [$A | b$] into the bottom row of our working storage an
 eliminate the first $n$ columns of this row with Givens transformations. This
 gives us another element of $z_2$. Repeat until all the data has been processed.
 
-We can at this point solve for $x$. Algorithm 4, however, applies the one-sided
+We can at this point solve for $x$. Algorithm 4 of @jncnm79, however, applies the one-sided
 Jacobi method to get a singular value decomposition of $A$ allowing of a minimal
 length least squares solution as well as some useful diagnostic information about
 the condition of our problem. This was also published as @LefkovitchNash1976.
+
+### QR approach to the Marquardt stabilization
+
+We can arrange to solve the normal equations approximately as under Ridge Regression
+above by adding a unit matrix scaled by e.g., 1e-5, and padding the RHS with zeros.
+The solution is "almost but not quite" the same because the formation of the sum of squares and
+cross products matrix explicitly in the normal equations can introduce errors that
+are partially avoidable in the QR approach below.
+
+```{r lm7a, echo=TRUE}
+Dx <- diag(rep(1e-5,4))
+print(Dx)
+Ap<-rbind(Ax, Dx)
+print(Ap)
+## we need to pad y with zeros
+yp<-c(y, rep(0,4))
+xxp<-qr.solve(Ap,yp)
+print(xxp)
+## Previous solution via normal equations
+print(as.vector(xxx))
+```
+
+
+
 
 
 # References
