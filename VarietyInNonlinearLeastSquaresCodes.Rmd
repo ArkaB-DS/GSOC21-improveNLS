@@ -373,8 +373,8 @@ f3 <- y3 ~ a3/(3+b3*exp(-c3*tt))
 
 # Implementation comparisons
 
-Here want to explore the ideas.
-
+Here want to explore the ideas. First we will examine the sub-problem of solving
+the Gauss-Newton equations or their Marquardt variants.
 
 ## Linear least squares and storage considerations
 
