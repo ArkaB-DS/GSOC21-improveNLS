@@ -1,0 +1,38 @@
+---
+title: "Jacobian Calculations for nls()"
+author:
+  - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+  - John C. Nash, University of Ottawa, Canada
+  - Heather Turner, University of Warwick, UK
+date: "26/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Jacobians in nls()
+
+`nls()` needs Jacobians calculated at the current set of trial nonlinear model
+parameters to set up the Gauss-Newton equations. Unfortunately, `nls()` calls
+the Jacobian the "gradient", and uses function `numericDerivs()` to compute them.
+?? where is this called in the sequence??
+
+
+
+# Other tools for computing Jacobians
+
+The package `numDeriv` includes a function `jacobian()` that acts on a user
+function `resid()` to produce the Jacobian at a set of parameters by several
+choices of approximation. 
+
+The package `nlsr` has a function `model2rjfun()` that converts an expression
+describing how the residual functions are computed into an R function that
+computes the residuals at a particular set of parameters and sets the 
+**attribute** "gradient" of the vector of residual values to the Jacobian at
+the particular set of parameters. 
+
+## Symbolic methods from `nlsr`
+
+## `numDeriv` package
