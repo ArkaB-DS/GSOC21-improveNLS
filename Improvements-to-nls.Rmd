@@ -1,3 +1,6 @@
+<!-- This is source of original document. -->
+
+
 ## Background
 
 nls() is the primary nonlinear modelling tool in base R. It has a great
