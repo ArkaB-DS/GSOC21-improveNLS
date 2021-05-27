@@ -144,4 +144,27 @@ tjeunsc<-microbenchmark(jeunsc<-jacobian(res0, start1))
 print(tjeunsc)
 
 jeunsc-attr(vfunsc,"gradient")
-ndeunsc-attr(vfunsc,"gradient")
+attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")
+
+ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+print(ndeunsc2)
+print(sum(ndeunsc2^2))
+tndeunsc2<-microbenchmark(ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+print(tndeunsc2)
+attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")
+
+ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+print(ndeunscx)
+print(sum(ndeunscx^2))
+tndeunscx<-microbenchmark(ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+print(tndeunscx)
+attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")
+
+ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+print(ndeunscx2)
+print(sum(ndeunscx2^2))
+tndeunscx2<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+print(tndeunscx2)
+attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")
+
+## We have not tried the dir parameter (probably allows backward differences)
