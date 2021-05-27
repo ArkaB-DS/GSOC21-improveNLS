@@ -76,6 +76,12 @@ JN also set up this document.
      Jacobian using symbolic or automatic derivatives. This may or may not be 
      feasible for `nls()`. However, we may be able to improve the approximation
      used.
+
+     [2021-5-27] first draft DerivsNLS.Rmd. Note discovered "central" control
+     for numericDeriv() function. It does NOT appear that the 'dir' control
+     is actually used. This would likely change from forward to backward
+     differences for SOME components of the step to compute first order finite
+     difference approximation to the Jacobian.
      
 - Augment this document to record what has been done and results or problems.
 
@@ -84,6 +90,10 @@ JN also set up this document.
   
 - AB can ask for pointers to references to add to this document or to subsidiary
   documents we will create as necessary to describe parts of the work if required.
+  
+[2021-5-25] Meet session. AB got Linux Mint 20.1 VM going and verified. SOme 
+questions sorted out. JN added some material re: linear least squares solutions
+to the Variety document. 
 
 ## Some thoughts on how nls() code might be modified [JN: 2021-5-19]
 
@@ -320,6 +330,8 @@ awkward cases with very little extra overhead. It is accomplished with the QR ap
 appending $\sqrt{\phi  \lambda}$ times a unit matrix $I_n$ to the matrix already augmented
 matrix. We must also append a further $n$ zeros to the augmented $r$. 
 
+[2021-5-27] JN added some notes on LU and Cholesky to "Variety" document. 
+
 ### ======== End of extract on approaches to solving Gauss Newton equations =========
 
 ## Early explorations and setup of project [2021-5-24]
@@ -352,7 +364,7 @@ This is essentially a diary entry. (?? AB you may want to add some notes too.)
 
 - Meet scheduled for May 25;
 
-## Attempts to understand numericDeriv() [2021-5-24]
+## Attempts to understand numericDeriv() [2021-5-24 to 27]
 
 JN has found it quite difficult to get a good understanding of the `numericDeriv()` function
 that appears in `nls.R` and calls material in `nls.c`. That this has proved difficult to use
@@ -361,11 +373,13 @@ tests and timings and compare to other approaches to computing the Jacobian in n
 least squares. ??Gut feeling: numericDeriv is really only set up to compute a Jacobian.
 ?? Note: there is a "central" option. Can this be used with nls()? Why or why not?
 
-A file ExDerivs.R has been added to the repo. It is NOT working as at 2021-5-25 with
-the numericDeriv function.
+A file ExDerivs.R has been added to the repo. 
 
-
-
+[2021-5-26] JN sorted out one approach that allows numricDeriv, nlsr::model2rjfun and
+numDeriv::jacobian to be compared. [2021-5-27] DerivsNLS.Rmd first draft done. Problems
+with system() and system2() and calling bash from rmarkdown document led to email sent
+to Yihui Xie, as the output of a Linux command (inxi -F) to get machine properties was
+returned with extra characters. 
 
 ## References
 
