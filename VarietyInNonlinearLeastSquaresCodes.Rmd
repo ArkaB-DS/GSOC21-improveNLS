@@ -90,6 +90,12 @@ Clearly there are many tactical choices that give rise to a variety of particula
 One concern is that the direction $\delta$ gives no lower value of the sum of squares, since
 there is an approximation involved in using $J^t J$ rather than $H$.
 
+In `nls.c`, the Gauss Newton direction is computed (`incr` -- see nls-flowchart.txt)
+and a step-halving "line-search" is used. This is a form of the method of @Hartley61,
+though Hartley recommends a quadratic (parabolic) line search where two "new" points
+are evaluated and we then try a third at the suggested minimum of the parabola fitted
+to the existing and two new sum of squares functions. 
+
 ## Marquardt
 
 @Marquardt1963 is perhaps one of the most important developments in nonlinear least squares
@@ -572,7 +578,6 @@ try(sum(xx1^2))
 try(sum(xx1^2, na.rm=TRUE))
 try(sum(xx2^2))
 ```
-
 ### Minimum length least squares solution
 
 The minimum length least squares solution, which is unique, 
@@ -686,8 +691,47 @@ print(xxp)
 print(as.vector(xxx))
 ```
 
+### Choices when solving the normal equations
 
+Whether the normal equations arise from the original Gauss-Newton or Marquardt
+approaches to nonlinear least squares, we have several choices of how to solve
+them. 
 
+Traditional solutions to the solution of linear equations used elimination 
+techniques under names such as **Gaussian Elimination**, **Gauss-Doolittle**,
+**Crout's Method**, **Gauss-Jordan** and many others. All these can be considered
+as LU decompositions. That is, they can be expressed as a transformation of the
+matrix $A = J^t J$ or its Marquardt stabilized variant into a product of a lower
+triangular and an upper triangular matrix, possibly with permutations of rows and/or
+columns. Row permutations of A give 
+
+$$ P A = L U$$
+
+The origin of our matrix $A$ means that it is at least non-negative definite. 
+This means that we can form a special LU decomposition that does NOT need
+permutations and has
+
+$$ A = L L^t$$
+
+which is called the Choleski decomposition. In practice, we need $A$ computationally
+non-singular (not just theoretically so), but the Marquardt stabilization can be used
+to ensure this. 
+
+If we are very worried about storage space, we can note that $A$ is symmetric, so
+that we only need to store the lower (or upper) triangle, including diagonals. 
+And some bright programmers realized we could do our storage in a single array,
+so that a matrix of order $n$ could be stored in a vector of length $n (n+1)/2$.
+@Nash1987a uses this Cholesky decomposition structure in BASIC code.
+
+Similarly, a Gauss Jordan variance could be programmed using such a format for
+$A$ and with only a temporary storage of size $n$, matrix $A$ could be overwritten
+with its inverse. This is the code of @BauerReinsch71 which is Algorithm 9 of
+@jncnm79. 
+
+Both these "single vector" storage programs are challenging to check and maintain.
+While I embraced them in the age when 16K of storage was the norm for personal
+computers, they are simply too finicky to follow easily, and highly prone to
+errors.
 
 
 # References

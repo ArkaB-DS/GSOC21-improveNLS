@@ -41,7 +41,7 @@ R-devel/src/library/stats/R/nls.R
           
           numeric_deriv(... [approx line 280-372 of nls.c] is called from nls.R in numericDeriv
           [approx line 24 of nls.R] and computes a derivative. It uses a rather simple forward
-          difference as far as JN can determine. ?? 
+          difference as far as JN can determine.  
           ==================================================================================
           Sidebar2: A minor research exercise may be to set up some timings and tests using
           microbenchmark to test the "speed" and accuracy of this routine compared to raw
@@ -49,8 +49,13 @@ R-devel/src/library/stats/R/nls.R
           derivatives in package nlsr. This could be an output of the project e.g., an R-Journal
           or R-blog article. ?? AB to let JN know opinions on this. However, probably best done
           as a "work on this when stuck trying other tasks". 
+          [2021-5-27] DerivsNLS.Rmd is a start on such testing. 
           JN suspects this code is both poor in accuracy and not appreciably faster than other
           approaches in plain R which are more maintainable. They are > 25 years old.
+          [2021-5-27] accuracy as illustrated by default numericDeriv is not great, but 
+          use of 'central=TRUE' gives a considerable improvement. On the M21-LM20.1 machine,
+          timings are very respectable, and almost match the symbolic results from nlsr (which
+          are all in R). 
           ==================================================================================
           
           
