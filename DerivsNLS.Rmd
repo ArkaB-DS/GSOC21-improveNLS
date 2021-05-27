@@ -61,8 +61,30 @@ print(as.formula(ceunsc)==eunsc)
 ## LOCAL DATA IN DATA FRAMES
 weeddata1  <-  data.frame(y=ydat, tt=tdat)
 
-## Now ready to try things out.
+## Put data in an Environment
+weedenv <- list2env(weeddata1)
+weedenv$b1 <- start1[[1]]
+weedenv$b2 <- start1[[2]]
+weedenv$b3 <- start1[[3]]
+# Display content of the Environment
+## Note that may need to do further commands to get everything
+ls.str(weedenv)
+# Generate the residual "call"
+rexpr<-call("-",eunsc[[3]], eunsc[[2]])
+# Get the residuals
+r0<-eval(rexpr, weedenv)
+print(r0)
+cat("Sumsquares at 1,1,1 is ",sum(r0^2),"\n")
 
+## Another way
+ldata<-list2env(as.list(start1),envir=weedenv)
+ldata
+ls.str(ldata)
+eval(rexpr,envir=ldata)
+
+## Do we need to get a model frame? How? and How to use it?
+
+## Now ready to try things out.
 ```
 
 # Tools for Jacobians
@@ -73,13 +95,43 @@ weeddata1  <-  data.frame(y=ydat, tt=tdat)
 equations. The R source code is in the file `nls.R`. It calls a C function numeric_deriv
 in `nls.c`. 
 
+```{r nD1}
+## seems to work -- Note file ExDerivs.R has many "failures"
+theta <- c("b1", "b2", "b3")
+ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv)
+print(ndeunsc)
+print(sum(ndeunsc^2))
+tndeunsc<-microbenchmark(ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv))
+print(tndeunsc)
+## numericDeriv also has central difference option, as well as choice of eps parameter
+## Central diff
+ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+print(ndeunsc2)
+print(sum(ndeunsc2^2))
+tndeunsc2<-microbenchmark(ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+print(tndeunsc2)
+
+## Forward diff with smaller eps
+ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+print(ndeunscx)
+print(sum(ndeunscx^2))
+tndeunscx<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+print(tndeunscx)
+
+## Central diff with smaller eps
+ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+print(ndeunscx2)
+print(sum(ndeunscx2^2))
+tndeunscx2<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+print(tndeunscx2)
 
 
-# Other tools for computing Jacobians
+```
 
-The package `numDeriv` includes a function `jacobian()` that acts on a user
-function `resid()` to produce the Jacobian at a set of parameters by several
-choices of approximation. 
+**We have not tried the dir parameter (probably allows backward differences)**
+
+
+## Symbolic methods from `nlsr`
 
 The package `nlsr` has a function `model2rjfun()` that converts an expression
 describing how the residual functions are computed into an R function that
@@ -87,48 +139,11 @@ computes the residuals at a particular set of parameters and sets the
 **attribute** "gradient" of the vector of residual values to the Jacobian at
 the particular set of parameters. 
 
-## Symbolic methods from `nlsr`
-
-## `numDeriv` package
-
-# Temporary inclusion of ExDerivs.R before separating
-
-```
-weedenv <- list2env(weeddata1)
-## weedenv$b1 <- start1$b1
-## Error in start1$b1 : $ operator is invalid for atomic vectors
-weedenv$b1 <- start1[[1]]
-weedenv$b2 <- start1[[2]]
-weedenv$b3 <- start1[[3]]
-ls.str(weedenv)
-rexpr<-call("-",eunsc[[3]], eunsc[[2]])
-r0<-eval(rexpr, weedenv)
-cat("Sumsquares at 1,1,1 is ",sum(r0^2),"\n")
-
-## Another way
-ldata<-list2env(as.list(start1),envir=weedenv)
-ldata
-ls.str(ldata)
-eval(rexpr,envir=ldata)
-
-## How to get a model frame? Do we need it?
-
-## Error in model.frame.default(eunsc, ldata) : variable lengths differ (found for 'b1')
-mfeunsc<-model.frame(eunsc, ldata)
-
-y<-ydat
-tt<-tdat
-b1<-1
-b2<-1
-b3<-1
-## Error in model.frame.default(eunsc) : variable lengths differ (found for 'b1')
-mfeunsc<-model.frame(eunsc)
-get_all_vars(eunsc)
-eval(eunsc, ldata)
-str(mfeunsc)
-
-## 2021-5-25 try derivatives
-print(eunsc)
+```{r nlsr1}
+# nlsr has function model2rjfun. We can evaluate just the residuals
+res0<-model2rjfun(eunsc, start1, data=weeddata1, jacobian=FALSE)
+res0(start1)
+# or the residuals and jacobian
 ## nlsr::model2rjfun forms a function with gradient (jacobian) attribute
 funsc <- model2rjfun(eunsc, start1, data=weeddata1) # from nlsr: creates a function
 tmodel2rjfun <- microbenchmark(model2rjfun(eunsc, start1, data=weeddata1))
@@ -143,102 +158,57 @@ vfunsc<-funsc(start1)
 print(vfunsc)
 tfunsc<-microbenchmark(funsc(start1))
 print(tfunsc)
+```
 
-# following gives an error "theta should be of type character"
-nDfunsc<-try(numericDeriv(eunsc, start1, weeddata1))
-print(nDfunsc)
-print(start1)
+# `numDeriv` package
 
-theta <- c("b1", "b2", "b3")
-# Following gives error
-## Error in numericDeriv(eunsc, theta, weedenv) : 
-## 'language' object cannot be coerced to type 'double'
-nDfunsc<-try(numericDeriv(eunsc, theta, weedenv))
-print(nDfunsc)
-str(theta)
-str(weedenv)
-print(weedenv)
-## try other ways
-xeunsc<-expression(eunsc)
-## Error in numericDeriv(xeunsc, theta, rho = weedenv) : 
-## 'list' object cannot be coerced to type 'double'
-nDfunsc<-try(numericDeriv(xeunsc, theta, rho=weedenv))
-## Error in numericDeriv(funsc, theta, rho = weedenv) : 
-##    cannot coerce type 'closure' to vector of type 'double'
-nDfunsc<-try(numericDeriv(funsc, theta, rho=weedenv))
+The package `numDeriv` includes a function `jacobian()` that acts on a user
+function `resid()` to produce the Jacobian at a set of parameters by several
+choices of approximation. 
 
-y<-weeddata1$y
-tt<-weeddata1$tt
-# variables now in local environment
-## Error in numericDeriv(funsc, theta) : 
-##    cannot coerce type 'closure' to vector of type 'double'
-nDfunsc<-try(numericDeriv(funsc, theta))
-
-## Error in numericDeriv(xeunsc, theta, rho = weedenv) : 
-## 'list' object cannot be coerced to type 'double'
-nDfunsc<-try(numericDeriv(xeunsc, theta))
-
-# Error in formula.default(object, env = baseenv()) : invalid formula
-nDfunsc<-try(numericDeriv(as.formula(xeunsc), theta))
-
-formunsc<-formula(eunsc)
-str(formunsc)
-formunsc[1]
-formunsc[2]
-formunsc[3]
-
-## Error in numericDeriv(formunsc[3], theta) : object 'b1' not found
-nDfunsc<-try(numericDeriv(formunsc[3], theta))
-
-b1<-1
-b2<-1
-b3<-1
-## Error in numericDeriv(formunsc[3], theta) : attempt to apply non-function
-nDfunsc<-try(numericDeriv(formunsc[3], theta))
-
-## seems to work
-
-ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv)
-print(ndeunsc)
-print(sum(ndeunsc^2))
-tndeunsc<-microbenchmark(ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv))
-print(tndeunsc)
-
-
-res0<-model2rjfun(eunsc, start1, data=weeddata1, jacobian=FALSE)
-res0(start1)
+```{r numDeriv1}
+# We use the residual function (without gradient attribute) from nlsr
 jeunsc<-jacobian(res0, start1)
 jeunsc
 tjeunsc<-microbenchmark(jeunsc<-jacobian(res0, start1))
 print(tjeunsc)
-
-jeunsc-attr(vfunsc,"gradient")
-attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")
-
-ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
-print(ndeunsc2)
-print(sum(ndeunsc2^2))
-tndeunsc2<-microbenchmark(ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
-print(tndeunsc2)
-attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")
-
-ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
-print(ndeunscx)
-print(sum(ndeunscx^2))
-tndeunscx<-microbenchmark(ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
-print(tndeunscx)
-attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")
-
-ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
-print(ndeunscx2)
-print(sum(ndeunscx2^2))
-tndeunscx2<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
-print(tndeunscx2)
-attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")
-
-## We have not tried the dir parameter (probably allows backward differences)
-
 ```
+
+Note that the manual pages for `numDeriv` offer many options for the functions in
+the package. At 2021-5-27 we have yet to explore these.
+
+# Comparisons
+
+In the following, we are comparing to `vfunsc`, which is the evaluated 
+residual vector at `start1=c(1,1,1)` with "gradient" attribute (jacobian)
+included, as developed using package `nlsr`. This is taken as the "correct"
+result.
+
+`numericDeriv` computes a similar structure (residuals with "gradient" attribute):
+`ndeunsc`: the forward difference result with default `eps` (1e-07 according to manual)
+`ndeunsc2`: Central difference with default `eps`
+`ndeunscx`: Forward difference with smaller eps=1e-10
+`ndeunscx2`: Central difference with smaller eps=1e-10
+
+`jeunsc`: numDeriv::jacobian() result with default settings.
+
+```{r compjac1}
+## Matrix comparisons
+attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")
+attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")
+attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")
+attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")
+jeunsc-attr(vfunsc,"gradient")
+
+## Summary comparisons
+max(abs(attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")))
+max(abs(jeunsc-attr(vfunsc,"gradient")))
+```
+
+
 
 # Performance results for different computing environments
 
