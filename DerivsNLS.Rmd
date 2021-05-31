@@ -56,7 +56,7 @@ ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))"
 str(ceunsc)
 
 # Will be TRUE if we have made the conversion
-print(as.formula(ceunsc)==eunsc)
+print(as.formula(ceunsc)==eunsc)?
 
 ## LOCAL DATA IN DATA FRAMES
 weeddata1  <-  data.frame(y=ydat, tt=tdat)
