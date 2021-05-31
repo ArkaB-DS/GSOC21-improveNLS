@@ -138,6 +138,31 @@ to the Variety document.
   but not on the radar of most users. Clearly a "nasty". Can we do anything to
   at least warn users in a way that is useful?
   
+### [2021-5-31] Notes on investigations
+
+1) AB managed to get R built from an R-devel expanded tarball. JN had managed
+this earlier. There appear to be some transient glitches (HT has noted also).
+These are likely due to R-core members making trial changes. MASS package in 
+particular noted. 
+
+2) Investigations of using subversion or git repo of the code so we can track
+any changes in files relevant to nls(). JN tried from https://github.com/wch/r-source/wiki
+which has some instructions. These seemed to work, but we note the need for texinfo
+and git-svn packages to be installed. Also standard "git pull" cannot be used.
+"git sv rebase" followed by "git svn fetch" tried and seem to work, but JN does
+not feel he understands what is going on.
+
+3) Started to look into development of replacement code for parts of nls(). 
+Created ReplaceNLS.R and RestoreNLS.R with the intention that source() of
+these files would replace the functions. However, first attempt, which simply
+added a cat() output to numericDeriv() function got 
+
+```
+Error in numericDeriv(rexpr, theta, rho = weedenv) : 
+  object 'C_numeric_deriv' not found
+```  
+  
+  
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
 ### 5. Implementation of nonlinear least squares methods
