@@ -161,6 +161,35 @@ added a cat() output to numericDeriv() function got
 Error in numericDeriv(rexpr, theta, rho = weedenv) : 
   object 'C_numeric_deriv' not found
 ```  
+
+## [2021-6-1] nlspkg package created
+
+Thanks to Duncan Murdoch who created nlspkg from the R source files. This is
+a package version of the files in the source tree that will let us work with the
+code and change it. When we issue
+
+```
+library(nlspkg)
+```
+
+once we have installed it, the objects in the package will replace (mask) those
+in base-R. 
+
+To build nlspkg, I needed the inconsolata.sty font that is in the 
+`texlive-fonts-extra` package of Linux Mint. In other systems, this font may
+reside elsewhere.
+
+As of June 1, the package builds and mostly checks. There are two warnings:
+
+- a number of function objects are NOT documented. We may or may not wish to 
+  add `man` files (of type `.Rd`). The list of objects is quite long, but they
+  seem not to be needed by the user. Note that nlminb is present, likely for
+  the PORT option of the "algorithm" parameter of `nls()`.
+  
+- There is a non-standard license specification. Checking in the 
+  Writing R Extensions manual (file r-exts.pdf), suggests dropping one of
+  the two licenses listed (GPL-2 and GPL-3). Dropping the latter removed one
+  warning.
   
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
