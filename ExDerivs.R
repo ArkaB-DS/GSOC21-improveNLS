@@ -1,6 +1,6 @@
 ## ExDerivs.R -- a file to explore different aspects of R in calculating Jacobians
 ## This is an experimental file for learning. 2021-5-25
-
+  
 rm(list=ls()) # clear the workspace (does not completely remove things, need to restart R sometimes)
 
 library(nlsr)
