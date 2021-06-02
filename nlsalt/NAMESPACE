@@ -1,0 +1,50 @@
+exportPattern("^[[:alpha:]]+")
+
+useDynLib(nlsalt, .registration = TRUE, .fixes = "C_")
+
+S3method(anova, nls)
+S3method(coef, nls)
+S3method(confint, nls)
+S3method(deviance, nls)
+S3method(df.residual, nls)
+S3method(fitted, nls)
+S3method(formula, nls)
+S3method(logLik, nls)
+S3method(NLSstAsymptotic, sortedXyData)
+S3method(NLSstClosestX, sortedXyData)
+S3method(NLSstLfAsymptote, sortedXyData)
+S3method(NLSstRtAsymptote, sortedXyData)
+S3method(nobs, nls)
+S3method(plot, profile.nls)
+S3method(predict, nls)
+S3method(print, nls)
+S3method(print, summary.nls)
+S3method(profile, nls)
+S3method(profiler, nls)
+S3method(residuals, nls)
+S3method(summary, nls)
+S3method(vcov, nls)
+S3method(weights, nls)
+
+S3method(getInitial, default)
+S3method(getInitial, formula)
+S3method(getInitial, selfStart)
+
+S3method(selfStart, default)
+S3method(selfStart, formula)
+
+S3method(sortedXyData, default)
+
+importFrom(graphics, abline, lines, par)
+
+importFrom(grDevices, dev.flush, dev.hold)
+
+importFrom(stats, .checkMFClasses, as.formula, coef, confint,
+           deriv, deviance, df.residual,
+           fitted, formula, lm,
+           model.weights, na.omit, nobs,
+           napredict, naprint, naresid, pf, predict, printCoefmat,
+           pt, qf,
+           resid, symnum,
+           weights)
+
