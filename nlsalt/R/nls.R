@@ -50,7 +50,7 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
 ##    SEXP
 ##    pars = PROTECT(allocVector(VECSXP, LENGTH(theta))),
 ##    ans  = PROTECT(duplicate(eval(expr, rho1)));
-      ans0 <- eval(expr, rho)
+      res0 <- eval(expr, rho) # the base residuals
 ##    double *rDir = REAL(dir),  *res = NULL; // -Wall
     #define CHECK_FN_VAL(_r_, _ANS_) do {					\
 ##     if(!isReal(_ANS_)) {						\
@@ -59,78 +59,106 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
 ##         PROTECT(_ANS_ = temp);						\
 ##     }									\
 ##    _r_ = REAL(_ANS_);							\
+      
 ##    for(int i = 0; i < LENGTH(_ANS_); i++) {				\
 ##        if (!R_FINITE(_r_[i]))						\
 ##        error(_("Missing value or an infinity produced when evaluating the model")); \
 ##    }	
 ## } while(0)
-      if (! is.finite(ans0) ) {stop("residuals cannot be evaluated at base point")}
+      if (! is.finite(res0) ) {stop("residuals cannot be evaluated at base point")}
 
-          
-##      CHECK_FN_VAL(res, ans);
+      ##      CHECK_FN_VAL(res, ans);
 
 ## const void *vmax = vmaxget();
 ## int lengthTheta = 0;
 # for(int i = 0; i < LENGTH(theta); i++) {
-#     const char *name = translateChar(STRING_ELT(theta, i));
-#     SEXP s_name = install(name);
-#     SEXP temp = findVar(s_name, rho1);
-#     if(isInteger(temp))
-#         error(_("variable '%s' is integer, not numeric"), name);
-#     if(!isReal(temp))
-#         error(_("variable '%s' is not numeric"), name);
-#     // We'll be modifying the variable, so need to make a copy PR#15849
-# 	defineVar(s_name, temp = duplicate(temp), rho1);
-# 	MARK_NOT_MUTABLE(temp);
-# 	SET_VECTOR_ELT(pars, i, temp);
-# 	lengthTheta += LENGTH(VECTOR_ELT(pars, i));
-#     }
-#     vmaxset(vmax);
-#     SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
-#     double *grad = REAL(gradient);
-#     double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
-#     for(int start = 0, i = 0; i < LENGTH(theta); i++) {
-# 	double *pars_i = REAL(VECTOR_ELT(pars, i));
-# 	for(int j = 0; j < LENGTH(VECTOR_ELT(pars, i)); j++, start += LENGTH(ans)) {
-# 	    double
-# 		origPar = pars_i[j],
-# 		xx = fabs(origPar),
-# 		delta = (xx == 0) ? eps : xx*eps;
-# 	    pars_i[j] += rDir[i] * delta;
-# 	    SEXP ans_del = PROTECT(eval(expr, rho1));
-# 	    double *rDel = NULL;
-# 	    CHECK_FN_VAL(rDel, ans_del);
-# 	    if(central) {
-# 		pars_i[j] = origPar - rDir[i] * delta;
-# 		SEXP ans_de2 = PROTECT(eval(expr, rho1));
-# 		double *rD2 = NULL;
-# 		CHECK_FN_VAL(rD2, ans_de2);
-# 		for(int k = 0; k < LENGTH(ans); k++) {
-# 		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
-# 		}
-# 	    } else { // forward difference  (previously hardwired):
-# 		for(int k = 0; k < LENGTH(ans); k++) {
-# 		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
-# 		}
+      nt <- length(theta) # number of parameters
+      mr <- length(res0) # number of residuals
+      prm<-as.vector(mget(theta,envir=rho))
+      JJ <- matrix(NA, nrow=mr, ncol=nt)
+      colnames(JJ)<-theta # May not be necessary
+      for (j in 1:nt){
+          # need to get paramater i
+          #     const char *name = translateChar(STRING_ELT(theta, i));
+          #     SEXP s_name = install(name);
+          #     SEXP temp = findVar(s_name, rho1);
+          ## Done in the mget above
+          #     if(isInteger(temp))
+          #         error(_("variable '%s' is integer, not numeric"), name);
+          #     if(!isReal(temp))
+          #         error(_("variable '%s' is not numeric"), name);
+          #     // We'll be modifying the variable, so need to make a copy PR#15849
+          # 	defineVar(s_name, temp = duplicate(temp), rho1);
+          # 	MARK_NOT_MUTABLE(temp);
+          # 	SET_VECTOR_ELT(pars, i, temp);
+          # 	lengthTheta += LENGTH(VECTOR_ELT(pars, i));
+          #     }
+          #     vmaxset(vmax);
+          #     SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
+          #     double *grad = REAL(gradient);
+          #     double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
+          #     for(int start = 0, i = 0; i < LENGTH(theta); i++) {
+          # 	double *pars_i = REAL(VECTOR_ELT(pars, i));
+          # 	for(int j = 0; j < LENGTH(VECTOR_ELT(pars, i)); j++, start += LENGTH(ans)) {
+          # 	    double
+          # 		origPar = pars_i[j],
+          # 		xx = fabs(origPar),
+          # 		delta = (xx == 0) ? eps : xx*eps;
+          origPar <- prm[j]
+          xx <- abs(origPar)
+          delta <- if (xx == 0.0) {eps} else { xx*eps }
+          ## JN: I prefer eps*(xx + eps)  which is simpler
+          
+          # 	    pars_i[j] += rDir[i] * delta;
+          prm[j]<- origPar * delta * dir[j]
+          # 	    SEXP ans_del = PROTECT(eval(expr, rho1));
+          assign(theta[i], prm[i], envir=rho) # may be able to make more efficient later??
+          res1 <- eval(expr, rho) # new residuals (forward step)
+          # 	    double *rDel = NULL;
+          # 	    CHECK_FN_VAL(rDel, ans_del);
+          # 	    if(central) {
+          # 		pars_i[j] = origPar - rDir[i] * delta;
+          if (central) { # compute backward step resids for central diff
+              prm[j] <- origPar - dir[j]*delta
+              assign(theta[i], prm[i], envir=rho) # may be able to make more efficient later??
+              # 		SEXP ans_de2 = PROTECT(eval(expr, rho1));
+              resb <- eval(expr, rho)
+          # 		double *rD2 = NULL;
+          # 		CHECK_FN_VAL(rD2, ans_de2);
+          # 		for(int k = 0; k < LENGTH(ans); k++) {
+          # 		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
+          # 		}
+              for (i in 1:mr){
+                  JJ[i, j] <- dir[j]*(res1[i]-resb[i])/(2*delta)
+              } ## Note: should be able to vectorize in pure R
+          } else { ## forward diff
+          # 	    } else { // forward difference  (previously hardwired):
+          # 		for(int k = 0; k < LENGTH(ans); k++) {
+          # 		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
+          # 		}
+              for (i in 1:mr){
+                  JJ[i,j] <- dir[j]*(res1[i]-res0[i])/delta
+              }
+          }  
 # 	    }
 # 	    UNPROTECT(central ? 2 : 1); // ansDel & possibly ans
 # 	    pars_i[j] = origPar;
-# 	}
+      prm[j]<-origPar
+ 	}
 #     }
 #     setAttrib(ans, install("gradient"), gradient);
 #     UNPROTECT(nprot);
 #     return ans;
-}
     
-    
-        
-    if (!is.null(d <- dim(val))) {
-        if(d[length(d)] == 1L)
-            d <- d[-length(d)]
-        if(length(d) > 1L)
-            dim(attr(val, "gradient")) <- c(d, dim(attr(val, "gradient"))[-1L])
-    }
-    val
+    # if (!is.null(d <- dim(val))) {
+    #     if(d[length(d)] == 1L)
+    #         d <- d[-length(d)]
+    #     if(length(d) > 1L)
+    #         dim(attr(val, "gradient")) <- c(d, dim(attr(val, "gradient"))[-1L])
+    # }
+    # val
+    attr(res0, "gradient") <- JJ
+    return(res0)
 }
 
 nlsModel.plinear <- function(form, data, start, wts, scaleOffset = 0, nDcentral = FALSE)
