@@ -191,6 +191,18 @@ As of June 1, the package builds and mostly checks. There are two warnings:
   the two licenses listed (GPL-2 and GPL-3). Dropping the latter removed one
   warning.
   
+The package `nlspkg` is to provide the EXISTING nls() functionality, while the
+package `nlsalt` is for our replacement. I plan to make this all-R. If we want
+to use C (or something else) later, then we will create another "alternate"
+package. 
+
+Note that each of these packages needs its own "project". In Rstudio we choose
+to create a project using an existing directory (copy of that for `nlspkg`). 
+This sets up the control files for the project and allows the package to be
+built and checked with the Rstudio tools. The umbrella ImproveNLS project 
+handles the **git** version control.
+
+
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
