@@ -202,6 +202,13 @@ This sets up the control files for the project and allows the package to be
 built and checked with the Rstudio tools. The umbrella ImproveNLS project 
 handles the **git** version control.
 
+## [2021-6-1] nlsalt package mods started
+
+numericDeriv first cut at pure R. JN incorporated C code into the R code of the 
+numericDeriv function as comments, then tried to provide R statements to do what
+it appears the C is doing. Some steps and checks likely left out. 
+
+?? Still to test -- not working right away on June 2
 
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
