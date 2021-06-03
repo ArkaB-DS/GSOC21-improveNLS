@@ -478,5 +478,58 @@ with system() and system2() and calling bash from rmarkdown document led to emai
 to Yihui Xie, as the output of a Linux command (inxi -F) to get machine properties was
 returned with extra characters. 
 
+## Tangential issues raised during the project
+
+### Output from `bash` scripts in rmarkdown files
+
+In trying to capture the output of the Linux command-line program `inxi` (which 
+reports hardware and software information), JN found rmarkdown failed to knit
+correctly. 
+
+```
+system('inxi -F >t.txt')
+```
+
+and
+
+```
+system2("inxi -F >tlinux.txt")
+```
+both failed, as did specifying the chunk as `{bash inxi2}` and trying `inxi -F >t2.txt`.
+```
+
+The outputs had strange characters that were indecipherable by the LaTEX processor
+and caused a crash. Indeed files of substantially differing sizes were generated.
+
+We also tried 
+
+```
+ system2("inxi", "-F", stdout="tlinux2.txt")
+```
+
+The issue was reported on community.rstudio.
+
+\url{https://community.rstudio.com/t/bash-output-causes-trouble-for-latex-and-hence-no-pdf/106502}
+
+where a workaround is reported. This puts the inxi command in a script which uses the preamble
+`/#!/bin/sh`. That is, we use the `sh` shell. For example, let us call it myscript.sh and it
+contains
+
+```
+#!/bin/sh
+# myscript.sh -- push hw info to thw.txt one directory above
+inxi -F >../thw.txt
+echo "done"
+```
+
+This command script is then run from R using
+
+```
+system("mate-terminal -e ./myscript.sh")
+```
+
+JN tested this with mate-terminal, xterm and konsole as the terminal programs.
+
+
 ## References
 
