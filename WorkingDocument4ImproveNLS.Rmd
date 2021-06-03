@@ -210,6 +210,26 @@ it appears the C is doing. Some steps and checks likely left out.
 
 ?? Still to test -- not working right away on June 2
 
+## [2021-6-2] Converting codes to All-R -- numericDeriv
+
+In the `ExDerivs.R` script, JN tested a forward difference code in R against
+a call to numericDeriv(). On a single example, it tests OK, so next step is to
+modify nls.R in package `nlsalt`. 
+
+Note that `ExDerivs.R` is in flux. "Old" tests will be commented out. Look for
+the double question mark (??) for things that may need to be checked.
+
+Some concerns:
+ 
+- the code requires us to get() and assign() values in the environment `rho`
+  that is used to evaluate the nonlinear residual functions. There may or may
+  not be ways to make this more efficient.
+  
+- the C code uses explicit loops. A very preliminarly use of R's vectorization
+  in the difference between two residual vectors (i.e., without subscripts or
+  looping) worked fine, but there are almost certainly further optimizations.
+  By contrast, we MAY want to leave either explicit loops or commented code that
+  contains such loops as a way to provide explanation of what is happening.
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
