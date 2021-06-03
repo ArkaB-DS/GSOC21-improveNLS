@@ -99,25 +99,29 @@ JJ <- matrix(NA, nrow=mr, ncol=nt)
 colnames(JJ)<-theta # May not be necessary
 str(prm)
 eps<-.Machine$double.eps
-eps<-sqrt(eps)
-dir<-rep(1,nt)
+eps<-sqrt(eps) # see call in nls.R
+dir<-rep(1,nt) # dir could be a vector in general??
 for (j in 1:nt){
-    origPar <- prm[[j]]
+    # origPar <- prm[[j]] # save the value
+    origPar<-get(theta[j],rho)
     cat(theta[j]," = prm[[",j,"]]=",prm[[j]],"\n")
     xx <- abs(origPar)
     delta <- if (xx == 0.0) {eps} else { xx*eps }
-    prm[j]<- origPar + delta * dir[j]
-    assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
+    # prm[[j]]<- origPar + delta * dir[j]
+    # assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
+    prmx<-origPar+delta*dir[j]
+    assign(theta[j],prmx,rho)
     res1 <- eval(rexpr, rho) # new residuals (forward step)
-    print(res1)
-    cat("diff:")
-    print(res1-res0)
-    for (i in 1:mr){
-        JJ[i,j] <- dir[j]*(res1[i]-res0[i])/delta
-    }
-    prm[[j]]<-origPar
+    # print(res1)
+    # cat("diff:")
+    # print(res1-res0)
+    # for (i in 1:mr){
+    #     JJ[i,j] <- dir[j]*(res1[i]-res0[i])/delta
+    # }
+    JJ[,j] <- dir[j]*(res1-res0)/delta
+    # prm[[j]]<-origPar
     ## Remember to reset
-    assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
+    assign(theta[j], origPar, envir=rho) # may be able to make more efficient later??
 }  
 JJ
 JJnD<-attr(nDnls,"gradient")
