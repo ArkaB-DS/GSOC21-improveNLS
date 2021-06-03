@@ -88,6 +88,10 @@ rho <- weedenv
 rexpr<-call("-",eunsc[[3]], eunsc[[2]])
 res0<-eval(rexpr, rho) # the base residuals
 res0
+## Try the numericDeriv option
+nDnls<-numericDeriv(rexpr, theta, weedenv)
+nDnls
+
 nt <- length(theta) # number of parameters
 mr <- length(res0) # number of residuals
 prm<-as.vector(mget(theta,envir=rho))
@@ -95,17 +99,26 @@ JJ <- matrix(NA, nrow=mr, ncol=nt)
 colnames(JJ)<-theta # May not be necessary
 str(prm)
 eps<-.Machine$double.eps
+eps<-sqrt(eps)
 dir<-rep(1,nt)
 for (j in 1:nt){
     origPar <- prm[[j]]
-    cat("prm[[",j,"]]=",prm[[j]],"\n")
+    cat(theta[j]," = prm[[",j,"]]=",prm[[j]],"\n")
     xx <- abs(origPar)
     delta <- if (xx == 0.0) {eps} else { xx*eps }
-    prm[j]<- origPar * delta * dir[j]
+    prm[j]<- origPar + delta * dir[j]
     assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
     res1 <- eval(rexpr, rho) # new residuals (forward step)
+    print(res1)
+    cat("diff:")
+    print(res1-res0)
     for (i in 1:mr){
         JJ[i,j] <- dir[j]*(res1[i]-res0[i])/delta
     }
+    prm[[j]]<-origPar
+    ## Remember to reset
+    assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
 }  
 JJ
+JJnD<-attr(nDnls,"gradient")
+JJ-JJnD
