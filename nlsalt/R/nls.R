@@ -23,13 +23,14 @@
 
 numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
                  eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
+## Note: this expr must be set up as a call to work properly according to JN??
+## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
 {    cat("numericDeriv-Alt\n")
     dir <- rep_len(dir, length(theta))
     stopifnot(is.finite(eps), eps > 0)
     rho1 <- new.env(FALSE, rho, 0)
 #    val <- .Call(C_numeric_deriv, expr, theta, rho, dir, eps, central, rho1) ## ../src/nls.c
-    
-    
+
     if (!is.character(theta) ) {stop("'theta' should be of type character")}
     if (is.null(rho)) {
             stop("use of NULL environment is defunct")
@@ -65,7 +66,7 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
 ##        error(_("Missing value or an infinity produced when evaluating the model")); \
 ##    }	
 ## } while(0)
-      if (! is.finite(res0) ) {stop("residuals cannot be evaluated at base point")}
+      if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
 
       ##      CHECK_FN_VAL(res, ans);
 
@@ -74,10 +75,12 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
 # for(int i = 0; i < LENGTH(theta); i++) {
       nt <- length(theta) # number of parameters
       mr <- length(res0) # number of residuals
-      prm<-as.vector(mget(theta,envir=rho))
+#      prm<-as.vector(mget(theta,envir=rho))
       JJ <- matrix(NA, nrow=mr, ncol=nt)
-      colnames(JJ)<-theta # May not be necessary
+#      colnames(JJ)<-theta # May not be necessary -- "gradient" matrix has no names
       for (j in 1:nt){
+         origPar<-get(theta[j],rho)
+#         cat(theta[j]," = prm[[",j,"]]=",origPar,"\n")
           # need to get paramater i
           #     const char *name = translateChar(STRING_ELT(theta, i));
           #     SEXP s_name = install(name);
@@ -96,6 +99,10 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
           #     vmaxset(vmax);
           #     SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
           #     double *grad = REAL(gradient);
+          xx <- abs(origPar)
+          delta <- if (xx == 0.0) {eps} else { xx*eps }
+          # prm[[j]]<- origPar + delta * dir[j]
+          # assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
           #     double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
           #     for(int start = 0, i = 0; i < LENGTH(theta); i++) {
           # 	double *pars_i = REAL(VECTOR_ELT(pars, i));
@@ -104,23 +111,21 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
           # 		origPar = pars_i[j],
           # 		xx = fabs(origPar),
           # 		delta = (xx == 0) ? eps : xx*eps;
-          origPar <- prm[j]
           xx <- abs(origPar)
           delta <- if (xx == 0.0) {eps} else { xx*eps }
-          ## JN: I prefer eps*(xx + eps)  which is simpler
-          
+          ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
           # 	    pars_i[j] += rDir[i] * delta;
-          prm[j]<- origPar * delta * dir[j]
-          # 	    SEXP ans_del = PROTECT(eval(expr, rho1));
-          assign(theta[i], prm[i], envir=rho) # may be able to make more efficient later??
+          prmx<-origPar+delta*dir[j]
+          assign(theta[j],prmx,rho)
           res1 <- eval(expr, rho) # new residuals (forward step)
+          # 	    SEXP ans_del = PROTECT(eval(expr, rho1));
           # 	    double *rDel = NULL;
           # 	    CHECK_FN_VAL(rDel, ans_del);
           # 	    if(central) {
           # 		pars_i[j] = origPar - rDir[i] * delta;
           if (central) { # compute backward step resids for central diff
-              prm[j] <- origPar - dir[j]*delta
-              assign(theta[i], prm[i], envir=rho) # may be able to make more efficient later??
+              prmb <- origPar - dir[j]*delta
+              assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
               # 		SEXP ans_de2 = PROTECT(eval(expr, rho1));
               resb <- eval(expr, rho)
           # 		double *rD2 = NULL;
@@ -128,23 +133,19 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
           # 		for(int k = 0; k < LENGTH(ans); k++) {
           # 		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
           # 		}
-              for (i in 1:mr){
-                  JJ[i, j] <- dir[j]*(res1[i]-resb[i])/(2*delta)
-              } ## Note: should be able to vectorize in pure R
+              JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
           } else { ## forward diff
           # 	    } else { // forward difference  (previously hardwired):
           # 		for(int k = 0; k < LENGTH(ans); k++) {
           # 		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
           # 		}
-              for (i in 1:mr){
-                  JJ[i,j] <- dir[j]*(res1[i]-res0[i])/delta
-              }
-          }  
+                  JJ[,j] <- dir[j]*(res1-res0)/delta
+          }  # end forward diff
 # 	    }
 # 	    UNPROTECT(central ? 2 : 1); // ansDel & possibly ans
 # 	    pars_i[j] = origPar;
-      prm[j]<-origPar
- 	}
+            assign(theta[j], origPar, envir=rho) # reset the parameter
+      }
 #     }
 #     setAttrib(ans, install("gradient"), gradient);
 #     UNPROTECT(nprot);

@@ -35,10 +35,12 @@ having the gradient $g$ stationary. The so-called Newton method
 uses the second derivatives in the Hessian matrix $H$ defined as
 
 $$  H_{i,j} = \partial^2{f}/ {\partial{x_i} \partial{x_j}}$$
+
 where $f$ is a function of several variables $x_i$, where $i=1,...,n$, written
 collectively as $x$. The Newton equations are defined as 
 
 $$  H \delta = - g $$
+
 where $H$ and $g$ are evaluated at a guess or estimate of $x$. $x$ is then updated
 to 
 
@@ -49,6 +51,7 @@ and we iterate until there is no change in $x$.
 There are some adjustments When our function $f(x)$ can be written as a sum of squares
 
 $$  f(x) = \sum_{i-1}^n {r_i(x)^2} = r^t r $$
+
 where the final vector product form is the one I favour because it is the least fussy to write.
 In particular, when we try to evaluate the Hessian of this sum of squares function, we see that it is
 
@@ -57,9 +60,11 @@ $$ H_{j,k} = 2 \sum_{i-1}^n { { [ (\partial r_i/\partial{x_j} ) } ({\partial r_i
 If we define the **Jacobian** matrix
 
 $$ J_{i,j} = \partial r_i/\partial{x_j} $$
+
 then the gradient is 
 
 $$ g = 2 J^t r $$
+
 and the first part of the Hessian is 
 
 $$  J^t J $$
@@ -69,6 +74,7 @@ the second term (using elements of the residual times second derivatives of the 
 equations (cancelling the factor 2)
 
 $$ (J^t J)  \delta  =  - J^t r $$
+
 We can use this in an iteration similar to the Newton iteration.
 
 ## Hartley's method
@@ -113,10 +119,12 @@ $$    \mathbf{1}_n \delta = - g $$
 is clearly a downhill version of the gradient. And if we solve 
 
 $$  \lambda  \mathbf{1}_n \delta =  - g $$
+
 various values of $\lambda$ will produce steps along the **steepest descents**
 direction. Solutions of the Levenberg-Marquardt equations
 
 $$ (J^t J + \lambda 1_n)  \delta  =  - J^t r $$
+
 can be thought of as yielding a step $\delta$ that merges the Gauss-Newton and 
 steepest-descents direction. This approach was actually first suggested by 
 @Levenberg1944, but it is my opinion that while the ideas are sound, Levenberg 
@@ -142,9 +150,8 @@ with $0.4*\lambda$, then retry from **A**
 - ELSE increase $\lambda$ to $10*\lambda$ and retry from **B** ($J$ and $g$ do
   NOT need to be recomputed)
   
-In this scheme, an algorithm is defined by the initial value, decrease factor (
-e.g., 0.4) and
-increase factor (e.g., 10) for $\lambda$, but there are a number of 
+In this scheme, an algorithm is defined by the initial value, decrease factor 
+(e.g., 0.4) and increase factor (e.g., 10) for $\lambda$, but there are a number of 
 annoying computational 
 details concerning underflow or overflow and how we measure equivalence of 
 iterates. That is, we need to ensure $\lambda$ is not so "small" that multiplying
@@ -158,8 +165,8 @@ An example of choices to deal with these details:
    reduced.)
    
 - when comparing $x_{new}$ and $x5, we can use a modest number, e.g, 100.0 which
-we will call OFFSET. In the arithmetic of the system at hand, if the floating-point
-numbers $x_{new} + OFFSET} matches bit for bit $x + OFFSET$, then they are equal.
+  we will call OFFSET. In the arithmetic of the system at hand, if the floating-point
+  numbers $x_{new} + OFFSET} matches bit for bit $x + OFFSET$, then they are equal.
 
 Many practitioners dislike using IF statements (comparisons) of floating point
 numbers and I have had a number of exchanges with other workers over the years. 
