@@ -231,6 +231,10 @@ Some concerns:
   By contrast, we MAY want to leave either explicit loops or commented code that
   contains such loops as a way to provide explanation of what is happening.
   
+The code from the trials in ExDerivs.R was ported to nls.R in nlsalt package
+and tested with TestnumericDeriv1.R (added to repo). Things seem to work OK.
+I have NOT tried changing `dir`. ??
+  
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
 ### 5. Implementation of nonlinear least squares methods
