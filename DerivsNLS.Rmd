@@ -56,7 +56,7 @@ ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))"
 str(ceunsc)
 
 # Will be TRUE if we have made the conversion
-print(as.formula(ceunsc)==eunsc)?
+print(as.formula(ceunsc)==eunsc)
 
 ## LOCAL DATA IN DATA FRAMES
 weeddata1  <-  data.frame(y=ydat, tt=tdat)
@@ -233,25 +233,44 @@ in a command line terminal in the host machine.
 While it may be tempting to run either
 
 ```{r runinxi}
-system('inxi -F >t.txt')
+system('inxi -F >../t.txt')
 ```
 
 or 
 
 ```{bash inxi2}
-inxi -F >t2.txt
+inxi -F >../t2.txt
 ```
 
 it turns out that the encoding of the files is different. Indeed
 the files are different sizes!
 
 ```{bash ls-t}
-ls -al t*.txt
+ls -al ../t*.txt
 ```
 Here is the result from running the `inxi` command in the native Linux
-terminal.
+terminal. (?? note that we need each "user to do following.) Note that
+the file tlinuxOS.txt needs to be created via the command
 
-```{r M21disp}
-cat(readLines('tlinuxOS.txt'), sep = '\n')
+```
+inxi -F > tlinuxOS.txt
 ```
 
+in the directory immediately ABOVE the `improvenls` local git repository where
+the present docoument is stored i.e., outside the version control. 
+
+```{r M21disp}
+cat(readLines('../tlinuxOS.txt'), sep = '\n')
+```
+
+```
+#!/bin/sh
+inxi -F >../tlx.txt
+echo "done!"
+```
+
+
+```{r M21mt1}
+system("mate-terminal -e ./inxirun.sh")
+cat(readLines('../tlx.txt'), sep = '\n')
+```
