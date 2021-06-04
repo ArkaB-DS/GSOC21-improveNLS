@@ -3,6 +3,7 @@
 #
 #  Copyright (C) 2000-2020 The R Core Team
 #  Copyright (C) 1999-1999 Saikat DebRoy, Douglas M. Bates, Jose C. Pinheiro
+#  All-R package nlsalt in 2021 by John C. Nash and Arkajyoti Bhattacharjee
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -329,7 +330,7 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
     getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
     setPars.noVarying <- function(newPars)
     {
-        internalPars <<- newPars # envir = thisEnv
+        internalPars <<- newPars # envir = thisEnv ## ?? be very careful with "<<-"
         for(i in names(ind))
             env[[i]] <- unname(newPars[ ind[[i]] ])
     }
