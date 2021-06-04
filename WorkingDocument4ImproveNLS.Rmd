@@ -234,6 +234,20 @@ Some concerns:
 The code from the trials in ExDerivs.R was ported to nls.R in nlsalt package
 and tested with TestnumericDeriv1.R (added to repo). Things seem to work OK.
 I have NOT tried changing `dir`. ??
+
+### [2021-6-4]
+
+- Code for `numericDeriv()` in nls.R was extracted to `numericDeriv20210603CommentedWithC.txt`.
+
+- The code for numeric_deriv was removed from nls.c
+
+- The line in init.c that mentions numeric_deriv was commented out so it would not be linked
+  into the shared library for nlsalt (nlsalt.so)
+  
+- By launching Rstudio from the nlsalt.Rproj file, the package `nlsalt` could be rebuilt 
+  using "clean and rebuild"
+  
+
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 

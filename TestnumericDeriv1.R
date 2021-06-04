@@ -1,4 +1,4 @@
-## TestnumericDeriv1.R 
+
 # Data for Hobbs problem
 rm(list=ls())
 ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
@@ -34,4 +34,18 @@ print(sum(ndeunsc1^2))
 ndeunsc1c<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
 print(ndeunsc1c) # includes gradient
 print(sum(ndeunsc1c^2))
+library(microbenchmark)
+tndeunsc0<-microbenchmark(ndeunsc0<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv))
+tndeunsc0
+tndeunsc0c<-microbenchmark(ndeunsc0c<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+tndeunsc0c
+tndeunsc1<-microbenchmark(ndeunsc1<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv))
+tndeunsc1
+tndeunsc1c<-microbenchmark(ndeunsc1c<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+tndeunsc1c
+
+tndeunsc0
+tndeunsc0c
+tndeunsc1
+tndeunsc1c
 
