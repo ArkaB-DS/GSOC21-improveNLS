@@ -29,8 +29,6 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
     dir <- rep_len(dir, length(theta))
     stopifnot(is.finite(eps), eps > 0)
     rho1 <- new.env(FALSE, rho, 0)
-#    val <- .Call(C_numeric_deriv, expr, theta, rho, dir, eps, central, rho1) ## ../src/nls.c
-
     if (!is.character(theta) ) {stop("'theta' should be of type character")}
     if (is.null(rho)) {
             stop("use of NULL environment is defunct")
@@ -39,125 +37,32 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
           if(! is.environment(rho)) {stop("'rho' should be an environment")}
           #    int nprot = 3;
     }
-##    if(TYPEOF(dir) != REALSXP) {
-##        PROTECT(dir = coerceVector(dir, REALSXP)); nprot++;
-##    }
     if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
               {stop("'dir' is not a numeric vector of the correct length") }
-    ## Rboolean central = asLogical(centr);
     if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
-##    //    SEXP rho1 = PROTECT(R_NewEnv(rho, FALSE, 0));
-##    //    nprot++;
-##    SEXP
-##    pars = PROTECT(allocVector(VECSXP, LENGTH(theta))),
-##    ans  = PROTECT(duplicate(eval(expr, rho1)));
-      res0 <- eval(expr, rho) # the base residuals
-##    double *rDir = REAL(dir),  *res = NULL; // -Wall
-    #define CHECK_FN_VAL(_r_, _ANS_) do {					\
-##     if(!isReal(_ANS_)) {						\
-##         SEXP temp = coerceVector(_ANS_, REALSXP);			\
-##         UNPROTECT(1);/*: _ANS_ *must* have been the last PROTECT() ! */ \
-##         PROTECT(_ANS_ = temp);						\
-##     }									\
-##    _r_ = REAL(_ANS_);							\
-      
-##    for(int i = 0; i < LENGTH(_ANS_); i++) {				\
-##        if (!R_FINITE(_r_[i]))						\
-##        error(_("Missing value or an infinity produced when evaluating the model")); \
-##    }	
-## } while(0)
-      if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
-
-      ##      CHECK_FN_VAL(res, ans);
-
-## const void *vmax = vmaxget();
-## int lengthTheta = 0;
-# for(int i = 0; i < LENGTH(theta); i++) {
-      nt <- length(theta) # number of parameters
-      mr <- length(res0) # number of residuals
-#      prm<-as.vector(mget(theta,envir=rho))
-      JJ <- matrix(NA, nrow=mr, ncol=nt)
-#      colnames(JJ)<-theta # May not be necessary -- "gradient" matrix has no names
-      for (j in 1:nt){
-         origPar<-get(theta[j],rho)
-#         cat(theta[j]," = prm[[",j,"]]=",origPar,"\n")
-          # need to get paramater i
-          #     const char *name = translateChar(STRING_ELT(theta, i));
-          #     SEXP s_name = install(name);
-          #     SEXP temp = findVar(s_name, rho1);
-          ## Done in the mget above
-          #     if(isInteger(temp))
-          #         error(_("variable '%s' is integer, not numeric"), name);
-          #     if(!isReal(temp))
-          #         error(_("variable '%s' is not numeric"), name);
-          #     // We'll be modifying the variable, so need to make a copy PR#15849
-          # 	defineVar(s_name, temp = duplicate(temp), rho1);
-          # 	MARK_NOT_MUTABLE(temp);
-          # 	SET_VECTOR_ELT(pars, i, temp);
-          # 	lengthTheta += LENGTH(VECTOR_ELT(pars, i));
-          #     }
-          #     vmaxset(vmax);
-          #     SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
-          #     double *grad = REAL(gradient);
-          xx <- abs(origPar)
-          delta <- if (xx == 0.0) {eps} else { xx*eps }
-          # prm[[j]]<- origPar + delta * dir[j]
-          # assign(theta[j], prm[[j]], envir=rho) # may be able to make more efficient later??
-          #     double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
-          #     for(int start = 0, i = 0; i < LENGTH(theta); i++) {
-          # 	double *pars_i = REAL(VECTOR_ELT(pars, i));
-          # 	for(int j = 0; j < LENGTH(VECTOR_ELT(pars, i)); j++, start += LENGTH(ans)) {
-          # 	    double
-          # 		origPar = pars_i[j],
-          # 		xx = fabs(origPar),
-          # 		delta = (xx == 0) ? eps : xx*eps;
-          xx <- abs(origPar)
-          delta <- if (xx == 0.0) {eps} else { xx*eps }
-          ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
-          # 	    pars_i[j] += rDir[i] * delta;
-          prmx<-origPar+delta*dir[j]
-          assign(theta[j],prmx,rho)
-          res1 <- eval(expr, rho) # new residuals (forward step)
-          # 	    SEXP ans_del = PROTECT(eval(expr, rho1));
-          # 	    double *rDel = NULL;
-          # 	    CHECK_FN_VAL(rDel, ans_del);
-          # 	    if(central) {
-          # 		pars_i[j] = origPar - rDir[i] * delta;
-          if (central) { # compute backward step resids for central diff
-              prmb <- origPar - dir[j]*delta
-              assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
-              # 		SEXP ans_de2 = PROTECT(eval(expr, rho1));
-              resb <- eval(expr, rho)
-          # 		double *rD2 = NULL;
-          # 		CHECK_FN_VAL(rD2, ans_de2);
-          # 		for(int k = 0; k < LENGTH(ans); k++) {
-          # 		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
-          # 		}
-              JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
-          } else { ## forward diff
-          # 	    } else { // forward difference  (previously hardwired):
-          # 		for(int k = 0; k < LENGTH(ans); k++) {
-          # 		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
-          # 		}
-                  JJ[,j] <- dir[j]*(res1-res0)/delta
-          }  # end forward diff
-# 	    }
-# 	    UNPROTECT(central ? 2 : 1); // ansDel & possibly ans
-# 	    pars_i[j] = origPar;
-            assign(theta[j], origPar, envir=rho) # reset the parameter
-      }
-#     }
-#     setAttrib(ans, install("gradient"), gradient);
-#     UNPROTECT(nprot);
-#     return ans;
-    
-    # if (!is.null(d <- dim(val))) {
-    #     if(d[length(d)] == 1L)
-    #         d <- d[-length(d)]
-    #     if(length(d) > 1L)
-    #         dim(attr(val, "gradient")) <- c(d, dim(attr(val, "gradient"))[-1L])
-    # }
-    # val
+    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
+    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
+    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
+    nt <- length(theta) # number of parameters
+    mr <- length(res0) # number of residuals
+    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
+    for (j in 1:nt){
+       origPar<-get(theta[j],rho)
+       xx <- abs(origPar)
+       delta <- if (xx == 0.0) {eps} else { xx*eps }
+       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
+       prmx<-origPar+delta*dir[j]
+       assign(theta[j],prmx,rho)
+       res1 <- eval(expr, rho) # new residuals (forward step)
+       if (central) { # compute backward step resids for central diff
+          prmb <- origPar - dir[j]*delta
+          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
+          resb <- eval(expr, rho)
+          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
+       } else { ## forward diff
+          JJ[,j] <- dir[j]*(res1-res0)/delta
+       }  # end forward diff
+    } # end loop over the parameters
     attr(res0, "gradient") <- JJ
     return(res0)
 }
