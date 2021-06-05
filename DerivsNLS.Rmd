@@ -5,6 +5,7 @@ author:
   - John C. Nash, University of Ottawa, Canada
 date: "26/05/2021"
 output: pdf_document
+bibliography: ImproveNLS.bib
 ---
 
 <!-- - Heather Turner, University of Warwick, UK -->
@@ -273,4 +274,228 @@ echo "done!"
 ```{r M21mt1}
 system("mate-terminal -e ./inxirun.sh")
 cat(readLines('../tlx.txt'), sep = '\n')
+```
+
+## Appendix 1: Base R numericDeriv code
+
+This code is in two files, nls.R and nls.c and is extracted here.
+
+### From nls.R
+
+```
+numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
+                 eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
+## Note: this expr must be set up as a call to work properly according to JN??
+## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
+{    cat("numericDeriv-Alt\n")
+    dir <- rep_len(dir, length(theta))
+    stopifnot(is.finite(eps), eps > 0)
+    rho1 <- new.env(FALSE, rho, 0)
+    if (!is.character(theta) ) {stop("'theta' should be of type character")}
+    if (is.null(rho)) {
+            stop("use of NULL environment is defunct")
+            #        rho <- R_BaseEnv;
+    } else {
+          if(! is.environment(rho)) {stop("'rho' should be an environment")}
+          #    int nprot = 3;
+    }
+    if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
+              {stop("'dir' is not a numeric vector of the correct length") }
+    if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
+    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
+    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
+    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
+    nt <- length(theta) # number of parameters
+    mr <- length(res0) # number of residuals
+    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
+    for (j in 1:nt){
+       origPar<-get(theta[j],rho)
+       xx <- abs(origPar)
+       delta <- if (xx == 0.0) {eps} else { xx*eps }
+       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
+       prmx<-origPar+delta*dir[j]
+       assign(theta[j],prmx,rho)
+       res1 <- eval(expr, rho) # new residuals (forward step)
+       if (central) { # compute backward step resids for central diff
+          prmb <- origPar - dir[j]*delta
+          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
+          resb <- eval(expr, rho)
+          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
+       } else { ## forward diff
+          JJ[,j] <- dir[j]*(res1-res0)/delta
+       }  # end forward diff
+    } # end loop over the parameters
+    attr(res0, "gradient") <- JJ
+    return(res0)
+}
+
+```
+
+### From nls.c
+
+```
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <float.h>
+#include <R.h>
+#include <Rinternals.h>
+#include "nls.h"
+#include "internals.h"
+
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
+
+/*
+ *  call to numeric_deriv from R -
+ *  .Call("numeric_deriv", expr, theta, rho, dir = 1., eps = .Machine$double.eps, central=FALSE)
+ *  Returns: ans
+ */
+SEXP
+numeric_deriv(SEXP expr, SEXP theta, SEXP rho, SEXP dir, SEXP eps_, SEXP centr,
+              SEXP rho1)
+{
+    if(!isString(theta))
+	error(_("'theta' should be of type character"));
+    if (isNull(rho)) {
+	error(_("use of NULL environment is defunct"));
+	rho = R_BaseEnv;
+    } else
+	if(!isEnvironment(rho))
+	    error(_("'rho' should be an environment"));
+    int nprot = 3;
+    if(TYPEOF(dir) != REALSXP) {
+	PROTECT(dir = coerceVector(dir, REALSXP)); nprot++;
+    }
+    if(LENGTH(dir) != LENGTH(theta))
+	error(_("'dir' is not a numeric vector of the correct length"));
+    Rboolean central = asLogical(centr);
+    if(central == NA_LOGICAL)
+	error(_("'central' is NA, but must be TRUE or FALSE"));
+//    SEXP rho1 = PROTECT(R_NewEnv(rho, FALSE, 0));
+//    nprot++;
+    SEXP
+	pars = PROTECT(allocVector(VECSXP, LENGTH(theta))),
+        ans  = PROTECT(duplicate(eval(expr, rho1)));
+    double *rDir = REAL(dir),  *res = NULL; // -Wall
+#define CHECK_FN_VAL(_r_, _ANS_) do {					\
+    if(!isReal(_ANS_)) {						\
+	SEXP temp = coerceVector(_ANS_, REALSXP);			\
+	UNPROTECT(1);/*: _ANS_ *must* have been the last PROTECT() ! */ \
+	PROTECT(_ANS_ = temp);						\
+    }									\
+    _r_ = REAL(_ANS_);							\
+    for(int i = 0; i < LENGTH(_ANS_); i++) {				\
+	if (!R_FINITE(_r_[i]))						\
+	    error(_("Missing value or an infinity produced when evaluating the model")); \
+    }									\
+} while(0)
+
+    CHECK_FN_VAL(res, ans);
+
+    const void *vmax = vmaxget();
+    int lengthTheta = 0;
+    for(int i = 0; i < LENGTH(theta); i++) {
+	const char *name = translateChar(STRING_ELT(theta, i));
+	SEXP s_name = install(name);
+	SEXP temp = findVar(s_name, rho1);
+	if(isInteger(temp))
+	    error(_("variable '%s' is integer, not numeric"), name);
+	if(!isReal(temp))
+	    error(_("variable '%s' is not numeric"), name);
+	// We'll be modifying the variable, so need to make a copy PR#15849
+	defineVar(s_name, temp = duplicate(temp), rho1);
+	MARK_NOT_MUTABLE(temp);
+	SET_VECTOR_ELT(pars, i, temp);
+	lengthTheta += LENGTH(VECTOR_ELT(pars, i));
+    }
+    vmaxset(vmax);
+    SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
+    double *grad = REAL(gradient);
+    double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
+    for(int start = 0, i = 0; i < LENGTH(theta); i++) {
+	double *pars_i = REAL(VECTOR_ELT(pars, i));
+	for(int j = 0; j < LENGTH(VECTOR_ELT(pars, i)); j++, start += LENGTH(ans)) {
+	    double
+		origPar = pars_i[j],
+		xx = fabs(origPar),
+		delta = (xx == 0) ? eps : xx*eps;
+	    pars_i[j] += rDir[i] * delta;
+	    SEXP ans_del = PROTECT(eval(expr, rho1));
+	    double *rDel = NULL;
+	    CHECK_FN_VAL(rDel, ans_del);
+	    if(central) {
+		pars_i[j] = origPar - rDir[i] * delta;
+		SEXP ans_de2 = PROTECT(eval(expr, rho1));
+		double *rD2 = NULL;
+		CHECK_FN_VAL(rD2, ans_de2);
+		for(int k = 0; k < LENGTH(ans); k++) {
+		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
+		}
+	    } else { // forward difference  (previously hardwired):
+		for(int k = 0; k < LENGTH(ans); k++) {
+		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
+		}
+	    }
+	    UNPROTECT(central ? 2 : 1); // ansDel & possibly ans
+	    pars_i[j] = origPar;
+	}
+    }
+    setAttrib(ans, install("gradient"), gradient);
+    UNPROTECT(nprot);
+    return ans;
+}
+
+## Appendix 2: numericDeriv() from nlsalt package (all in R)
+
+```
+numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
+                 eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
+## Note: this expr must be set up as a call to work properly according to JN??
+## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
+{    cat("numericDeriv-Alt\n")
+    dir <- rep_len(dir, length(theta))
+    stopifnot(is.finite(eps), eps > 0)
+    rho1 <- new.env(FALSE, rho, 0)
+    if (!is.character(theta) ) {stop("'theta' should be of type character")}
+    if (is.null(rho)) {
+            stop("use of NULL environment is defunct")
+            #        rho <- R_BaseEnv;
+    } else {
+          if(! is.environment(rho)) {stop("'rho' should be an environment")}
+          #    int nprot = 3;
+    }
+    if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
+              {stop("'dir' is not a numeric vector of the correct length") }
+    if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
+    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
+    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
+    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
+    nt <- length(theta) # number of parameters
+    mr <- length(res0) # number of residuals
+    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
+    for (j in 1:nt){
+       origPar<-get(theta[j],rho)
+       xx <- abs(origPar)
+       delta <- if (xx == 0.0) {eps} else { xx*eps }
+       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
+       prmx<-origPar+delta*dir[j]
+       assign(theta[j],prmx,rho)
+       res1 <- eval(expr, rho) # new residuals (forward step)
+       if (central) { # compute backward step resids for central diff
+          prmb <- origPar - dir[j]*delta
+          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
+          resb <- eval(expr, rho)
+          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
+       } else { ## forward diff
+          JJ[,j] <- dir[j]*(res1-res0)/delta
+       }  # end forward diff
+    } # end loop over the parameters
+    attr(res0, "gradient") <- JJ
+    return(res0)
+}
+```
+
+
 ```

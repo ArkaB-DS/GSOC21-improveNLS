@@ -1,0 +1,67 @@
+---
+title: "Understaning nlsModel in the base R nls() function"
+author:
+  - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+  - John C. Nash, University of Ottawa, Canada
+date: "05/06/2021"
+output: pdf_document
+bibliography: ImproveNLS.bib
+---
+
+<!-- - Heather Turner, University of Warwick, UK -->
+
+```{r setup, include=FALSE}
+rm(list=ls()) # clear the workspace for this document
+knitr::opts_chunk$set(echo = TRUE)
+## setup for this document
+library(microbenchmark)  # timing
+
+printsum <- function(xx){ print(summary(xx))} # May be needed
+traceval  <-  TRUE  # traceval set TRUE to debug or give full history
+#  Set to FALSE when we don't need extensive output
+```
+
+# nlsModel()
+
+- created script `tnlsModel.R` as first step to create and produce an "m" object
+
+- Current understanding (JN): nlsModel (and nlsModel.plinear too probably) creates
+  an R object that it labels as class "nlsModel". This object contains functions
+  that are called from nls.c::nls_iter to run the interation and estimate the 
+  parameters in the model. There seem to be some extraneous functions, and we can
+  hopefully learn enough to remove the extras.
+  
+- The current structure is to particularize the functions in "m" so the (essentially)
+  external nls.c code acts on these. As a first goal, and part of learning how things
+  work, we will want to replace the nls.c::nls_iter with all-R equivalent. 
+  
+# A script to examine the output of nlsModel()
+
+We will use the Hobbs weed infestation problem (@jncnm79, page 120) again.
+?? AB: we should build a set of test problems that are easy to try out. Let us
+discuss the examples that are in the help for nls. (?nls in R will show them.)
+
+```{r hobbsex}
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+str(eunsc)
+# Can we convert a string form of this "model" to a formula
+ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))"
+str(ceunsc)
+
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+
+## Now ready to try things out.
+library(nlsalt) # ?? needed because base R does not export nlsModel()
+nmod1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+str(nmod1)
+ls.str(nmod1)
+print(nmod1)
+```
+

@@ -14,8 +14,14 @@ output:
 ## TODOS
 
 - See how `dir` works in nlsalt::numericDeriv(); need some examples/tests
+
 - Do we need to update nlsalt and nlspkg on a machine when there are changes 
   imported via git?
+
+- ?? AB: in our documents, I am currently copying and pasting material. However, it
+  would be sensible to do an "include" of the material from the nlsalt package, but
+  to do that cleanly, we will want to separate the functions into different files.
+  This will mean we have to be careful that the package still builds OK.
 
 
 ## Abstract
@@ -254,7 +260,25 @@ I have NOT tried changing `dir`. ??
   Rstudio. Note that rebuild is probably necessary on each machine on which nlsalt
   is used. (?? Do we need to check this is the case?)
   
+### [2021-6-5]
 
+- created script `tnlsModel.R` as first step to create and produce an "m" object
+
+- Current understanding (JN): nlsModel (and nlsModel.plinear too probably) creates
+  an R object that it labels as class "nlsModel". This object contains functions
+  that are called from nls.c::nls_iter to run the interation and estimate the 
+  parameters in the model. There seem to be some extraneous functions, and we can
+  hopefully learn enough to remove the extras.
+  
+- The current structure is to particularize the functions in "m" so the (essentially)
+  external nls.c code acts on these. As a first goal, and part of learning how things
+  work, we will want to replace the nls.c::nls_iter with all-R equivalent. 
+  
+- Started document nlsModel.Rmd to document this function. 
+  ?? AB: in our documents, I am currently copying and pasting material. However, it
+  would be sensible to do an "include" of the material from the nlsalt package, but
+  to do that cleanly, we will want to separate the functions into different files.
+  This will mean we have to be careful that the package still builds OK.
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 

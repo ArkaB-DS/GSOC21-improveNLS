@@ -15,6 +15,7 @@ weedenv$b2 <- start1[[2]]
 weedenv$b3 <- start1[[3]]
 rexpr<-call("-",eunsc[[3]], eunsc[[2]])
 theta <- c("b1", "b2", "b3")
+library(nlsalt) # ?? needed because base R does not export nlsModel()
 nmod1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 str(nmod1)
 ls.str(nmod1)
