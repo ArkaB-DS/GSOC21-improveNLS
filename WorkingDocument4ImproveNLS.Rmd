@@ -11,6 +11,13 @@ output:
     keep_tex: false
 ---
 
+## TODOS
+
+- See how `dir` works in nlsalt::numericDeriv(); need some examples/tests
+- Do we need to update nlsalt and nlspkg on a machine when there are changes 
+  imported via git?
+
+
 ## Abstract
 
 nls() is the primary nonlinear modeling tool in base R. It has a great
@@ -208,8 +215,6 @@ numericDeriv first cut at pure R. JN incorporated C code into the R code of the
 numericDeriv function as comments, then tried to provide R statements to do what
 it appears the C is doing. Some steps and checks likely left out. 
 
-?? Still to test -- not working right away on June 2
-
 ## [2021-6-2] Converting codes to All-R -- numericDeriv
 
 In the `ExDerivs.R` script, JN tested a forward difference code in R against
@@ -245,7 +250,9 @@ I have NOT tried changing `dir`. ??
   into the shared library for nlsalt (nlsalt.so)
   
 - By launching Rstudio from the nlsalt.Rproj file, the package `nlsalt` could be rebuilt 
-  using "clean and rebuild"
+  using "clean and rebuild". nlsalt.Rproj can be initiated from the "Files" menu of 
+  Rstudio. Note that rebuild is probably necessary on each machine on which nlsalt
+  is used. (?? Do we need to check this is the case?)
   
 
   
