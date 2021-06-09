@@ -1,0 +1,131 @@
+---
+title: "A Machine Profile Summary"
+author:
+  - John C. Nash, University of Ottawa, Canada
+date: "08/06/2021"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Providing a characterization of a particular computing environment for R calculations
+
+If we want to compare results computed on different machines, we need a way to provide 
+measures and identifiers of the particular computing environment at hand. This document
+attempts to summarize some possibilities available in the R statistical software and language.
+
+# Some possible information desired
+
+
+?? should provide unique names for each info item
+
+## Temporal information
+
+Most computatins should have a time/date stamp that is unlikely to be confused with any
+other, at least in combination with a machine name and/or other tags.
+
+?? tdstamp
+
+## Identifier for the computing environment
+
+- machine name
+- operating system and version
+- compiler or interpreter version
+- specific variations, if any, that should be noted
+
+
+## Hardware information
+
+- cpu
+- cores
+- operating cycle speed??
+- RAM total
+- RAM available, possibly indicating swap space and usage
+- RAM speed (could be variable)
+
+## Software information
+
+?? what to put in.
+
+## R tools for machine information
+
+### sessionInfo()
+
+```{r sessionInfox}
+tt <- sessionInfo()
+tt <- as.vector(tt)
+tt
+```
+
+### benchmarkme
+
+- uses `proc.time()` for timings
+- has single core and parallel timings
+- ?? does it do GPUs
+- provides far too much for most needs i.e., a succinct summary of
+  how capable a computing system should be
+
+```{r benchmarkmex}
+library(benchmarkmeData)
+library(benchmarkme)
+ls(package:benchmarkmeData)
+ls(package:benchmarkme)
+lsf.str("package:benchmarkme")
+lsf.str("package:benchmarkmeData")
+## This next line takes some time
+benchmark_std()
+
+get_byte_compiler()
+get_linear_algebra()
+get_sys_details()
+```
+
+
+
+### calceps.R
+
+This is a port of Mike Malcolm's ENVRON to R. ??ref. It computes the 
+machine precision, radix and number of radix digits. 
+
+?? get file into chunk
+
+```
+calceps.R
+
+
+- calceps.R example
+
+### Sys.info()
+
+```{r sysinfox}
+Sys.info()
+```
+
+
+
+## Issues relateing to RNG
+
+## Issues relating to compilation of R 
+
+- LAPACK
+- BLAS
+- others?
+
+
+# Tools for accessing and clearing environments and dataframes
+
+?? should this be here -- probably to list things in the workspace
+
+```
+sys.frame()
+sys.frames()
+sys.status()
+sys.on.exit()
+sys.parents()
+sys.calls()
+```
+
+??JN exp(sin(cos())) benchmark

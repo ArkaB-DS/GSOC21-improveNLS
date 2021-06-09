@@ -282,6 +282,19 @@ I have NOT tried changing `dir`. ??
   
 ## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
 
+### [2021-6-6]
+
+Wanted package benchmarkme.
+
+install failed. Needed dependencies.
+
+So in linux, install libssl.dev
+                     libcurl4-openssl-dev
+        
+Then benchmarkme installed OK.
+
+We can use this within our benchmarking in addition to sessionInfo().
+
 ### 5. Implementation of nonlinear least squares methods
 
 This section is a review of approaches to solving the nonlinear least
