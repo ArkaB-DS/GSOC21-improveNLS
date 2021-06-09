@@ -7,6 +7,8 @@ output: pdf_document
 ---
 
 
+THis line is a test for git on AB machine.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -18,7 +20,6 @@ measures and identifiers of the particular computing environment at hand. This d
 attempts to summarize some possibilities available in the R statistical software and language.
 
 # Some possible information desired
-
 
 ?? should provide unique names for each info item
 
@@ -55,9 +56,9 @@ other, at least in combination with a machine name and/or other tags.
 ### sessionInfo()
 
 ```{r sessionInfox}
-tt <- sessionInfo()
-tt <- as.vector(tt)
-tt
+si <- sessionInfo()
+si <- as.vector(si)
+si
 ```
 
 ### benchmarkme
