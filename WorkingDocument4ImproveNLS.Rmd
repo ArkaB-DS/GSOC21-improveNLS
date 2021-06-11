@@ -295,6 +295,27 @@ Then benchmarkme installed OK.
 
 We can use this within our benchmarking in addition to sessionInfo().
 
+### [2021-6-6] --> [2021-6-11]
+
+Had online meeting and got Rstudio more or less set up to deal with version control
+and package building, BUT ...
+
+hit a big problem with 32 bit Windows architecture NOT linking to BLAS. A posting
+to R-package-devel list got a suggestion from Dirk Eddelbeutel to check sessionInfo()
+and this shows that on the Windows R side, BLAS and LAPACK are not listed, while
+they are in Linux. Duncan Murdoch pointed to makevars.win, but severeal tries with
+some possible PKG_LIBS settings did not give any change. Noted that command line
+CMD.exe use of "R CMD build" and "R CMD INSTALL" showed the issue to be at the
+INSTALL stage, and it is clear that the 32 bit architecture is NOT finding the
+BLAS routines, but 
+
+Then found
+https://stackoverflow.com/questions/42118561/error-in-r-cmd-shlib-compiling-c-code
+and this shows what to use for makevars.win.
+
+
+==================================================================================
+
 ### 5. Implementation of nonlinear least squares methods
 
 This section is a review of approaches to solving the nonlinear least
