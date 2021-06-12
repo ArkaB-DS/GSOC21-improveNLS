@@ -311,7 +311,9 @@ BLAS routines, but
 
 Then found
 https://stackoverflow.com/questions/42118561/error-in-r-cmd-shlib-compiling-c-code
-and this shows what to use for makevars.win.
+and this shows what to use for makevars.win, which is the single line file
+
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 
 
 ==================================================================================
