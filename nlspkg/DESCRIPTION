@@ -1,7 +1,7 @@
 Package: nlspkg
 Type: Package
 Title: Port of stats::nls() to its own package
-Version: 0.1.0
+Version: 0.1.2
 Author: R Core and others
 Maintainer: John C Nash <Nashjc@uottawa.ca>
 Description: More about what it does (maybe more than one line)
