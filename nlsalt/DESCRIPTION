@@ -6,7 +6,7 @@ Author:  John C Nash <Nashjc@uottawa.ca>, Arkajyoti Bhattacharjee <arkajyoti20@i
 Maintainer: John C Nash <Nashjc@uottawa.ca>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-License: GPL-2
+License: GPL-2 | GPL-3
 Encoding: UTF-8
 Suggests: MASS
 Imports: graphics, stats
