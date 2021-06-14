@@ -30,21 +30,46 @@ to develop new names for our set of information.
 Most computatins should have a time/date stamp that is unlikely to be confused with any
 other, at least in combination with a machine name and/or other tags.
 
-?? tdstamp
-
+```{r tdstamp}
+#get a timestamp
+tsstr<- format(Sys.time(), "%Y%m%d%H%M") # tsstr == time stamp string in form YYYYmmddHHMM
+cat("Date and Time stamp:",tsstr,"\n")
+```
 ## Identifier for the computing environment
 
-- machine name
+Some of the important information elements concerning the computing environment that 
+we need for reporting tests are
+
+- machine name. While most systems (and Linux in particular) offer to let the user
+  provide a machine name, there are generally defaults that many people accept, and
+  these are often uninformative and may be non-unique. We note that VirtualBox with
+  a Windows 10 guest machine gave the name DESKTOP-HF4CKVA. Where this name was 
+  generated we are not sure. Settings / System allows "rename this PC".
+  
 - operating system and version
-- compiler or interpreter version
-- specific variations, if any, that should be noted
+
+- compiler or interpreter version. For our needs, it is obvious that the R version
+  will be important. However, if any code is compiled or linked to libraries, we
+  would like to know that. In particular, versions of compilers (e.g., gfortran, 
+  gcc) or BLAS or LAPACK libraries used will affect performance. Linux generally
+  displays the BLAS and LAPACK **filenames** in `sessionInfo()`, but to get the
+  version information, one needs to dig deeper, for example, using operating
+  system commands. For the present, we will omit such extra information unless
+  we can extract it easily within R.
+  
+- specific variations, if any, that should be noted. Here we may want to note if
+  a machine is running background tasks, or if some special steps have been 
+  taken to speed up or slow down the operation e.g., overclocking.
+  
 
 
 ## Hardware information
 
+Some of the factors relating to hardware that could be important are:
+
 - cpu
 - cores
-- operating cycle speed??
+- operating cycle speed (While the cpu is generally specified )
 - RAM total
 - RAM available, possibly indicating swap space and usage
 - RAM speed (could be variable)
@@ -78,12 +103,11 @@ ls(package:benchmarkmeData)
 ls(package:benchmarkme)
 lsf.str("package:benchmarkme")
 lsf.str("package:benchmarkmeData")
-## This next line takes some time
-benchmark_std()
-
+## This next line takes a lot of time to run, so is commented out here
+# benchmark_std()
 get_byte_compiler()
-get_linear_algebra()
-get_sys_details()
+gla<-get_linear_algebra()
+gsd<-get_sys_details()
 ```
 
 
@@ -132,3 +156,23 @@ sys.calls()
 ```
 
 ??JN exp(sin(cos())) benchmark
+
+# Choices
+
+For use in recording tests of R functions and packages for optimization and nonlinear 
+least squares, it seems that the `benchmarkme` function `get_sys_details()`
+provides more than sufficient information for our needs. 
+
+From the above discussion, the following offers a possible compact solution.
+
+```{r mymachid}
+sy<-Sys.info()
+tsstr<- format(Sys.time(), "%Y%m%d%H%M")
+cpu<-get_cpu()
+ram<-round(get_ram()/(1024*1024*1000)) #fudged to make it work OK
+machid<-paste(sy["nodename"],":",sy["user"],"-",sy["sysname"],"-",sy["release"],
+      "|",cpu$model_name,"|",ram,"GB", sep='')
+print(machid)
+```
+
+
