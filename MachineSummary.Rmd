@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Providing a characterization of a particular computing environment for R calculations
 
+I have looked at this.
+
 If we want to compare results computed on different machines, we need a way to provide 
 measures and identifiers of the particular computing environment at hand. This document
 attempts to summarize some possibilities available in the R statistical software and language.
