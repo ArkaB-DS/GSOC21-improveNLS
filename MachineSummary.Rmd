@@ -7,8 +7,6 @@ output: pdf_document
 ---
 
 
-THis line is a test for git on AB machine.
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -21,7 +19,11 @@ attempts to summarize some possibilities available in the R statistical software
 
 # Some possible information desired
 
-?? should provide unique names for each info item
+There are multiple ways to get information of the type useful for characterizing the
+computing infrastructure used for a particular test or timing. We will need to
+ensure that identifiers of particular pieces of information are unique, and that 
+common identifiers really do specify identical information. Otherwise, we need
+to develop new names for our set of information.
 
 ## Temporal information
 
