@@ -652,14 +652,49 @@ nls <-
 
     ## Iterate
     if (algorithm != "port") { ## i.e. "default" or  "plinear" :
-	if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
-	    warning('upper and lower bounds ignored unless algorithm = "port"')
-	    cl$lower <- NULL # see PR#15960 -- confint() would use these regardless of algorithm
-	    cl$upper <- NULL
-	}
+        if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
+            warning('upper and lower bounds ignored unless algorithm = "port"')
+            cl$lower <- NULL # see PR#15960 -- confint() would use these regardless of algorithm
+            cl$upper <- NULL
+        }
         convInfo <- .Call(C_nls_iter, m, ctrl, trace)
-	nls.out <- list(m = m, convInfo = convInfo,
-			data = substitute(data), call = cl)
+        nls.out <- list(m = m, convInfo = convInfo,
+                        data = substitute(data), call = cl)        
+# ========== Substitute code for above .Call(C_nls_iter, m, ctrl, trace) =========
+#-- First part is check on inputs
+#        doTrace (a logical)
+#        control and m must be lists
+#        maxiter
+#        tol (??how is it used?)
+#        minFac (?? how is it used)
+#        warnOnly
+#        printEval
+#-- 2nd part -- extract parts of object m
+#        ?? tmp = getAttrib(m, R_NamesSymbol)
+#        function conv -- set up as lang1(conv) -- how does it work?
+#        function incr
+#        function deviance
+#        function trace
+#        function setPars
+#        function getPars
+#        nPars
+#        dev <-  evaluate deviance
+#        fac <- 1.0
+#        hasConverged <- FALSE
+#        newPars (vector setup)
+#        evaltoCnt <- 1
+#        convNew <- -1.
+#        ConvInfoMsg ( i, _I_, fac, minFac, maxIter, convNew)
+#  3 non-converged-finis defines 
+#         i <- 0
+#         while (i < maxIter){ # main loop -- uses for loop in C
+#             i <- i+1
+#             convNew <- evaluate conv() in globalenv
+#             if (convNew <= tol)
+#             
+#             
+#         } # End main loop
+# ===== END Substitute code for above .Call(C_nls_iter, m, ctrl, trace) =========
     }
     else { ## "port" i.e., PORT algorithm
 	pfit <- nls_port_fit(m, start, lower, upper, control, trace,
