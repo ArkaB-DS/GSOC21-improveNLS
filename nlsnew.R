@@ -3,6 +3,7 @@
 #
 #  Copyright (C) 2000-2020 The R Core Team
 #  Copyright (C) 1999-1999 Saikat DebRoy, Douglas M. Bates, Jose C. Pinheiro
+#  All-R package nlsalt in 2021 by John C. Nash and Arkajyoti Bhattacharjee
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,19 +23,49 @@
 ###
 
 numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
-                         eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
-{
+                 eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
+## Note: this expr must be set up as a call to work properly according to JN??
+## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
+{    cat("numericDeriv-Alt\n")
     dir <- rep_len(dir, length(theta))
     stopifnot(is.finite(eps), eps > 0)
     rho1 <- new.env(FALSE, rho, 0)
-    val <- .Call(C_numeric_deriv, expr, theta, rho, dir, eps, central, rho1) ## ../src/nls.c
-    if (!is.null(d <- dim(val))) {
-        if(d[length(d)] == 1L)
-            d <- d[-length(d)]
-        if(length(d) > 1L)
-            dim(attr(val, "gradient")) <- c(d, dim(attr(val, "gradient"))[-1L])
+    if (!is.character(theta) ) {stop("'theta' should be of type character")}
+    if (is.null(rho)) {
+            stop("use of NULL environment is defunct")
+            #        rho <- R_BaseEnv;
+    } else {
+          if(! is.environment(rho)) {stop("'rho' should be an environment")}
+          #    int nprot = 3;
     }
-    val
+    if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
+              {stop("'dir' is not a numeric vector of the correct length") }
+    if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
+    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
+    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
+    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
+    nt <- length(theta) # number of parameters
+    mr <- length(res0) # number of residuals
+    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
+    for (j in 1:nt){
+       origPar<-get(theta[j],rho)
+       xx <- abs(origPar)
+       delta <- if (xx == 0.0) {eps} else { xx*eps }
+       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
+       prmx<-origPar+delta*dir[j]
+       assign(theta[j],prmx,rho)
+       res1 <- eval(expr, rho) # new residuals (forward step)
+       if (central) { # compute backward step resids for central diff
+          prmb <- origPar - dir[j]*delta
+          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
+          resb <- eval(expr, rho)
+          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
+       } else { ## forward diff
+          JJ[,j] <- dir[j]*(res1-res0)/delta
+       }  # end forward diff
+    } # end loop over the parameters
+    attr(res0, "gradient") <- JJ
+    return(res0)
 }
 
 nlsModel.plinear <- function(form, data, start, wts, scaleOffset = 0, nDcentral = FALSE)
@@ -299,7 +330,7 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
     getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
     setPars.noVarying <- function(newPars)
     {
-        internalPars <<- newPars # envir = thisEnv
+        internalPars <<- newPars # envir = thisEnv ## ?? be very careful with "<<-"
         for(i in names(ind))
             env[[i]] <- unname(newPars[ ind[[i]] ])
     }
@@ -621,212 +652,50 @@ nls <-
 
     ## Iterate
     if (algorithm != "port") { ## i.e. "default" or  "plinear" :
-	if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
-	    warning('upper and lower bounds ignored unless algorithm = "port"')
-	    cl$lower <- NULL # see PR#15960 -- confint() would use these regardless of algorithm
-	    cl$upper <- NULL
-	}
+        if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
+            warning('upper and lower bounds ignored unless algorithm = "port"')
+            cl$lower <- NULL # see PR#15960 -- confint() would use these regardless of algorithm
+            cl$upper <- NULL
+        }
         convInfo <- .Call(C_nls_iter, m, ctrl, trace)
-	nls.out <- list(m = m, convInfo = convInfo,
-			data = substitute(data), call = cl)
-##------ Beginning of nls_iter portion	
-# /*
-#     *  call to nls_iter from R --- .Call("nls_iter", m, control, doTrace)
-# *  where m and control are nlsModel and nlsControl objects
-# *             doTrace is a logical value.
-# *  m is modified; the return value is a "convergence-information" list.
-# */
-#     SEXP
-# nls_iter(SEXP m, SEXP control, SEXP doTraceArg)
-# {
-#     int doTrace = asLogical(doTraceArg);
-#     
-#     if(!isNewList(control))
-#         error(_("'control' must be a list"));
-#     if(!isNewList(m))
-#         error(_("'m' must be a list"));
-#     
-#     SEXP tmp, conv;
-#     PROTECT(tmp = getAttrib(control, R_NamesSymbol));
-#     
-#     conv = getListElement(control, tmp, "maxiter");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$maxiter");
-#     int maxIter = asInteger(conv);
-#     
-#     conv = getListElement(control, tmp, "tol");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$tol");
-#     double tolerance = asReal(conv);
-#     
-#     conv = getListElement(control, tmp, "minFactor");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$minFactor");
-#     double minFac = asReal(conv);
-#     
-#     conv = getListElement(control, tmp, "warnOnly");
-#     if(conv == NULL || !isLogical(conv))
-#         error(_("'%s' absent"), "control$warnOnly");
-#     int warnOnly = asLogical(conv);
-#     
-#     conv = getListElement(control, tmp, "printEval");
-#     if(conv == NULL || !isLogical(conv))
-#         error(_("'%s' absent"), "control$printEval");
-#     Rboolean printEval = asLogical(conv);
-#     
-#     // now get parts from 'm'  ---------------------------------
-#         tmp = getAttrib(m, R_NamesSymbol);
-#     
-#     conv = getListElement(m, tmp, "conv");
-#     if(conv == NULL || !isFunction(conv))
-#         error(_("'%s' absent"), "m$conv()");
-#     PROTECT(conv = lang1(conv));
-#     
-#     SEXP incr = getListElement(m, tmp, "incr");
-#     if(incr == NULL || !isFunction(incr))
-#         error(_("'%s' absent"), "m$incr()");
-#     PROTECT(incr = lang1(incr));
-#     
-#     SEXP deviance = getListElement(m, tmp, "deviance");
-#     if(deviance == NULL || !isFunction(deviance))
-#         error(_("'%s' absent"), "m$deviance()");
-#     PROTECT(deviance = lang1(deviance));
-#     
-#     SEXP trace = getListElement(m, tmp, "trace");
-#     if(trace == NULL || !isFunction(trace))
-#         error(_("'%s' absent"), "m$trace()");
-#     PROTECT(trace = lang1(trace));
-#     
-#     SEXP setPars = getListElement(m, tmp, "setPars");
-#     if(setPars == NULL || !isFunction(setPars))
-#         error(_("'%s' absent"), "m$setPars()");
-#     PROTECT(setPars);
-#     
-#     SEXP getPars = getListElement(m, tmp, "getPars");
-#     if(getPars == NULL || !isFunction(getPars))
-#         error(_("'%s' absent"), "m$getPars()");
-#     PROTECT(getPars = lang1(getPars));
-#     
-#     SEXP pars = PROTECT(eval(getPars, R_GlobalEnv));
-#     int nPars = LENGTH(pars);
-#     
-#     double dev = asReal(eval(deviance, R_GlobalEnv));
-#     if(doTrace) eval(trace,R_GlobalEnv);
-#     
-#     double fac = 1.0;
-#     Rboolean hasConverged = FALSE;
-#     SEXP newPars = PROTECT(allocVector(REALSXP, nPars));
-#     int evaltotCnt = 1;
-#     double convNew = -1. /* -Wall */;
-#     int i;
-#     #define CONV_INFO_MSG(_STR_, _I_)				\
-#     ConvInfoMsg(_STR_, i, _I_, fac, minFac, maxIter, convNew)
-#     
-#     #define NON_CONV_FINIS(_ID_, _MSG_)		\
-#     if(warnOnly) {				\
-#         warning(_MSG_);				\
-#         return CONV_INFO_MSG(_MSG_, _ID_);      \
-#     }						\
-#     else					\
-#     error(_MSG_);
-#     
-#     #define NON_CONV_FINIS_1(_ID_, _MSG_, _A1_)	\
-#     if(warnOnly) {				\
-#         char msgbuf[1000];			\
-#         warning(_MSG_, _A1_);			\
-#         snprintf(msgbuf, 1000, _MSG_, _A1_);	\
-#         return CONV_INFO_MSG(msgbuf, _ID_);	\
-#     }						\
-#     else					\
-#     error(_MSG_, _A1_);
-#     
-#     #define NON_CONV_FINIS_2(_ID_, _MSG_, _A1_, _A2_)	\
-#     if(warnOnly) {					\
-#         char msgbuf[1000];				\
-#         warning(_MSG_, _A1_, _A2_);			\
-#         snprintf(msgbuf, 1000, _MSG_, _A1_, _A2_);	\
-#         return CONV_INFO_MSG(msgbuf, _ID_);		\
-#     }							\
-#     else						\
-#     error(_MSG_, _A1_, _A2_);
-#     
-#     for (i = 0; i < maxIter; i++) { // ---------------------------------------------
+# ========== Substitute code for above .Call(C_nls_iter, m, ctrl, trace) =========
+#-- First part is check on inputs
+#        doTrace (a logical)
+#        control and m must be lists
+#        maxiter
+#        tol (??how is it used?)
+#        minFac (?? how is it used)
+#        warnOnly
+#        printEval
+#-- 2nd part -- extract parts of object m
+#        ?? tmp = getAttrib(m, R_NamesSymbol)
+#        function conv -- set up as lang1(conv) -- how does it work?
+#        function incr
+#        function deviance
+#        function trace
+#        function setPars
+#        function getPars
+#        nPars
+#        dev <-  evaluate deviance
+#        fac <- 1.0
+#        hasConverged <- FALSE
+#        newPars (vector setup)
+#        evaltoCnt <- 1
+#        convNew <- -1.
+#        ConvInfoMsg ( i, _I_, fac, minFac, maxIter, convNew)
+#  3 non-converged-finis defines 
+#         i <- 0
+#         while (i < maxIter){ # main loop -- uses for loop in C
+#             i <- i+1
+#             convNew <- evaluate conv() in globalenv
+#             if (convNew <= tol)
 #             
-#             if((convNew = asReal(eval(conv, R_GlobalEnv))) <= tolerance) {
-#                 hasConverged = TRUE;
-#                 break;
-#             }
-#         
-#         SEXP newIncr = PROTECT(eval(incr, R_GlobalEnv));
-#         double
-#         *par   = REAL(pars),
-#         *npar  = REAL(newPars),
-#         *nIncr = REAL(newIncr);
-#         int evalCnt = -1;
-#         if(printEval)
-#             evalCnt = 1;
-#         
-#         while(fac >= minFac) { // 1-dim "line search"
-#             if(printEval) {
-#                 Rprintf("  It. %3d, fac= %11.6g, eval (no.,total): (%2d,%3d):",
-#                         i+1, fac, evalCnt, evaltotCnt);
-#                 evalCnt++;
-#                 evaltotCnt++;
-#             }
-#             for(int j = 0; j < nPars; j++)
-#                 npar[j] = par[j] + fac * nIncr[j];
 #             
-#             PROTECT(tmp = lang2(setPars, newPars));
-#             if (asLogical(eval(tmp, R_GlobalEnv))) { /* singular gradient */
-#                     UNPROTECT(11);
-#                 
-#                 NON_CONV_FINIS(1, _("singular gradient"));
-#             }
-#             UNPROTECT(1);
-#             
-#             double newDev = asReal(eval(deviance, R_GlobalEnv));
-#             if(printEval)
-#                 Rprintf(" new dev = %g\n", newDev);
-#             if(newDev <= dev) {
-#                 dev = newDev;
-#                 tmp = newPars;
-#                 newPars = pars;
-#                 pars = tmp;
-#                 fac = MIN(2*fac, 1);
-#                 break;
-#             } // else
-#                 fac /= 2.;
-#         }
-#         UNPROTECT(1);
-#         if(doTrace) eval(trace, R_GlobalEnv);
-#         if( fac < minFac ) {
-#             UNPROTECT(9);
-#             NON_CONV_FINIS_2(2,
-#                              _("step factor %g reduced below 'minFactor' of %g"),
-#                              fac, minFac);
-#         }
-#     }
-#     
-#     UNPROTECT(9);
-#     if(!hasConverged) {
-#         NON_CONV_FINIS_1(3,
-#                          _("number of iterations exceeded maximum of %d"),
-#                          maxIter);
-#     }
-#     else
-#         return CONV_INFO_MSG(_("converged"), 0);
-# }
-# #undef CONV_INFO_MSG
-# #undef NON_CONV_FINIS
-# #undef NON_CONV_FINIS_1
-# #undef NON_CONV_FINIS_2
-	
-	
-	
-	
-	
-##------ End of nls_iter portion	
-	}
+#         } # End main loop
+# ===== END Substitute code for above .Call(C_nls_iter, m, ctrl, trace) =========
+        nls.out <- list(m = m, convInfo = convInfo,
+                        data = substitute(data), call = cl)
+    }
     else { ## "port" i.e., PORT algorithm
 	pfit <- nls_port_fit(m, start, lower, upper, control, trace,
 			     give.v=TRUE)
