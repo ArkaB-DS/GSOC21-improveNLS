@@ -322,6 +322,20 @@ the Makevars.win issue.
 
 JN diverted to update optimx package.
 
+### [2021-6-15] chunk code from file
+
+The **R Markdown Cookbook** is quite useful in giving hints on some features
+of R Markdown. In particular, sections 16.1 to 16.3 of
+
+\url{https://bookdown.org/yihui/rmarkdown-cookbook/}
+
+show how to use R scripts saved in files within chunks of R Markdown documents.
+This is important, as we may wish to list such files, but copying the script
+into the text of the document means that this copy and the original file can 
+become unsynchronized.
+
+
+
 ==================================================================================
 
 ### 5. Implementation of nonlinear least squares methods

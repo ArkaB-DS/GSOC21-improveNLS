@@ -167,14 +167,6 @@ provides more than sufficient information for our needs.
 
 From the above discussion, the following offers a possible compact solution.
 
-```{r mymachid}
-sy<-Sys.info()
-tsstr<- format(Sys.time(), "%Y%m%d%H%M")
-cpu<-get_cpu()
-ram<-round(get_ram()/(1024*1024*1000)) #fudged to make it work OK
-machid<-paste(sy["nodename"],":",sy["user"],"-",sy["sysname"],"-",sy["release"],
-      "|",cpu$model_name,"|",ram,"GB", sep='')
-print(machid)
+```{r code=xfun::read_utf8('MachID.R')}
 ```
-
 
