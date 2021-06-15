@@ -1,10 +1,16 @@
 ---
 title: "A Machine Profile Summary"
-author:
+author: 
   - John C. Nash, University of Ottawa, Canada
-date: "08/06/2021"
-output: pdf_document
+date: "14/06/2021"
+bibliography: ImproveNLS.bib
+output: 
+  pdf_document:
+    keep_tex: false
 ---
+
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+
 
 
 ```{r setup, include=FALSE}
@@ -169,4 +175,7 @@ From the above discussion, the following offers a possible compact solution.
 
 ```{r code=xfun::read_utf8('MachID.R')}
 ```
+
+Note that we are reading from the file `MachID.R` so that this file is usable elsewhere
+and the current document does not become out of sync with the working MachID.
 
