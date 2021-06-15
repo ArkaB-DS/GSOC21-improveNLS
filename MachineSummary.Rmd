@@ -9,7 +9,7 @@ output:
     keep_tex: false
 ---
 
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+<!-- date: "`r format(Sys.time(), '%d %B, %Y')`" -->
 
 
 
