@@ -28,3 +28,10 @@ ndorig0
 library(nlsalt)
 ndalt0<-numericDeriv(Ccall, Ctheta)
 print(all.equal(ndorig0, ndalt0))
+
+# retest nls
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+
+# summarise
+summary(fit)
+
