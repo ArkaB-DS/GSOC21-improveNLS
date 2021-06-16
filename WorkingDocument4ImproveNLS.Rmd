@@ -334,6 +334,15 @@ This is important, as we may wish to list such files, but copying the script
 into the text of the document means that this copy and the original file can 
 become unsynchronized.
 
+### [2021-6-15] nlsalt issues
+
+1) Need to ensure the name "nlsalt" is fixed DESCRIPTION, NAMESPACE (dynload line),
+.gitignore (.so line can be *.so), init.c (dynload line, R_init line)
+
+2) appears new all-R numericDeriv not quite right for all nls examples. Probably 
+(to be determined??) whether example uses a function or expression in the definition
+of the model.
+
 
 
 ==================================================================================
