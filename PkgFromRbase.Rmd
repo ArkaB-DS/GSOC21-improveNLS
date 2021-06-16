@@ -130,7 +130,15 @@ do so with R functions. They may then be documented as needed.
 
 It is worth mentioning that the NAMESPACE file provided by Duncan is an
 important part of the packaging. It could be worthwhile to document the
-elements in that file needed for a package such as `nlspkg`.
+elements in that file needed for a package such as `nlspkg`. In particular,
+however, we must note that in renaming the package from `nlspkg` to something
+else, the change of name must be mirrored in the line
+
+```
+useDynLib(nlspkg, .registration = TRUE, .fixes = "C_")
+```
+
+where `nlspkg` in this line must be changed appropriately.
 
 # Developing an alternative set of functions and alternative package
 
