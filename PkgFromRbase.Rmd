@@ -128,6 +128,8 @@ their names have underscore characters in the names). It is these functions
 that our "Improvements to nls()" project aims to replace where sensible to
 do so with R functions. They may then be documented as needed.
 
+### Name issues -- IMPORTANT
+
 It is worth mentioning that the NAMESPACE file provided by Duncan is an
 important part of the packaging. It could be worthwhile to document the
 elements in that file needed for a package such as `nlspkg`. In particular,
@@ -139,6 +141,17 @@ useDynLib(nlspkg, .registration = TRUE, .fixes = "C_")
 ```
 
 where `nlspkg` in this line must be changed appropriately.
+
+We note that name change is ALSO required in `src/init.c`
+in the line 
+
+```
+void attribute_visible R_init_nlspkg(DllInfo *dll)
+```
+
+For version control, the file `.gitignore` has two entries: one is `*.0` and
+the other, initially, was `nlspkg.so`. I changed the latter to `*.so` and this
+appears to be satisfactory for general use.
 
 # Developing an alternative set of functions and alternative package
 
