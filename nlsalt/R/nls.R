@@ -25,7 +25,8 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
                  eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
 ## Note: this expr must be set up as a call to work properly according to JN??
 ## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
-{    cat("numericDeriv-Alt\n")
+{   ndtrace<-TRUE
+#    if(ndtrace) cat("numericDeriv-Alt\n")
     dir <- rep_len(dir, length(theta))
     stopifnot(is.finite(eps), eps > 0)
     rho1 <- new.env(FALSE, rho, 0)
@@ -62,8 +63,15 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
        } else { ## forward diff
           JJ[,j] <- dir[j]*(res1-res0)/delta
        }  # end forward diff
+       assign(theta[j],origPar,rho) # restore the parameter value !! IMPORTANT
     } # end loop over the parameters
     attr(res0, "gradient") <- JJ
+    if (ndtrace){
+       cat("par:")
+       for (j in 1:nt){ cat(get(theta[j],rho)," ") }
+       cat("\n")
+       print(res0)
+    }
     return(res0)
 }
 

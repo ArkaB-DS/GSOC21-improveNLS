@@ -61,8 +61,9 @@ static const R_CallMethodDef CallEntries[] = {
 /*    CALLDEF(cutree, 2),
     CALLDEF(isoreg, 1),
     CALLDEF(monoFC_m, 2), */
-/*    CALLDEF(numeric_deriv, 7), */
+    CALLDEF(numeric_deriv, 7), 
 /* above removed as nls.R now has all-R version of code 20210604 */
+
     CALLDEF(nls_iter, 3),
 /*    CALLDEF(setup_starma, 8),
     CALLDEF(free_starma, 1),
@@ -303,7 +304,7 @@ static const R_ExternalMethodDef ExtEntries[] = {
 };
 
 
-void attribute_visible R_init_nlspkg(DllInfo *dll)
+void attribute_visible R_init_nlsalt(DllInfo *dll)
 {
     R_registerRoutines(dll, CEntries, CallEntries, FortEntries, ExtEntries);
     R_useDynamicSymbols(dll, FALSE);
