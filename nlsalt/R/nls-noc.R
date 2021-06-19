@@ -1,4 +1,5 @@
 #  File src/library/stats/R/nls.R
+#     nls-noc.R -- replacement for nls.R
 #  Part of the R package, https://www.R-project.org
 #
 #  Copyright (C) 2000-2020 The R Core Team
@@ -198,7 +199,7 @@ nls <-
 	    cl$lower <- NULL # see PR#15960 -- confint() would use these regardless of algorithm
 	    cl$upper <- NULL
 	}
-        convInfo <- .Call(C_nls_iter, m, ctrl, trace)
+#        convInfo <- nlsiter(m, ctrl, trace) -- we will build convInfo
 ##------ Beginning of nls_iter portion	
 # /*
 #     *  call to nls_iter from R --- .Call("nls_iter", m, control, doTrace)
@@ -208,44 +209,26 @@ nls <-
 # */
 #     SEXP
 # nls_iter(SEXP m, SEXP control, SEXP doTraceArg)
-# {
-#     int doTrace = asLogical(doTraceArg);
-#     
-#     if(!isNewList(control))
-#         error(_("'control' must be a list"));
-#     if(!isNewList(m))
-#         error(_("'m' must be a list"));
-#     
-#     SEXP tmp, conv;
-#     PROTECT(tmp = getAttrib(control, R_NamesSymbol));
-#     
-#     conv = getListElement(control, tmp, "maxiter");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$maxiter");
-#     int maxIter = asInteger(conv);
-#     
-#     conv = getListElement(control, tmp, "tol");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$tol");
-#     double tolerance = asReal(conv);
+#  nls-noc:      m      ctrl        trace
+# {                                 doTrace
+# ?? Some of these tests might be better earlier
+      if (! is.list(control) ) stop("'control' must be a list")
+      if (! is.list(m) ) stop("'m' must be a list")
+      if ( is.null(ctrl$maxiter) || (! is.numeric(ctrl$maxiter)) ) stop("Missing ctrl$maxiter")
+      if ( is.null(ctrl$tol) || ! is.numeric(ctrl$tol) ) stop("Missing ctrl$tol")
 #     
 #     conv = getListElement(control, tmp, "minFactor");
-#     if(conv == NULL || !isNumeric(conv))
-#         error(_("'%s' absent"), "control$minFactor");
-#     double minFac = asReal(conv);
-#     
+      if( is.null(ctrl$minFactor) || ! is.numeric(ctrl$minFactor) ) stop("Missing ctrl$minFactor")
+
 #     conv = getListElement(control, tmp, "warnOnly");
-#     if(conv == NULL || !isLogical(conv))
-#         error(_("'%s' absent"), "control$warnOnly");
-#     int warnOnly = asLogical(conv);
+      if( is.null(ctrl$warnOnly) || ! is.logical(ctrl$warnOnly))
+            stop("Missing ctrl$warnOnly")
 #     
 #     conv = getListElement(control, tmp, "printEval");
-#     if(conv == NULL || !isLogical(conv))
-#         error(_("'%s' absent"), "control$printEval");
-#     Rboolean printEval = asLogical(conv);
+      if( is.null(ctrl$printEval) || ! is.logical(ctrl$printEval)) stop("Missing ctrl$printEval")
 #     
 #     // now get parts from 'm'  ---------------------------------
-#         tmp = getAttrib(m, R_NamesSymbol);
+#      tmp = getAttrib(m, R_NamesSymbol);
 #     
 #     conv = getListElement(m, tmp, "conv");
 #     if(conv == NULL || !isFunction(conv))

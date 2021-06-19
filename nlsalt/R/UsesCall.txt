@@ -1,0 +1,15 @@
+nlminb.R:    .Call(C_port_ivset, 2, iv, v)
+nlminb.R:    .Call(C_port_nlminb, obj, grad, hess, rho, low, upp,
+nlsModel.R:    gradCall <-
+nlsModel.R:        attr(ans, "gradient") <- eval(gradCall)
+nlsModel.R:		 gradCall[[length(gradCall) - 1L]] <<- useP
+nlspl.R:    gradCall <-
+nlspl.R:        attr(ans, "gradient") <- eval(gradCall)
+nlspl.R:                 gradCall[[length(gradCall)]] <<- useParams
+nlsportfit.R:    .Call(C_port_ivset, 1, iv, v)
+nlsportfit.R:        .Call(C_port_nlsb, m,
+nls-profile.R:		     if(sum(vary)) .Call(C_nls_iter, fittedModel, ctrl, trace)
+nls.R:        convInfo <- .Call(C_nls_iter, m, ctrl, trace)
+nls.R:#     *  call to nls_iter from R --- .Call("nls_iter", m, control, doTrace)
+selfStart.R:		       mCall = as.list(match.call(func, call = object[[2L]])),
+selfStart.R:		       mCall = as.list(match.call(func, call = object[[3L]])),
