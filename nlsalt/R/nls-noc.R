@@ -23,7 +23,7 @@
 ###
 ## port_cpos, port_msg() , ... are in  ==> ./nlminb.R
 
-nls <-
+nlsx <-
   function (formula, data = parent.frame(), start, control = nls.control(),
             algorithm = c("default", "plinear", "port"), trace = FALSE,
             subset, weights, na.action, model = FALSE,
@@ -188,10 +188,11 @@ nls <-
     scOff  <- ctrl$scaleOffset
     nDcntr <- ctrl$nDcentral
     m <- switch(algorithm,
-		plinear = nlsModel.plinear(formula, mf, start, wts,        scaleOffset=scOff, nDcentral=nDcntr),
-		port    = nlsModel        (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
-                default = nlsModel        (formula, mf, start, wts,        scaleOffset=scOff, nDcentral=nDcntr))
-
+	plinear = nlsModel.plinear(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr),
+	port = nlsModel (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
+        default = nlsModel (formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
+    cat("Right after setup -- m:\n")
+    print(str(m))
     ## Iterate
     if (algorithm != "port") { ## i.e. "default" or  "plinear" :
 	if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
@@ -226,42 +227,34 @@ nls <-
 #     
 #     conv = getListElement(control, tmp, "printEval");
       if( is.null(ctrl$printEval) || ! is.logical(ctrl$printEval)) stop("Missing ctrl$printEval")
+      cat("m:\n")
+      print(str(m))
 #     
 #     // now get parts from 'm'  ---------------------------------
 #      tmp = getAttrib(m, R_NamesSymbol);
-#     
-#     conv = getListElement(m, tmp, "conv");
-#     if(conv == NULL || !isFunction(conv))
-#         error(_("'%s' absent"), "m$conv()");
-#     PROTECT(conv = lang1(conv));
-#     
-#     SEXP incr = getListElement(m, tmp, "incr");
-#     if(incr == NULL || !isFunction(incr))
-#         error(_("'%s' absent"), "m$incr()");
-#     PROTECT(incr = lang1(incr));
-#     
-#     SEXP deviance = getListElement(m, tmp, "deviance");
-#     if(deviance == NULL || !isFunction(deviance))
-#         error(_("'%s' absent"), "m$deviance()");
-#     PROTECT(deviance = lang1(deviance));
-#     
-#     SEXP trace = getListElement(m, tmp, "trace");
-#     if(trace == NULL || !isFunction(trace))
-#         error(_("'%s' absent"), "m$trace()");
-#     PROTECT(trace = lang1(trace));
-#     
-#     SEXP setPars = getListElement(m, tmp, "setPars");
-#     if(setPars == NULL || !isFunction(setPars))
-#         error(_("'%s' absent"), "m$setPars()");
-#     PROTECT(setPars);
-#     
-#     SEXP getPars = getListElement(m, tmp, "getPars");
-#     if(getPars == NULL || !isFunction(getPars))
-#         error(_("'%s' absent"), "m$getPars()");
-#     PROTECT(getPars = lang1(getPars));
-#     
-#     SEXP pars = PROTECT(eval(getPars, R_GlobalEnv));
-#     int nPars = LENGTH(pars);
+      tmpa <- attributes(m)
+      conv<-m$conv
+      if (is.null(conv) || ! is.function(conv)) stop("m$conv missing")
+      incr<-m$incr
+      if (is.null(incr) || ! is.function(incr)) stop("m$incr missing")
+      deviance<-m$deviance
+      if (is.null(deviance) || ! is.function(deviance)) stop("m$deviance missing")
+      tracefn<-m$trace # BE CAREFUL WITH SAME NAMES !!
+      if (is.null(tracefn) || ! is.function(tracefn)) stop("m$trace missing")
+      setPars<-m$setPars
+      if (is.null(setPars) || ! is.function(setPars)) stop("m$setPars missing")
+      getPars<-m$getPars
+      if (is.null(getPars) || ! is.function(getPars)) stop("m$getPars missing")
+      pars <- eval(getPars(), .GlobalEnv)
+#      cat("pars=")
+#      print(pars)
+      nPars <- length(pars)
+      dev <- eval(deviance(), .GlobalEnv)
+      cat("dev=",dev,"\n")
+      if (trace) {
+         cat("result of eval of tracefn:")
+         eval(tracefn, .GlobalEnv)
+      }
 #     
 #     double dev = asReal(eval(deviance, R_GlobalEnv));
 #     if(doTrace) eval(trace,R_GlobalEnv);
@@ -373,7 +366,8 @@ nls <-
 # #undef NON_CONV_FINIS
 # #undef NON_CONV_FINIS_1
 # #undef NON_CONV_FINIS_2
-##------ End of nls_iter portion	
+##------ End of nls_iter portion
+        convInfo <- NULL # temporary assignment	
 	nls.out <- list(m = m, convInfo = convInfo,
 			data = substitute(data), call = cl)
 	}

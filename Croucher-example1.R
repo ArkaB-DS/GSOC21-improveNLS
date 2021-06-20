@@ -33,5 +33,7 @@ print(all.equal(ndorig0, ndalt0))
 fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
 
 # summarise
-summary(fit)
 
+summary(fit)
+# try new all-R form
+fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
