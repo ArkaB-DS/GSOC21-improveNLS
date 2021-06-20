@@ -252,22 +252,25 @@ nlsx <-
       dev <- eval(deviance(), .GlobalEnv)
       cat("dev=",dev,"\n")
       if (trace) {
-         cat("result of eval of tracefn:")
+         cat("result of eval of tracefn:\n")
          eval(tracefn, .GlobalEnv)
       }
-#     
-#     double dev = asReal(eval(deviance, R_GlobalEnv));
-#     if(doTrace) eval(trace,R_GlobalEnv);
-#     
-#     double fac = 1.0;
-#     Rboolean hasConverged = FALSE;
+      fac <- 1.0;
+      hasConverged <- FALSE;
 #     SEXP newPars = PROTECT(allocVector(REALSXP, nPars));
+      newPars <- rep(NA,nPars)
 #     int evaltotCnt = 1;
+      evaltotCnt <- 1
+      convNew <- -1.0
 #     double convNew = -1. /* -Wall */;
 #     int i;
 #     #define CONV_INFO_MSG(_STR_, _I_)				\
 #     ConvInfoMsg(_STR_, i, _I_, fac, minFac, maxIter, convNew)
+#  ?? how does this ConvInfoMsg work
 #     
+#     ?? Seems this is defining the behaviour i.e., a function definition
+#     ?? so the code is NOT executed here, but when NON_CONV_FINIS?
+#     ??  are called. 
 #     #define NON_CONV_FINIS(_ID_, _MSG_)		\
 #     if(warnOnly) {				\
 #         warning(_MSG_);				\
@@ -275,6 +278,14 @@ nlsx <-
 #     }						\
 #     else					\
 #     error(_MSG_);
+# ?? here are my replacements
+##      cat("ctrl$warnOnly =",ctrl$warnOnly,"\n")
+##      if (ctrl$warnOnly){
+##         warning("-- need ConvInfoMsg here ?? --")
+##         return(NULL) #?? need to return proper info to match nls()
+##      } else {
+##         stop("--need a suitable msg to stop --??")
+##      }
 #     
 #     #define NON_CONV_FINIS_1(_ID_, _MSG_, _A1_)	\
 #     if(warnOnly) {				\
