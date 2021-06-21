@@ -202,13 +202,6 @@ nlsx <-
 	}
 #        convInfo <- nlsiter(m, ctrl, trace) -- we will build convInfo
 ##------ Beginning of nls_iter portion	
-# /*
-#     *  call to nls_iter from R --- .Call("nls_iter", m, control, doTrace)
-# *  where m and control are nlsModel and nlsControl objects
-# *             doTrace is a logical value.
-# *  m is modified; the return value is a "convergence-information" list.
-# */
-#     SEXP
 # nls_iter(SEXP m, SEXP control, SEXP doTraceArg)
 #  nls-noc:      m      ctrl        trace
 # {                                 doTrace
@@ -262,59 +255,22 @@ nlsx <-
 #     int evaltotCnt = 1;
       evaltotCnt <- 1
       convNew <- -1.0
-#     double convNew = -1. /* -Wall */;
-#     int i;
-#     #define CONV_INFO_MSG(_STR_, _I_)				\
-#     ConvInfoMsg(_STR_, i, _I_, fac, minFac, maxIter, convNew)
-#  ?? how does this ConvInfoMsg work
-#     
-#     ?? Seems this is defining the behaviour i.e., a function definition
-#     ?? so the code is NOT executed here, but when NON_CONV_FINIS?
-#     ??  are called. 
-#     #define NON_CONV_FINIS(_ID_, _MSG_)		\
-#     if(warnOnly) {				\
-#         warning(_MSG_);				\
-#         return CONV_INFO_MSG(_MSG_, _ID_);      \
-#     }						\
-#     else					\
-#     error(_MSG_);
-# ?? here are my replacements
-##      cat("ctrl$warnOnly =",ctrl$warnOnly,"\n")
-##      if (ctrl$warnOnly){
-##         warning("-- need ConvInfoMsg here ?? --")
-##         return(NULL) #?? need to return proper info to match nls()
-##      } else {
-##         stop("--need a suitable msg to stop --??")
-##      }
-#     
-#     #define NON_CONV_FINIS_1(_ID_, _MSG_, _A1_)	\
-#     if(warnOnly) {				\
-#         char msgbuf[1000];			\
-#         warning(_MSG_, _A1_);			\
-#         snprintf(msgbuf, 1000, _MSG_, _A1_);	\
-#         return CONV_INFO_MSG(msgbuf, _ID_);	\
-#     }						\
-#     else					\
-#     error(_MSG_, _A1_);
-#     
-#     #define NON_CONV_FINIS_2(_ID_, _MSG_, _A1_, _A2_)	\
-#     if(warnOnly) {					\
-#         char msgbuf[1000];				\
-#         warning(_MSG_, _A1_, _A2_);			\
-#         snprintf(msgbuf, 1000, _MSG_, _A1_, _A2_);	\
-#         return CONV_INFO_MSG(msgbuf, _ID_);		\
-#     }							\
-#     else						\
-#     error(_MSG_, _A1_, _A2_);
-#     
+#     double convNew = -1. /* -Wall */; ?? what is -Wall about?
 #     for (i = 0; i < maxIter; i++) { // ---------------------------------------------
-#             
-#             if((convNew = asReal(eval(conv, R_GlobalEnv))) <= tolerance) {
-#                 hasConverged = TRUE;
-#                 break;
-#             }
-#         
-#         SEXP newIncr = PROTECT(eval(incr, R_GlobalEnv));
+      for (i in 1:ctrl$maxiter){ # top of main iteration -- are there better ways
+#       Test for termination             
+         convNew <-eval(conv, .GlobalEnv)
+         cat("convNew:")
+         print(str(convNew))
+         if (convNew <= ctrl$tol) {
+            hasConverged <- TRUE
+            break;
+         }
+         # incr computes the delta for Gauss-Newton. Bit incr calls QR, which uses 
+         # setPars to create the QR matrix.
+         newIncr <- eval(incr, .GlobalEnv)
+         cat("newIncr:")
+         print(str(newIncr))
 #         double
 #         *par   = REAL(pars),
 #         *npar  = REAL(newPars),
@@ -372,7 +328,7 @@ nlsx <-
 #     }
 #     else
 #         return CONV_INFO_MSG(_("converged"), 0);
-# }
+    } # end of main loop for default iteration
 # #undef CONV_INFO_MSG
 # #undef NON_CONV_FINIS
 # #undef NON_CONV_FINIS_1
@@ -381,7 +337,7 @@ nlsx <-
         convInfo <- NULL # temporary assignment	
 	nls.out <- list(m = m, convInfo = convInfo,
 			data = substitute(data), call = cl)
-	}
+    } # end of default and plinear options
     else { ## "port" i.e., PORT algorithm
 	pfit <- nls_port_fit(m, start, lower, upper, control, trace,
 			     give.v=TRUE)
@@ -417,12 +373,9 @@ nlsx <-
     nls.out$call$trace <- trace
 
     nls.out$na.action <- attr(mf, "na.action")
-    nls.out$dataClasses <-
-        attr(attr(mf, "terms"), "dataClasses")[varNamesRHS]
-    if(model)
-	nls.out$model <- mf
-    if(!mWeights)
-	nls.out$weights <- wts
+    nls.out$dataClasses <- attr(attr(mf, "terms"), "dataClasses")[varNamesRHS]
+    if(model) nls.out$model <- mf
+    if(!mWeights) nls.out$weights <- wts
     nls.out$control <- control
     class(nls.out) <- "nls"
     nls.out
