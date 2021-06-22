@@ -15,13 +15,6 @@ output:
 
 - See how `dir` works in nlsalt::numericDeriv(); need some examples/tests
 
-- Do we need to update nlsalt and nlspkg on a machine when there are changes 
-  imported via git?
-
-- ?? AB: in our documents, I am currently copying and pasting material. However, it
-  would be sensible to do an "include" of the material from the nlsalt package, but
-  to do that cleanly, we will want to separate the functions into different files.
-  This will mean we have to be careful that the package still builds OK.
 
 
 ## Abstract
@@ -343,6 +336,45 @@ become unsynchronized.
 (to be determined??) whether example uses a function or expression in the definition
 of the model.
 
+### [2021-6-21] Meeting etc.
+
+Met online. 
+
+- discussed testing schemes. Note 
+\url{}
+
+- talked about `nls-noc.R` process. This is ongoing by JN
+
+- later in day, JN contacted Doug Bates to ask if there are developer notes or
+  other information, as there seem to be extra features in the nlsModel() output
+  and the nls_iter code in nls.c
+  
+  
+
+### [2021-6-22] Answering some of the TODOS / nls-noc.R / nlsModelDoc.Rmd
+
+- Do we need to update nlsalt and nlspkg separately from improvenls on a machine 
+  when there are changes imported via git? Answer is that git within improvenls
+  directory seems sufficient.
+  
+- response from Doug Bates. Added him to gitlab project.
+
+- Expanded document nlsModelDoc.Rmd to show what different objects created actually
+  do. There are still plenty of questions, especially about `setPars()`.
+  
+- AB: in our documents, I am currently copying and pasting material. However, it
+  would be sensible to do an "include" of the material from the nlsalt package, but
+  to do that cleanly, we will want to separate the functions into different files.
+  This will mean we have to be careful that the package still builds OK.
+   
+  This can be accomplished via (following commented in the Rmd file). Note that
+  the issue is addressed in several ways in `/home/gramps/GrampsSetup/GrampsSetup.Rmd`,
+  which needs to be better explained here. 
+
+<!-- # Note this setup -- gives nice output -->
+<!--   ```{bash tt, echo=FALSE, comment=NA} -->
+<!--    cat ~/bin/f-g-M21 -->
+<!--   ``` -->
 
 
 ==================================================================================
