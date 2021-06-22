@@ -377,6 +377,15 @@ Met online.
 <!--   ``` -->
 
 
+https://towardsdatascience.com/rtest-pretty-testing-of-r-packages-50f50b135650
+
+
+https://towardsdatascience.com/unit-testing-in-r-68ab9cc8d211
+
+https://r-pkgs.org/tests.html
+
+
+
 ==================================================================================
 
 ### 5. Implementation of nonlinear least squares methods
