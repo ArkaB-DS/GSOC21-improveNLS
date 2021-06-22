@@ -1,5 +1,5 @@
 ---
-title: "Understaning nlsModel in the base R nls() function"
+title: "Understanding nlsModel in the base R nls() function"
 author:
   - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
   - John C. Nash, University of Ottawa, Canada
