@@ -223,6 +223,12 @@ print(nmodh1$getEnv())
 
 ##  trace() 
 
+The "trace" function seems to display information about the current state of the model estimation.
+
+ISSUE: because there is a "trace" argument to nls() (and to functions in package `nlsr` and others),
+would it not be better to use `tracefn()`??
+
+
 ```{r ttrace} 
 cat("Display Croucher trace from nmodc1 as currently set:\n")
 print(nmodc1$trace())
@@ -232,8 +238,18 @@ print(nmodh1$trace())
 
 ##  Rmat()  
 
-"Rmat" seems to generate some information about the parameters. Is it the variance-covariance
-matrix? Or possibly some related structure??
+"Rmat" appears to return the current R matrix of the QR decomposition.
+
+This could lead to some confusion if we build an augmented matrix for the
+Levenberg-Marquardt and LM + Nash variant of the stabilization. We may need to
+watch this carefully to see where it is used. A search shows ONLY
+usage within the packages `nlspkg`  and `nlsalt` to compute `XtXinv`, 
+to get the variance-covariance of the parameters in `summary.nls()`.
+
+?? We need to decide how to generate `Rmat` for the purposes of getting
+this information. In particular, in running the estimation iteration, we
+augment the matrix, so it is important to think how to get the right 
+information for `summary.nls`.
 
 
 ```{r tRmat}  
