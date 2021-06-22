@@ -53,10 +53,11 @@ Cdata<-data.frame(xdata, ydata)
 ## Try numericDeriv() function
 Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
 Ctheta<-c("p1","p2")
+Cstart<-c(p1=p1, p2=p2)
 
 
-## nmodc1<-nlspkg::nlsModel(form=Cform, data=Cdata, start=c(p1,p2), wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
-## print(str(nmodc1))
+nmodc1<-nlspkg::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+print(str(nmodc1))
 
 ```
 
@@ -78,9 +79,174 @@ weeddata1  <-  data.frame(y=ydat, tt=tdat)
 
 ## Now ready to try things out.
 library(nlsalt) # ?? needed because base R does not export nlsModel()
-nmod1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
-str(nmod1)
-ls.str(nmod1)
-print(nmod1)
+nmodh1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+str(nmodh1)
+ls.str(nmodh1)
+print(nmodh1)
 ```
+
+# Examining the nlsModel output
+
+The output of `nlsModel` is an object of class attribute "nlsModel" with 16 elements. (??Is this always the case, 
+or can the call cause elements to be added or not produced?)
+
+## resid()
+
+This function computes the residuals in the current environment. (?? Is this .GlobalEnv? Can
+that environment be changed i.e., is it an argument to resid()?)
+
+```{r tresid}
+cat("Display Croucher residuals from nmodc1 as currently set:\n")
+print(nmodc1$resid())
+cat("Display Hobbs residuals from nmodc1 as currently set:\n")
+print(nmodh1$resid())
+```
+
+
+## fitted()
+
+This function computes the fitted values of the nonlinear model in the current environment.
+The output includes an attribute, "gradient", which is actually the Jacobian matrix of which
+the k, j element is the 
+
+```{r fitted}
+cat("Display Croucher fitted model values from nmodc1 as currently set:\n")
+print(nmodc1$fitted())
+cat("Display Hobbs fitted model values from nmodc1 as currently set:\n")
+print(nmodh1$fitted())
+```
+
+
+##  formula()  
+
+```{r tformula}  
+cat("Display Croucher formula from nmodc1 as currently set:\n")
+print(nmodc1$formula())
+cat("Display Hobbs formula from nmodc1 as currently set:\n")
+print(nmodh1$formula())
+
+
+```
+
+
+
+##  deviance()  
+
+```{r tdeviance}  
+cat("Display Croucher deviance from nmodc1 as currently set:\n")
+print(nmodc1$deviance())
+cat("Display Hobbs deviance from nmodc1 as currently set:\n")
+print(nmodh1$deviance())
+```
+
+##  lhs()  
+
+```{r tlhs}  
+cat("Display Croucher lhs from nmodc1 as currently set:\n")
+print(nmodc1$lhs())
+cat("Display Hobbs lhs from nmodc1 as currently set:\n")
+print(nmodh1$lhs())
+```
+
+##  gradient()  
+
+```{r tgradient}  
+cat("Display Croucher gradient from nmodc1 as currently set:\n")
+print(nmodc1$gradient())
+cat("Display Hobbs gradient from nmodc1 as currently set:\n")
+print(nmodh1$gradient())
+```
+
+##  conv()  
+
+```{r tconv}
+cat("Display Croucher conv from nmodc1 as currently set:\n")
+print(nmodc1$conv())
+cat("Display Hobbs conv from nmodc1 as currently set:\n")
+print(nmodh1$conv())
+
+```
+
+##  incr()  
+
+```{r tincr}  
+cat("Display Croucher incr from nmodc1 as currently set:\n")
+print(nmodc1$incr())
+cat("Display Hobbs incr from nmodc1 as currently set:\n")
+print(nmodh1$incr())
+```
+
+##  setVarying(vary = rep_len(TRUE, np))  
+
+```{r tsetVarying(vary = rep_len(TRUE, np))  
+cat("Display Croucher setVarying from nmodc1 as currently set:\n")
+print(nmodc1$setVarying())
+cat("Display Hobbs setVarying from nmodc1 as currently set:\n")
+print(nmodh1$setVarying())
+```
+
+##  setPars(newPars)  
+
+```{r tsetPars(newPars)  
+cat("Display Croucher setPars(newPars) from nmodc1 as currently set:\n")
+print(nmodc1$setPars(newPars)())
+cat("Display Hobbs setPars(newPars) from nmodc1 as currently set:\n")
+print(nmodh1$setPars(newPars)())
+```
+
+##  getPars()  
+
+```{r tgetPars}  
+cat("Display Croucher getPars from nmodc1 as currently set:\n")
+print(nmodc1$fitted())
+cat("Display Hobbs getPars from nmodc1 as currently set:\n")
+print(nmodh1$getPars())
+```
+
+##  getAllPars()  
+
+```{r tgetAllPars}  
+cat("Display Croucher getAllPars from nmodc1 as currently set:\n")
+print(nmodc1$getAllPars())
+cat("Display Hobbs getAllPars from nmodc1 as currently set:\n")
+print(nmodh1$getAllPars())
+```
+
+##  getEnv() 
+
+```{r tgetEnv}
+cat("Display Croucher fitted model values from nmodc1 as currently set:\n")
+print(nmodc1$getEnv())
+cat("Display Hobbs fitted model values from nmodc1 as currently set:\n")
+print(nmodh1$getEnv())
+```
+
+##  trace() 
+
+```{r ttrace} 
+cat("Display Croucher trace from nmodc1 as currently set:\n")
+print(nmodc1$trace())
+cat("Display Hobbs trace from nmodc1 as currently set:\n")
+print(nmodh1$trace())
+```
+
+##  Rmat()  
+
+```{r tRmat}  
+cat("Display Croucher Rmat from nmodc1 as currently set:\n")
+print(nmodc1$Rmat())
+cat("Display Hobbs Rmat from nmodc1 as currently set:\n")
+print(nmodh1$Rmat())
+```
+
+##  predict(newdata = list(), qr = FALSE)  
+
+```{r tpredict(newdata = list(), qr = FALSE)  
+cat("Display Croucher predict from nmodc1 as currently set:\n")
+print(nmodc1$predict())
+cat("Display Hobbs predict from nmodc1 as currently set:\n")
+print(nmodh1$predict())
+```
+
+
 
