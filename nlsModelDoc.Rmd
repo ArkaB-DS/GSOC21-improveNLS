@@ -241,12 +241,25 @@ print(nmodh1$Rmat())
 
 ##  predict(newdata = list(), qr = FALSE)  
 
-```{r tpredict(newdata = list(), qr = FALSE)  
+```{r tpredict}  
 cat("Display Croucher predict from nmodc1 as currently set:\n")
+cat("first with no new parameters -- we get the fitted values\n")
 print(nmodc1$predict())
+cat("Now with some new data\n")
+newcdata<-data.frame(xdata=0.1, ydata=1.1)
+print(nmodc1$predict(newdata=newcdata))
 cat("Display Hobbs predict from nmodc1 as currently set:\n")
+cat("first with no new parameters -- we get the fitted values\n")
 print(nmodh1$predict())
+cat("Now with some new data\n")
+newhdata<-data.frame(tt=c(13,14), y=c(120,200))
+print(nmodh1$predict(newdata=newhdata))
 ```
 
 
+# Discussion
 
+Here we will look at some of the issues of using nlsModel. In particular, we will examine
+how this function may need to be modified to make it easier to maintain and use.
+
+# References
