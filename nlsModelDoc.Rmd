@@ -1,14 +1,14 @@
 ---
-title: "The nlsModel 'm' object"
-author: "John C. Nash"
-date: "22/06/2021"
-output:
-  pdf_document: default
+title: "Understaning nlsModel in the base R nls() function"
+author:
+  - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+  - John C. Nash, University of Ottawa, Canada
+date: "05/06/2021"
+output: pdf_document
+bibliography: ImproveNLS.bib
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+<!-- - Heather Turner, University of Warwick, UK -->
 
 # Objective
 
@@ -34,7 +34,65 @@ Here we will at time of writing (June 2021) only deal with the default case.
 
 # Generating an 'm`' object
 
-Let us use the Croucher problem.
+Let us use the Croucher problem and/or the Hobbs weed infestation problem (@jncnm79, page 120) again.
+
+```{r hobbsex}
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+str(eunsc)
+# Can we convert a string form of this "model" to a formula
+ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))"
+str(ceunsc)
+
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+
+## Now ready to try things out.
+library(nlsalt) # ?? needed because base R does not export nlsModel()
+nmod1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+str(nmod1)
+ls.str(nmod1)
+print(nmod1)
+```
 
 
+```{r croucherex}
+# Croucher-example1.R -- https://walkingrandomly.com/?p=5254
+# construct the data vectors using c()
+xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
+ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
 
+# look at it
+plot(xdata,ydata)
+
+# some starting values
+p1 = 1
+p2 = 0.2
+
+# do the fit
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+
+# summarise
+summary(fit)
+
+## Try numericDeriv() function
+Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
+Ccall<-call("-",Cform[[3]], Cform[[2]])
+Cstart=list(p1=p1,p2=p2)
+Cdata<-data.frame(xdata, ydata)
+Ctheta<-c("p1","p2")
+ndorig0<-numericDeriv(Ccall, Ctheta)
+ndorig0
+
+library(nlsalt)
+ndalt0<-numericDeriv(Ccall, Ctheta)
+print(all.equal(ndorig0, ndalt0))
+
+# retest nls
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+```

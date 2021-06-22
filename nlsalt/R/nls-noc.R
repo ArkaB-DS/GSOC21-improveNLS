@@ -254,13 +254,18 @@ nlsx <-
       newPars <- rep(NA,nPars)
 #     int evaltotCnt = 1;
       evaltotCnt <- 1
-      convNew <- -1.0
-#     double convNew = -1. /* -Wall */; ?? what is -Wall about?
-#     for (i = 0; i < maxIter; i++) { // ---------------------------------------------
+      convNew <- -1.0 # double convNew = -1. /* -Wall */; ?? what is -Wall about?
       for (i in 1:ctrl$maxiter){ # top of main iteration -- are there better ways
-#       Test for termination             
-         convNew <-eval(conv, .GlobalEnv)
-         cat("convNew:")
+#       Test for termination
+         cat("str(conv):")
+         print(str(conv))
+         cat("conv:")
+         print(conv)
+         conv<-as.call(conv)
+         cat("str(as.call(conv)):")
+         print(str(conv))
+         convNew <-eval(conv, .GlobalEnv) # ?? do we need as.call
+         cat("str(convNew):")
          print(str(convNew))
          if (convNew <= ctrl$tol) {
             hasConverged <- TRUE
@@ -268,7 +273,8 @@ nlsx <-
          }
          # incr computes the delta for Gauss-Newton. Bit incr calls QR, which uses 
          # setPars to create the QR matrix.
-         newIncr <- eval(incr, .GlobalEnv)
+         newIncr <- eval(as.call(incr), .GlobalEnv)
+	 # BUT PROTECT(incr = lang1(incr)); in C code converts incr to a call with 0 args
          cat("newIncr:")
          print(str(newIncr))
 #         double
@@ -276,16 +282,15 @@ nlsx <-
 #         *npar  = REAL(newPars),
 #         *nIncr = REAL(newIncr);
 #         int evalCnt = -1;
-#         if(printEval)
-#             evalCnt = 1;
+         if(ctrl$printEval) evalCnt <- 1
 #         
 #         while(fac >= minFac) { // 1-dim "line search"
-#             if(printEval) {
+             if(ctrl$printEval) {
 #                 Rprintf("  It. %3d, fac= %11.6g, eval (no.,total): (%2d,%3d):",
 #                         i+1, fac, evalCnt, evaltotCnt);
 #                 evalCnt++;
 #                 evaltotCnt++;
-#             }
+             }
 #             for(int j = 0; j < nPars; j++)
 #                 npar[j] = par[j] + fac * nIncr[j];
 #             
@@ -298,7 +303,7 @@ nlsx <-
 #             UNPROTECT(1);
 #             
 #             double newDev = asReal(eval(deviance, R_GlobalEnv));
-#             if(printEval)
+#             if(ctrl$printEval)
 #                 Rprintf(" new dev = %g\n", newDev);
 #             if(newDev <= dev) {
 #                 dev = newDev;
