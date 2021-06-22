@@ -1,0 +1,40 @@
+---
+title: "The nlsModel 'm' object"
+author: "John C. Nash"
+date: "22/06/2021"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objective
+
+The R function `nls()` for nonlinear least squares modeling uses a structure where
+a "model" object named `m` is built from an expression in the `nls` call. This 
+object contains a great deal of functionality in the form of data and functions that
+different parts of the `nls` infrastructure can use. In particular, `m` contains
+functions to determine if the estimation of the model is "converged" (actually if
+the process is "terminated") as well as computations of residuals and the search
+direction for the next set of parameters. 
+
+This article is an attempt to document and test the features of the nlsModel object `m`.
+
+# Location of the nlsModel code
+
+The code is found in the file `./R-devel/src/library/stats/R/nls.R` 
+
+Note that there is a version `nlsModel.plinear` for use with partially linear models
+(?? a ref would be helpful here). The default case and the use of bounds constraints
+using the `algorithm` setting "port" are handled by `nlsModel`. 
+
+Here we will at time of writing (June 2021) only deal with the default case.
+
+# Generating an 'm`' object
+
+Let us use the Croucher problem.
+
+
+
