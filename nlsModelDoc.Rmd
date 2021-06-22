@@ -232,6 +232,10 @@ print(nmodh1$trace())
 
 ##  Rmat()  
 
+"Rmat" seems to generate some information about the parameters. Is it the variance-covariance
+matrix? Or possibly some related structure??
+
+
 ```{r tRmat}  
 cat("Display Croucher Rmat from nmodc1 as currently set:\n")
 print(nmodc1$Rmat())
@@ -240,6 +244,11 @@ print(nmodh1$Rmat())
 ```
 
 ##  predict(newdata = list(), qr = FALSE)  
+
+This function allows predicted values of the model to be calculated for dependent variable
+data in the list "newdata". 
+
+?? What does qr=FALSE do??
 
 ```{r tpredict}  
 cat("Display Croucher predict from nmodc1 as currently set:\n")
@@ -254,7 +263,12 @@ print(nmodh1$predict())
 cat("Now with some new data\n")
 newhdata<-data.frame(tt=c(13,14), y=c(120,200))
 print(nmodh1$predict(newdata=newhdata))
+
+cat("trying again with qr=TRUE\n")
+print(nmodh1$predict(newdata=newhdata, qr=TRUE))
 ```
+
+Using "qr=TRUE" does not seem to make any difference. Need to delve further??
 
 
 # Discussion
