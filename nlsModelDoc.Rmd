@@ -169,6 +169,11 @@ print(nmodh1$conv())
 
 ##  incr()  
 
+?? This function appears to return the current search direction from the Gauss-Newton
+equations. We need to be very CAREFUL as we augment the `nls()` procedure to allow for
+Levenberg-Marquardt stabilizations and some different approaches to the solution
+iteration.
+
 ```{r tincr}  
 cat("Display Croucher incr from nmodc1 as currently set:\n")
 print(nmodc1$incr())
@@ -176,9 +181,13 @@ cat("Display Hobbs incr from nmodc1 as currently set:\n")
 print(nmodh1$incr())
 ```
 
-##  setVarying(vary = rep_len(TRUE, np))  
+##  setVarying(vary = rep_len(TRUE, np))
 
-```{r tsetVarying(vary = rep_len(TRUE, np))  
+?? This seems to return the number of free (i.e., unconstrained) parameters in the
+current nonlinear model. 
+
+
+```{r tsetVarying(vary = rep_len(TRUE, np)) }
 cat("Display Croucher setVarying from nmodc1 as currently set:\n")
 print(nmodc1$setVarying())
 cat("Display Hobbs setVarying from nmodc1 as currently set:\n")
@@ -187,10 +196,16 @@ print(nmodh1$setVarying())
 
 ##  setPars(newPars)  
 
-```{r tsetPars(newPars)  
+?? This function does not seem to execute. Listing it shows some quite 
+involved operations on the weghts, the model, the deviance and the QR
+decomposition of the Jacobian.
+
+```{r tsetPars(newPars), eval=FALSE}
+newPars <- c(p1=0.95, p2=0.15)
 cat("Display Croucher setPars(newPars) from nmodc1 as currently set:\n")
 print(nmodc1$setPars(newPars)())
 cat("Display Hobbs setPars(newPars) from nmodc1 as currently set:\n")
+newPars<- c(b1=1.1, b2=1.4, b3=0.1)
 print(nmodh1$setPars(newPars)())
 ```
 
@@ -203,23 +218,37 @@ cat("Display Hobbs getPars from nmodc1 as currently set:\n")
 print(nmodh1$getPars())
 ```
 
-##  getAllPars()  
+##  getAllPars()
+
+This function returns all parameters for the current nonlinear model as vector of
+named quantities. It is NOT a list as shown in the example.
 
 ```{r tgetAllPars}  
 cat("Display Croucher getAllPars from nmodc1 as currently set:\n")
+print(str(nmodc1$getAllPars()))
 print(nmodc1$getAllPars())
+is.list(nmodc1$getAllPars())
+is.numeric(nmodc1$getAllPars())
 cat("Display Hobbs getAllPars from nmodc1 as currently set:\n")
 print(nmodh1$getAllPars())
 ```
 
 ##  getEnv() 
 
+The `getEnv()` function returns the identifier of the current environment for the 
+nonlinear model in focus. By using the `ls()` function we can display the names of
+the objects available in this environment.
+
 ```{r tgetEnv}
 cat("Display Croucher fitted model values from nmodc1 as currently set:\n")
 print(nmodc1$getEnv())
+cat("ls(nmodc1$getEnv():")
+print(ls(nmodc1$getEnv()))
 cat("Display Hobbs fitted model values from nmodc1 as currently set:\n")
 print(nmodh1$getEnv())
+print(ls(nmodh1$getEnv()))
 ```
+
 
 ##  trace() 
 
@@ -228,6 +257,11 @@ The "trace" function seems to display information about the current state of the
 ISSUE: because there is a "trace" argument to nls() (and to functions in package `nlsr` and others),
 would it not be better to use `tracefn()`??
 
+Output from the `trace()` appears to be the current evaluated `deviance` (essentially the
+residual sum of squares), then in brackets the value of the `convCrit()` function -- the 
+value that is compared to a convergence tolerance, and then the current parameters.
+In printing the evaluated function, NULL is appended. Is this because no return value is
+provided??
 
 ```{r ttrace} 
 cat("Display Croucher trace from nmodc1 as currently set:\n")
