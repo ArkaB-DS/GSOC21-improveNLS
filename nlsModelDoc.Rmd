@@ -24,9 +24,11 @@ This article is an attempt to document and test the features of the nlsModel obj
 
 # ISSUES
 
-- why is there only `upper` in the arguments of nlsModel(), i.e., no `lower`? 
+- Why is there only `upper` in the arguments of nlsModel(), i.e., no `lower`? 
   For the default algorithm, upper makes no sense either.
 
+- Why do we have Varying and noVarying versions of some functions? And with 
+  so many attributes?
 
 # Location of the nlsModel code
 
@@ -64,6 +66,9 @@ Cstart<-c(p1=p1, p2=p2)
 
 nmodc1<-nlspkg::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 print(str(nmodc1))
+
+# nmodc1a<-nlsalt::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+# print(str(nmodc1a))
 
 ```
 

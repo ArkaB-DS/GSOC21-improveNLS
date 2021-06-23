@@ -271,7 +271,7 @@ nlsx <-
             hasConverged <- TRUE
             break;
          }
-         # incr computes the delta for Gauss-Newton. Bit incr calls QR, which uses 
+         # incr computes the delta for Gauss-Newton. But incr calls QR, which uses 
          # setPars to create the QR matrix.
          newIncr <- eval(as.call(incr), .GlobalEnv)
 	 # BUT PROTECT(incr = lang1(incr)); in C code converts incr to a call with 0 args
