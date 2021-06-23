@@ -35,7 +35,7 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
         ind[[i]] <- parLength + seq_along(temp)
         parLength <- parLength + length(temp)
     }
-    getPars.noVarying <- function() unlist(mget(names(ind), env))
+    ll.noVarying <- function() unlist(mget(names(ind), env))
     getPars <- getPars.noVarying
     internalPars <- getPars()
 

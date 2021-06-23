@@ -334,7 +334,18 @@ This is important, as we may wish to list such files, but copying the script
 into the text of the document means that this copy and the original file can 
 become unsynchronized.
 
-### [2021-6-15] nlsalt issues
+From work on the Gramps genealogy software (and some local setup issues), JN
+found that the following chunk will allow listings in a nice format. Note
+the "comment=NA" to avoid line prefixing with hash symbols.  The code which
+follows needs surrounding by the usual three ticks before and after.
+
+``` 
+   {r lscript, comment=NA, echo=FALSE}
+   cat(readLines('/home/gramps/GrampsSetup/FrohnGramps'), sep = '\n')
+```
+
+
+### [2021-6-15] - [2021-6-20]: nlsalt issues
 
 1) Need to ensure the name "nlsalt" is fixed DESCRIPTION, NAMESPACE (dynload line),
 .gitignore (.so line can be *.so), init.c (dynload line, R_init line)
@@ -343,9 +354,35 @@ become unsynchronized.
 (to be determined??) whether example uses a function or expression in the definition
 of the model.
 
+During this time did some work on splitting nls.R into separate files where major
+functions were in their own file. In particular, nlsModel() was separated out so
+that nlsModel and nlsModel.plinear did not get confused in editing, since they
+are largely the same. 
 
+The file `nls-noc.R` has the ongoing work to try to build an all-R nls_iter function.
+This is gradually proceeding, but not functional at the time of our June 21 online
+meeting.
 
-==================================================================================
+JN took a brief look at 2010 UseR! tutorial on nonlinear models. This may give
+us some ideas for documentation and tests.
+
+### Week of [2021-6-21] 
+
+Online meeting on June 21 talked about `nls-noc.R` as well as testing schemes.
+AB will try to develop a short appraisal of testing schemes and suggest a path
+for us. Some discussion of tools. 
+
+JN started `nlsModelDoc.Rmd`. There are many functions, seemingly without documentation.
+Also quite complex codes and reuse of names. In some codes the "<<-" assignment is 
+used. We will need to be very careful to document and understand this.
+
+JN contacted Doug Bates who indicated he may be able to provide some input on
+the code. There does not appear to be any developer documentations. Ongoing
+work with nlsModel() seems to indicate that the "m" object is set up to provide
+all the infrastructure for the rest of the code to work with for a particular 
+nonlinear model. 
+
+============end diary only portion ========================
 
 ### 5. Implementation of nonlinear least squares methods
 

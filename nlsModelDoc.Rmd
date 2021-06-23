@@ -22,6 +22,12 @@ direction for the next set of parameters.
 
 This article is an attempt to document and test the features of the nlsModel object `m`.
 
+# ISSUES
+
+- why is there only `upper` in the arguments of nlsModel(), i.e., no `lower`? 
+  For the default algorithm, upper makes no sense either.
+
+
 # Location of the nlsModel code
 
 The code is found in the file `./R-devel/src/library/stats/R/nls.R` 
@@ -210,6 +216,19 @@ print(nmodh1$setPars(newPars)())
 ```
 
 ##  getPars()  
+
+This function and getAllPars() are defined identically in nlsModel() as
+
+```
+	     getPars = function() getPars(),
+	     getAllPars = function() getPars(),
+```
+
+within the assignment of the list elements in creating the "m" object at the end
+of `nlsModel()`.
+
+Prior to this, we have 
+
 
 ```{r tgetPars}  
 cat("Display Croucher getPars from nmodc1 as currently set:\n")
