@@ -374,8 +374,8 @@ used. We will need to be very careful to document and understand this.
 
 Met online. 
 
-- discussed testing schemes. Note 
-\url{}
+- discussed testing schemes. AB will see if he can develop a short appraisal and
+  suggestions for our use. 
 
 - talked about `nls-noc.R` process. This is ongoing by JN
 
@@ -417,8 +417,6 @@ https://towardsdatascience.com/rtest-pretty-testing-of-r-packages-50f50b135650
 https://towardsdatascience.com/unit-testing-in-r-68ab9cc8d211
 
 https://r-pkgs.org/tests.html
-
->>>>>>> 87c9cdab53fe0c4678a54fa68be5e4a08997a7d9
 
 JN contacted Doug Bates who indicated he may be able to provide some input on
 the code. There does not appear to be any developer documentations. Ongoing
