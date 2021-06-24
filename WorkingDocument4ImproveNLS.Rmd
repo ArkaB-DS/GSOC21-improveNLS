@@ -424,6 +424,26 @@ work with nlsModel() seems to indicate that the "m" object is set up to provide
 all the infrastructure for the rest of the code to work with for a particular 
 nonlinear model. 
 
+### [2021-6-23]  [2021-6-24] Tidying
+
+- JN cleaned up DerivsNLS. Extracted ssasymptot model and tested in nlsalt.
+  numericDeriv must be working, but not explicitly tested. Note that the
+  encapsulated version in the examples of nls() seem to fail.??
+  
+- used file inport of nls.R and nls.c parts (which are now separated out
+  in improvnls)
+
+- nlsModelDoc proceeding slowly. There are many undocumented features and
+  pieces of code in nlsModel() that need careful understanding, particularly
+  the scoping assignment "<<-" in some lines of the code. In `minpack.lm` there
+  is a version of nlsModel() that uses `assign` rather than `<<-`, and some
+  documentation points out that this may be a more explicit mechanism (and
+  therefore easier to understand and keep correct). Note the R documentation
+  `?assignOps` as well as the `assign()` and `get()` functions.
+
+- 
+
+
 ============end diary only portion ========================
 
 ### 5. Implementation of nonlinear least squares methods
