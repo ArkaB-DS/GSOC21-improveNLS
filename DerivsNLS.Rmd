@@ -23,6 +23,13 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 #  Set to FALSE when we don't need extensive output
 ```
 
+# ISSUES
+
+- ExDerivs.R file causes a number of failures in the ORIGINAL numericDeriv.
+- We have not tried the dir parameter (probably allows backward differences)
+- Need to verify nlsalt:: version matches all cases of nlspkg:: version
+
+
 # Jacobians in nls()
 
 `nls()` needs Jacobians calculated at the current set of trial nonlinear model
@@ -90,46 +97,85 @@ eval(rexpr,envir=ldata)
 
 # Tools for Jacobians
 
-## numericDeriv()
+## numericDeriv() original version
 
 `numericDeriv` is the R function used by `nls()` to evaluate Jacobians for its Gauss-Newton
 equations. The R source code is in the file `nls.R`. It calls a C function numeric_deriv
 in `nls.c`. 
 
-```{r nD1}
-## seems to work -- Note file ExDerivs.R has many "failures"
+```{r nd1}
+## Seems to work -- BUT note file ExDerivs.R has many "failures"??
 theta <- c("b1", "b2", "b3")
-ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv)
+ndeunsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv)
 print(ndeunsc)
 print(sum(ndeunsc^2))
-tndeunsc<-microbenchmark(ndeunsc<-numericDeriv(rexpr, theta, rho=weedenv))
+tndeunsc<-microbenchmark(ndeunsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv))
 print(tndeunsc)
 ## numericDeriv also has central difference option, as well as choice of eps parameter
 ## Central diff
-ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+ndeunsc2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
 print(ndeunsc2)
 print(sum(ndeunsc2^2))
-tndeunsc2<-microbenchmark(ndeunsc2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+tndeunsc2<-microbenchmark(ndeunsc2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
 print(tndeunsc2)
 
 ## Forward diff with smaller eps
-ndeunscx<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+ndeunscx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
 print(ndeunscx)
 print(sum(ndeunscx^2))
-tndeunscx<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+tndeunscx<-microbenchmark(ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
 print(tndeunscx)
 
 ## Central diff with smaller eps
-ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
 print(ndeunscx2)
 print(sum(ndeunscx2^2))
-tndeunscx2<-microbenchmark(ndeunscx2<-numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+tndeunscx2<-microbenchmark(ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
 print(tndeunscx2)
 
 
 ```
 
 **We have not tried the dir parameter (probably allows backward differences)**
+
+## numericDeriv() alternative pure-R version
+
+This version (see Appendix 2) has C code replaced with R equivalents.
+
+
+```{r and1}
+## Try ExDerivs.R ??
+andeunsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv)
+print(andeunsc)
+print(sum(andeunsc^2))
+tandeunsc<-microbenchmark(andeunsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv))
+print(tandeunsc)
+## numericDeriv also has central difference option, as well as choice of eps parameter
+## Central diff
+andeunsc2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+print(andeunsc2)
+print(sum(andeunsc2^2))
+tandeunsc2<-microbenchmark(andeunsc2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+print(tandeunsc2)
+
+## Forward diff with smaller eps
+andeunscx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+print(andeunscx)
+print(sum(andeunscx^2))
+tandeunscx<-microbenchmark(andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+print(tandeunscx)
+
+## Central diff with smaller eps
+andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+print(andeunscx2)
+print(sum(andeunscx2^2))
+tandeunscx2<-microbenchmark(andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+print(tandeunscx2)
+```
+
+**We have not tried the dir parameter (probably allows backward differences)**
+
+
 
 
 ## Symbolic methods from `nlsr`
@@ -171,6 +217,7 @@ choices of approximation.
 # We use the residual function (without gradient attribute) from nlsr
 jeunsc<-jacobian(res0, start1)
 jeunsc
+# Timings of the analytic jacobian calculations
 tjeunsc<-microbenchmark(jeunsc<-jacobian(res0, start1))
 print(tjeunsc)
 ```
@@ -183,7 +230,8 @@ the package. At 2021-5-27 we have yet to explore these.
 In the following, we are comparing to `vfunsc`, which is the evaluated 
 residual vector at `start1=c(1,1,1)` with "gradient" attribute (jacobian)
 included, as developed using package `nlsr`. This is taken as the "correct"
-result.
+result, even though it is possible that the generated order of calculations
+may introduce inaccuracies in the supposedly analytic derivatives.
 
 `numericDeriv` computes a similar structure (residuals with "gradient" attribute):
 `ndeunsc`: the forward difference result with default `eps` (1e-07 according to manual)
@@ -214,67 +262,14 @@ max(abs(jeunsc-attr(vfunsc,"gradient")))
 # Performance results for different computing environments
 
 Here we present tables of the results, preceded by identified descriptions of the machines we
-used.
+used. We use ideas and functions from the document `MachineSummary` to provide a characterization
+and identity for each machine used.
 
 M21-LM20.1 
 
-```{r M21desc}
-sessionInfo()
-```
+?? still to be run
 
-To get a good picture of the physical and logical machine that is M21-LM20.1, we can
-run
-
-```
-inxi -F >tlinux.txt
-```
-
-in a command line terminal in the host machine. 
-
-While it may be tempting to run either
-
-```{r runinxi}
-system('inxi -F >../t.txt')
-```
-
-or 
-
-```{bash inxi2}
-inxi -F >../t2.txt
-```
-
-it turns out that the encoding of the files is different. Indeed
-the files are different sizes!
-
-```{bash ls-t}
-ls -al ../t*.txt
-```
-Here is the result from running the `inxi` command in the native Linux
-terminal. (?? note that we need each "user to do following.) Note that
-the file tlinuxOS.txt needs to be created via the command
-
-```
-inxi -F > tlinuxOS.txt
-```
-
-in the directory immediately ABOVE the `improvenls` local git repository where
-the present docoument is stored i.e., outside the version control. 
-
-```{r M21disp}
-cat(readLines('../tlinuxOS.txt'), sep = '\n')
-```
-
-```
-#!/bin/sh
-inxi -F >../tlx.txt
-echo "done!"
-```
-
-
-```{r M21mt1}
-system("mate-terminal -e ./inxirun.sh")
-cat(readLines('../tlx.txt'), sep = '\n')
-```
+?? What machines provide a range of possibilities.
 
 ## Appendix 1: Base R numericDeriv code
 
@@ -282,220 +277,19 @@ This code is in two files, nls.R and nls.c and is extracted here.
 
 ### From nls.R
 
+```{r nlsR, comment=NA, echo=FALSE}
+   cat(readLines('./nlsND.R'), sep = '\n')
 ```
-numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
-                 eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
-## Note: this expr must be set up as a call to work properly according to JN??
-## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
-{    cat("numericDeriv-Alt\n")
-    dir <- rep_len(dir, length(theta))
-    stopifnot(is.finite(eps), eps > 0)
-    rho1 <- new.env(FALSE, rho, 0)
-    if (!is.character(theta) ) {stop("'theta' should be of type character")}
-    if (is.null(rho)) {
-            stop("use of NULL environment is defunct")
-            #        rho <- R_BaseEnv;
-    } else {
-          if(! is.environment(rho)) {stop("'rho' should be an environment")}
-          #    int nprot = 3;
-    }
-    if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
-              {stop("'dir' is not a numeric vector of the correct length") }
-    if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
-    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
-    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
-    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
-    nt <- length(theta) # number of parameters
-    mr <- length(res0) # number of residuals
-    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
-    for (j in 1:nt){
-       origPar<-get(theta[j],rho)
-       xx <- abs(origPar)
-       delta <- if (xx == 0.0) {eps} else { xx*eps }
-       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
-       prmx<-origPar+delta*dir[j]
-       assign(theta[j],prmx,rho)
-       res1 <- eval(expr, rho) # new residuals (forward step)
-       if (central) { # compute backward step resids for central diff
-          prmb <- origPar - dir[j]*delta
-          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
-          resb <- eval(expr, rho)
-          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
-       } else { ## forward diff
-          JJ[,j] <- dir[j]*(res1-res0)/delta
-       }  # end forward diff
-    } # end loop over the parameters
-    attr(res0, "gradient") <- JJ
-    return(res0)
-}
 
-```
 
 ### From nls.c
 
+```{r nlsc, comment=NA, echo=FALSE}
+   cat(readLines('./nlsND.c'), sep = '\n')
 ```
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <float.h>
-#include <R.h>
-#include <Rinternals.h>
-#include "nls.h"
-#include "internals.h"
-
-#ifndef MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#endif
-
-/*
- *  call to numeric_deriv from R -
- *  .Call("numeric_deriv", expr, theta, rho, dir = 1., eps = .Machine$double.eps, central=FALSE)
- *  Returns: ans
- */
-SEXP
-numeric_deriv(SEXP expr, SEXP theta, SEXP rho, SEXP dir, SEXP eps_, SEXP centr,
-              SEXP rho1)
-{
-    if(!isString(theta))
-	error(_("'theta' should be of type character"));
-    if (isNull(rho)) {
-	error(_("use of NULL environment is defunct"));
-	rho = R_BaseEnv;
-    } else
-	if(!isEnvironment(rho))
-	    error(_("'rho' should be an environment"));
-    int nprot = 3;
-    if(TYPEOF(dir) != REALSXP) {
-	PROTECT(dir = coerceVector(dir, REALSXP)); nprot++;
-    }
-    if(LENGTH(dir) != LENGTH(theta))
-	error(_("'dir' is not a numeric vector of the correct length"));
-    Rboolean central = asLogical(centr);
-    if(central == NA_LOGICAL)
-	error(_("'central' is NA, but must be TRUE or FALSE"));
-//    SEXP rho1 = PROTECT(R_NewEnv(rho, FALSE, 0));
-//    nprot++;
-    SEXP
-	pars = PROTECT(allocVector(VECSXP, LENGTH(theta))),
-        ans  = PROTECT(duplicate(eval(expr, rho1)));
-    double *rDir = REAL(dir),  *res = NULL; // -Wall
-#define CHECK_FN_VAL(_r_, _ANS_) do {					\
-    if(!isReal(_ANS_)) {						\
-	SEXP temp = coerceVector(_ANS_, REALSXP);			\
-	UNPROTECT(1);/*: _ANS_ *must* have been the last PROTECT() ! */ \
-	PROTECT(_ANS_ = temp);						\
-    }									\
-    _r_ = REAL(_ANS_);							\
-    for(int i = 0; i < LENGTH(_ANS_); i++) {				\
-	if (!R_FINITE(_r_[i]))						\
-	    error(_("Missing value or an infinity produced when evaluating the model")); \
-    }									\
-} while(0)
-
-    CHECK_FN_VAL(res, ans);
-
-    const void *vmax = vmaxget();
-    int lengthTheta = 0;
-    for(int i = 0; i < LENGTH(theta); i++) {
-	const char *name = translateChar(STRING_ELT(theta, i));
-	SEXP s_name = install(name);
-	SEXP temp = findVar(s_name, rho1);
-	if(isInteger(temp))
-	    error(_("variable '%s' is integer, not numeric"), name);
-	if(!isReal(temp))
-	    error(_("variable '%s' is not numeric"), name);
-	// We'll be modifying the variable, so need to make a copy PR#15849
-	defineVar(s_name, temp = duplicate(temp), rho1);
-	MARK_NOT_MUTABLE(temp);
-	SET_VECTOR_ELT(pars, i, temp);
-	lengthTheta += LENGTH(VECTOR_ELT(pars, i));
-    }
-    vmaxset(vmax);
-    SEXP gradient = PROTECT(allocMatrix(REALSXP, LENGTH(ans), lengthTheta));
-    double *grad = REAL(gradient);
-    double eps = asReal(eps_); // was hardcoded sqrt(DOUBLE_EPS) { ~= 1.49e-08, typically}
-    for(int start = 0, i = 0; i < LENGTH(theta); i++) {
-	double *pars_i = REAL(VECTOR_ELT(pars, i));
-	for(int j = 0; j < LENGTH(VECTOR_ELT(pars, i)); j++, start += LENGTH(ans)) {
-	    double
-		origPar = pars_i[j],
-		xx = fabs(origPar),
-		delta = (xx == 0) ? eps : xx*eps;
-	    pars_i[j] += rDir[i] * delta;
-	    SEXP ans_del = PROTECT(eval(expr, rho1));
-	    double *rDel = NULL;
-	    CHECK_FN_VAL(rDel, ans_del);
-	    if(central) {
-		pars_i[j] = origPar - rDir[i] * delta;
-		SEXP ans_de2 = PROTECT(eval(expr, rho1));
-		double *rD2 = NULL;
-		CHECK_FN_VAL(rD2, ans_de2);
-		for(int k = 0; k < LENGTH(ans); k++) {
-		    grad[start + k] = rDir[i] * (rDel[k] - rD2[k])/(2 * delta);
-		}
-	    } else { // forward difference  (previously hardwired):
-		for(int k = 0; k < LENGTH(ans); k++) {
-		    grad[start + k] = rDir[i] * (rDel[k] - res[k])/delta;
-		}
-	    }
-	    UNPROTECT(central ? 2 : 1); // ansDel & possibly ans
-	    pars_i[j] = origPar;
-	}
-    }
-    setAttrib(ans, install("gradient"), gradient);
-    UNPROTECT(nprot);
-    return ans;
-}
 
 ## Appendix 2: numericDeriv() from nlsalt package (all in R)
 
-```
-numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
-                 eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
-## Note: this expr must be set up as a call to work properly according to JN??
-## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
-{    cat("numericDeriv-Alt\n")
-    dir <- rep_len(dir, length(theta))
-    stopifnot(is.finite(eps), eps > 0)
-    rho1 <- new.env(FALSE, rho, 0)
-    if (!is.character(theta) ) {stop("'theta' should be of type character")}
-    if (is.null(rho)) {
-            stop("use of NULL environment is defunct")
-            #        rho <- R_BaseEnv;
-    } else {
-          if(! is.environment(rho)) {stop("'rho' should be an environment")}
-          #    int nprot = 3;
-    }
-    if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
-              {stop("'dir' is not a numeric vector of the correct length") }
-    if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
-    res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
-    if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
-    ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?
-    nt <- length(theta) # number of parameters
-    mr <- length(res0) # number of residuals
-    JJ <- matrix(NA, nrow=mr, ncol=nt) # Initialize the Jacobian
-    for (j in 1:nt){
-       origPar<-get(theta[j],rho)
-       xx <- abs(origPar)
-       delta <- if (xx == 0.0) {eps} else { xx*eps }
-       ## JN: I prefer eps*(xx + eps)  which is simpler ?? Should we suggest / use a control switch
-       prmx<-origPar+delta*dir[j]
-       assign(theta[j],prmx,rho)
-       res1 <- eval(expr, rho) # new residuals (forward step)
-       if (central) { # compute backward step resids for central diff
-          prmb <- origPar - dir[j]*delta
-          assign(theta[j], prmb, envir=rho) # may be able to make more efficient later??
-          resb <- eval(expr, rho)
-          JJ[, j] <- dir[j]*(res1-resb)/(2*delta) # vectorized
-       } else { ## forward diff
-          JJ[,j] <- dir[j]*(res1-res0)/delta
-       }  # end forward diff
-    } # end loop over the parameters
-    attr(res0, "gradient") <- JJ
-    return(res0)
-}
-```
-
-
+```{r nlsndnew, comment=NA, echo=FALSE}
+   cat(readLines('./nlsalt/R/nlsnd.R'), sep = '\n')
 ```
