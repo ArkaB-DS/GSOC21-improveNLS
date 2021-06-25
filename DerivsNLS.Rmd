@@ -26,7 +26,6 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 # ISSUES
 
 - ExDerivs.R file causes a number of failures in the ORIGINAL numericDeriv.
-- We have not tried the dir parameter (probably allows backward differences)
 - Need to verify nlsalt:: version matches all cases of nlspkg:: version
 
 
@@ -136,7 +135,6 @@ print(tndeunscx2)
 
 ```
 
-**We have not tried the dir parameter (probably allows backward differences)**
 
 ## numericDeriv() alternative pure-R version
 
@@ -173,8 +171,13 @@ tandeunscx2<-microbenchmark(andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=w
 print(tandeunscx2)
 ```
 
-**We have not tried the dir parameter (probably allows backward differences)**
-
+The `dir` parameter allows us to use a backward difference for the derivative. This 
+appears in `nlsModel()` for the case where a parameter is on an upper bound for
+the case `algorithm="port"`. It does not check for nearness to the bound, and 
+for the lower bound assumes that we are stepping AWAY from the bound in the
+default direction (`dir=+1`). None of the code addresses the issue where bounds
+are closer together than the step used for the finite difference, so there are
+situations where we could crash the code.
 
 
 

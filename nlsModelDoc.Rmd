@@ -27,9 +27,15 @@ This article is an attempt to document and test the features of the nlsModel obj
 - Why is there only `upper` in the arguments of nlsModel(), i.e., no `lower`? 
   For the default algorithm, upper makes no sense either.
 
-- Why do we have Varying and noVarying versions of some functions? And with 
-  so many attributes?
-
+- Why do we have noVarying versions of some functions? And with 
+  so many attributes? But also the function setVarying?
+  Is this possibly a way to specify the parameters that are 
+  "free" in the Nash and Walker-Smith sense of bounds and
+  masks?
+  
+- Where is the QR decomposition actually executed? This is
+  key to establishing the Gauss-Newton iteration.
+  
 # Location of the nlsModel code
 
 The code is found in the file `./R-devel/src/library/stats/R/nls.R` 
@@ -64,7 +70,7 @@ Ctheta<-c("p1","p2")
 Cstart<-c(p1=p1, p2=p2)
 
 
-nmodc1<-nlspkg::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+nmodc1<-nlsalt::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 print(str(nmodc1))
 
 # nmodc1a<-nlsalt::nlsModel(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
@@ -90,7 +96,7 @@ weeddata1  <-  data.frame(y=ydat, tt=tdat)
 
 ## Now ready to try things out.
 library(nlsalt) # ?? needed because base R does not export nlsModel()
-nmodh1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+nmodh1<-nlsalt::nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 str(nmodh1)
 ls.str(nmodh1)
 print(nmodh1)
@@ -344,6 +350,17 @@ print(nmodh1$predict(newdata=newhdata, qr=TRUE))
 
 Using "qr=TRUE" does not seem to make any difference. Need to delve further??
 
+# Attempt to understand nlsModel in detail
+
+A new file `nlsModelx.R` was created that establishes the `nlsModelx()` function.
+
+```{r modx1}
+nmodc1<-nlsalt::nlsModelx(form=Cform, data=Cdata, start=Cstart, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+print(str(nmodc1))
+
+nmodh1<-nlsalt::nlsModelx(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+str(nmodh1)
+```
 
 # Discussion
 
