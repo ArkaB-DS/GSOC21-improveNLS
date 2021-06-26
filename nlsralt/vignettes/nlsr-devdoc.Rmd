@@ -1,0 +1,1569 @@
+---
+title: "nlsr Background, Development, Examples and Discussion"
+author: "John C. Nash"
+date: "`r Sys.Date()`"
+output: rmarkdown::pdf_document
+bibliography: nlpd.bib
+vignette: >
+  %\VignetteIndexEntry{nlsr Background, Development, Examples and Discussion}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+This rather long vignette is to explain the development and testing
+of **nlsr**, an R package to try to bring
+the **R** function nls() up to date and to add capabilities for the
+extension of the symbolic and automatic derivative tools in **R**.
+
+A particular goal in **nlsr** is to attempt, wherever possible, to
+use analytic or automatic derivatives. The function nls() uses a
+rather weak forward derivative approximation. A second objective 
+is to use a Marquardt stabilization of the Gauss-Newton equations
+to avoid the commonly encountered "singular gradient" failure
+of nls(). This refers to the loss of rank of the Jacobian at the
+parameters for evaluation. The particular stabilization also 
+incorporates a very simple trick to avoid very small diagonal
+elements of the Jacobian inner product, though in the present
+implementations, this is accomplished indirectly.
+See the section below **Implementation of method**
+
+In preparing the **nlsr** package there is a sub-goal to unify, 
+or at least render compatible, various
+packages in **R** for the estimation or analysis of problems amenable
+to nonlinear least squares solution.
+
+A large part of the work for this package -- particularly the parts
+concerning derivatives and R language structures -- was initially
+carried out by Duncan
+Murdoch. Without his input, much of the capability of the package
+would not exist.
+
+The package and this vignette are a work in progress, and assistance
+and examples are welcome. Note that there is similar work in the 
+package Deriv (Andrew Clausen and Serguei Sokol (2015) Symbolic 
+Differentiation, version 2.0, https://cran.r-project.org/package=Deriv),
+and making the current work "play nicely" with that package is 
+desirable.
+
+As a mechanism for highlighting issues that remain to be resolved, I have
+put double question marks (??) where I believe attention is needed in this
+document.
+
+## TODOS
+
+- explain JN approach to relative offset convergence criterion
+- how to insert numerical derivatives when Deriv unable to get result
+- approximations for jacfn beyond fwd approximation. How to specify??
+- how to force numerical approximations in nlfb() in a 
+manner consistent with that used in `optimx::optimr()`, that is, to
+surround the name of `jacfn` with quotes if it is a numerical approximation,
+or to provide a logical control to `nlxb()` for this purpose.
+
+## Summary of capabilities in `nlsr`
+
+### Functions in **nlsr**
+
+#### coef.nlsr: 
+extracts and displays the coefficients for a model 
+    estimated by nlxb() or nlfb() in the nlsr structured object. 
+
+```{r  c001}
+library(nlsr)
+ydat<-c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558, 50.156, 62.948,
+       75.995, 91.972)
+tdat<-1:12
+# try setting t and y here
+t <- tdat
+y <- ydat
+sol1 <- nlxb(y~100*b1/(1+10*b2*exp(-0.1*b3*t)), start=c(b1=2, b2=5, b3=3))
+coef(sol1)
+print(coef(sol1))
+```
+
+
+#### nlsDeriv, codeDeriv, fnDeriv, newDeriv:
+
+Functions **Deriv** and **fnDeriv** are designed as replacements 
+for the stats package functions **D** and **deriv**
+respectively, though the argument lists do not match exactly.
+**newDeriv** allows additional analytic derivative expressions to 
+be added. The following is an expanded and commented version of the 
+examples from the manual for these functions.
+
+```{r c002}
+require(nlsr)
+newDeriv() # a call with no arguments returns a list of available functions
+           # for which derivatives are currently defined
+newDeriv(sin(x)) # a call with a function that is in the list of available derivatives
+                 # returns the derivative expression for that function
+nlsDeriv(~ sin(x+y), "x") # partial derivative of this function w.r.t. "x"
+
+## CAUTION !! ##
+newDeriv(joe(x)) # but an undefined function returns NULL
+newDeriv(joe(x), deriv=log(x^2)) # We can define derivatives, even if joe(x) is meanin
+nlsDeriv(~ joe(x+z), "x")
+
+# Some examples of usage
+f <- function(x) x^2
+newDeriv(f(x), 2*x*D(x))
+nlsDeriv(~ f(abs(x)), "x")
+nlsDeriv(~ x^2, "x")
+nlsDeriv(~ (abs(x)^2), "x")
+
+# derivatives of distribution functions
+nlsDeriv(~ pnorm(x, sd=2, log = TRUE), "x")
+# get evaluation code from a formula
+codeDeriv(~ pnorm(x, sd = sd, log = TRUE), "x")
+# wrap it in a function call
+fnDeriv(~ pnorm(x, sd = sd, log = TRUE), "x")
+f <- fnDeriv(~ pnorm(x, sd = sd, log = TRUE), "x", args = alist(x =, sd = 2))
+f
+f(1)
+100*(f(1.01) - f(1))  # Should be close to the gradient
+                      # The attached gradient attribute (from f(1.01)) is
+                      # meaningless after the subtraction.
+```
+
+
+#### model2rjfun, model2ssgrfun, modelexpr, rjfundoc
+
+These functions create functions to evaluate residuals or sums of 
+squares at particular parameter locations.
+
+```{r c003}
+weed <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443,
+          38.558, 50.156, 62.948, 75.995, 91.972)
+ii <- 1:12
+wdf <- data.frame(weed, ii)
+wmod <- weed ~ b1/(1+b2*exp(-b3*ii))
+start1  <-  c(b1=1, b2=1, b3=1)
+wrj <- model2rjfun(wmod, start1, data=wdf)
+print(wrj)
+weedux <- nlxb(wmod, start=c(b1=200, b2=50, b3=0.3)) 
+print(weedux)
+
+wss <- model2ssgrfun(wmod, start1, data=wdf)
+print(wss)
+
+# We can get expressions used to calculate these as follows:
+wexpr.rj <- modelexpr(wrj) 
+print(wexpr.rj)
+
+wexpr.ss <- modelexpr(wss) 
+print(wexpr.ss)
+
+wrjdoc <- rjfundoc(wrj)
+print(wrjdoc)
+# We do not have similar function for ss functions
+```
+
+
+#### nlfb 
+
+   Given a nonlinear model expressed as an expression of the form of a function
+   that computes the residuals from the model and a start vector `par` , tries
+   to minimize the nonlinear sum of squares of these residuals w.r.t. `par`. 
+   If `model(par, mydata)` computes
+   an a vector of numbers that are presumed to be able to fit data `lhs`, then
+   the residual vector is `(model(par,mydata) - lhs)` ,
+   though traditionally we write the negative of this vector. (Writing it this
+   way allows the derivatives of the residuals w.r.t. the parameters `par` to be
+   the same as those for `model(par,mydata).) `nlfb` tries to minimize the sum
+   of squares of the residuals with respect to the parameters. 
+  
+   The method takes a parameter `jacfn` which returns the Jacobian matrix of
+   derivatives of the residuals w.r.t. the parameters in an attribute `gradient`.
+   If this is NULL, then a numerical approximation to derivatives is used.
+   (??which -- and can we use the character method to define these?? What 
+   about for nlxb??) Putting the Jacobian in the attribute `gradient` allows
+   us to combine the computation of the residual and Jacobian in the same code
+   block if we wish, since there are generally common computations, though it
+   does make the setup slightly more complicated. See the example below.
+
+   The start vector preferably uses named parameters (especially if there is an 
+   underlying formula). The attempted minimization of the sum of squares
+   uses the Nash variant (Nash, 1979) of the Marquardt algorithm, where the linear 
+   sub-problem is solved by a qr method. We explain how this is done later,
+   as well as giving a short discussion of the relative offset convergence
+   criterion.
+
+```{r c004}
+shobbs.res  <-  function(x){ # scaled Hobbs weeds problem -- residual
+  # This variant uses looping
+  if(length(x) != 3) stop("hobbs.res -- parameter vector n!=3")
+  y  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+           38.558, 50.156, 62.948, 75.995, 91.972)
+  tt  <-  1:12
+  res  <-  100.0*x[1]/(1+x[2]*10.*exp(-0.1*x[3]*tt)) - y
+}
+
+shobbs.jac  <-  function(x) { # scaled Hobbs weeds problem -- Jacobian
+  jj  <-  matrix(0.0, 12, 3)
+  tt  <-  1:12
+  yy  <-  exp(-0.1*x[3]*tt)
+  zz  <-  100.0/(1+10.*x[2]*yy)
+  jj[tt,1]   <-   zz
+  jj[tt,2]   <-   -0.1*x[1]*zz*zz*yy
+  jj[tt,3]   <-   0.01*x[1]*zz*zz*yy*x[2]*tt
+  attr(jj, "gradient") <- jj
+  jj
+}
+
+cat("try nlfb\n")
+st  <-  c(b1=1, b2=1, b3=1)
+low  <-  -Inf
+up <- Inf
+ans1 <- nlfb(st, shobbs.res, shobbs.jac, trace=TRUE)
+summary(ans1)
+
+## No jacobian function -- use internal approximation
+ans1n <- nlfb(st, shobbs.res, trace=TRUE, control=list(watch=FALSE)) # NO jacfn
+summary(ans1n)
+## difference
+coef(ans1)-coef(ans1n)
+```
+
+#### nlxb
+
+   Given a nonlinear model expressed as an expression of the form
+         lhs ~ formula_for_rhs
+   and a start vector where parameters used in the model formula are named,
+   attempts to find the minimum of the residual sum of squares using the
+   Nash variant (Nash, 1979) of the Marquardt algorithm, where the linear 
+   sub-problem is solved by a qr method. The process is to develop the 
+   residual and Jacobian functions using `model2rjfun`, then call `nlfb`.
+
+```{r c005}
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+start1  <-  c(b1=1, b2=1, b3=1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+anlxb1  <-  try(nlxb(eunsc, start=start1, trace=TRUE, data=weeddata1))
+summary(anlxb1)
+```
+
+#### print.nlsr
+
+Print summary output (but involving some serious computations!) of
+an object of class nlsr from `nlxb` or `nlfb` from package
+`nlsr`.
+
+```{r c006}
+### From examples above
+print(weedux)
+print(ans1)
+```
+
+#### resgr, resss####
+
+   For a nonlinear model originally expressed as an expression of the form
+         lhs ~ formula_for_rhs
+   assume we have a resfn and jacfn that compute the residuals and the 
+   Jacobian at a set of parameters. This routine computes the gradient, 
+   that is, t(Jacobian) %*% residuals. 
+
+```{r c007}
+## Use shobbs example
+RG <- resgr(st, shobbs.res, shobbs.jac)
+RG
+SS <- resss(st, shobbs.res)
+SS
+```
+
+
+####nlsSimplify and related functions####
+
+Simplifications to render derivative expresssions more usable.
+
+The related tools are: **newSimplification, sysSimplifications, isFALSE, isZERO, isONE, isMINUSONE, isCALL, findSubexprs, sysDerivs**.
+
+**nlsSimplify** simplifies expressions according to rules specified
+by **newSimplification**.
+
+**findSubexprs** finds common subexpressions in an expression vector
+so that duplicate computation can be avoided.
+
+```{r c008}
+## nlsSimplify
+nlsSimplify(quote(a + 0))
+nlsSimplify(quote(exp(1)), verbose = TRUE)
+
+nlsSimplify(quote(sqrt(a + b)))  # standard rule
+## sysSimplifications
+# creates a new environment whose parent is emptyenv()  Why??
+str(sysSimplifications)
+myrules <- new.env(parent = sysSimplifications)
+## newSimplification
+newSimplification(sqrt(a), TRUE, a^0.5, simpEnv = myrules)
+nlsSimplify(quote(sqrt(a + b)), simpEnv = myrules)
+
+## isFALSE
+print(isFALSE(1==2))
+print(isFALSE(2==2))
+
+## isZERO
+print(isZERO(0))
+x <- -0
+print(isZERO(x))
+x <- 0
+print(isZERO(x))
+print(isZERO(~(-1)))
+print(isZERO("-1"))
+print(isZERO(expression(-1)))
+
+
+## isONE
+print(isONE(1))
+x <- 1
+print(isONE(x))
+print(isONE(~(1)))
+print(isONE("1"))
+print(isONE(expression(1)))
+
+
+## isMINUSONE
+print(isMINUSONE(-1))
+x <- -1
+print(isMINUSONE(x))
+print(isMINUSONE(~(-1)))
+print(isMINUSONE("-1"))
+print(isMINUSONE(expression(-1)))
+
+## isCALL  ?? don't have good understanding of this
+x <- -1
+print(isCALL(x,"isMINUSONE"))
+print(isCALL(x, quote(isMINUSONE)))
+      
+## findSubexprs
+findSubexprs(expression(x^2, x-y, y^2-x^2))
+
+## sysDerivs
+# creates a new environment whose parent is emptyenv()  Why??
+str(sysDerivs)
+```
+
+#### summary.nlsr
+
+Provide a summary output (but involving some serious computations!) of an object of
+class nlsr from nlxb or nlfb from package nlsr. Examples have been given above under
+**nlxb** and **nlfb**.
+
+#### wrapnlsr
+
+Given a nonlinear model expressed as an expression of the form
+
+    lhs ~ formula_for_rhs
+
+and a start vector where parameters used in the model formula are named, attempts
+to find the minimum of the residual sum of squares using the Nash variant 
+(Nash, 1979) of the Marquardt algorithm, where the linear sub-problem is 
+solved by a qr method.
+
+```{r c009}
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+start1  <-  c(b1=1, b2=1, b3=1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+## The following attempt with nls() fails!
+anls1  <-  try(nls(eunsc, start=start1, trace=TRUE, data=weeddata1))
+## But we succeed by calling nlxb first.
+anlxb1  <-  try(nlxb(eunsc, start=start1, trace=TRUE, data=weeddata1))
+st2 <- coef(anlxb1)
+anls2  <-  try(nls(eunsc, start=st2, trace=TRUE, data=weeddata1))
+## Or we can simply call wrapnlsr
+anls2a  <-  try(wrapnlsr(eunsc, start=start1, trace=TRUE, data=weeddata1))
+```
+
+
+## Particular features
+
+### weighted nonlinear regression
+
+Weighted regression alters the sum of squares of the parameters `prm` from
+
+     sum_{i} (residual_i(prm)^2)
+
+to
+
+     sum_{i} (wts_i * residual_i(prm)^2)
+
+where `wts` is the vector of weights. This is equivalent to multiplying each residual or
+row of the Jacobian by the square root of the respective weight.
+
+While `nls()` has provision for (fixed) weights, the example given in the documentation
+of `nls()` for weighted regression actually uses a functional form. Moreover, the
+weights are the square roots of the **predicted** or model values, so are not fixed.
+Here we replace these weights with the fixed values of the quantity we are trying to
+predict, namely the `rate` variable in a kinetic model. In our example below we first
+use the documentation example with predicted values; note that the name of the result
+has been changed from that in the `nls()` documentation. This result gives different estimates of the parameters from the fixed weights used afterwards.
+
+Note that neither `nlsr::nlxb` nor `nlsr::nlfb` can use the weighted.MM function
+directly. This is one of the more awkward aspects of nonlinear least squares and
+nonlinear optimization.
+
+```{r c010}
+Treated <- Puromycin[Puromycin$state == "treated", ]
+weighted.MM <- function(resp, conc, Vm, K)
+{
+  ## Purpose: exactly as white book p. 451 -- RHS for nls()
+  ##  Weighted version of Michaelis-Menten model
+  ## ----------------------------------------------------------
+  ## Arguments: 'y', 'x' and the two parameters (see book)
+  ## ----------------------------------------------------------
+  ## Author: Martin Maechler, Date: 23 Mar 2001
+  
+  pred <- (Vm * conc)/(K + conc)
+  (resp - pred) / sqrt(pred)
+}
+## Here is the estimation using predicted value weights
+Pur.wtnlspred <- nls( ~ weighted.MM(rate, conc, Vm, K), data = Treated,
+               start = list(Vm = 200, K = 0.1))
+summary(Pur.wtnlspred)
+
+## nlxb cannot use this form
+Pur.wtnlxbpred <- try(nlxb( ~ weighted.MM(rate, conc, Vm, K), data = Treated,
+               start = list(Vm = 200, K = 0.1)))
+## and the structure is wrong for nlfb. See wres.MM below.
+Pur.wtnlfbpred <- try(nlfb(resfn=weighted.MM(rate, conc, Vm, K), data = Treated,
+               start = list(Vm = 200, K = 0.1)))
+
+
+
+## Now use fixed weights and the weights argument in nls()
+Pur.wnls <- nls( rate ~ (Vm * conc)/(K + conc), data = Treated,
+                  start = list(Vm = 200, K = 0.1), weights=1/rate)
+summary(Pur.wnls)
+
+## nlsr::nlxb should give essentially the same result
+library(nlsr)
+## Note that we put in the dataframe name to explicitly specify weights
+Pur.wnlxb <- nlxb( rate ~ (Vm * conc)/(K + conc), data = Treated,
+                start = list(Vm = 200, K = 0.1), weights=1/Treated$rate)
+summary(Pur.wnlxb)
+## check difference
+coef(Pur.wnls) - coef(Pur.wnlxb)
+## Residuals Pur.wnls -- These are weighted
+## resid(Pur.wnlxb) # ?? does not work -- why?
+print(res(Pur.wnlxb))
+## Those from nls() are NOT weighted
+resid(Pur.wnls)
+
+## Try using a function, that is nlsr::nlfb
+stw <- c(Vm = 200, K = 0.1)
+wres.MM <- function(prm, rate, conc) {
+      Vm <- prm[1]
+      K <- prm[2]
+      pred <- (Vm * conc)/(K + conc)
+    (rate - pred) / sqrt(rate) # NOTE: NOT pred here
+}
+
+# test function first to see it works
+print(wres.MM(stw, rate=Treated$rate, conc=Treated$conc))
+
+Pur.wnlfb <- nlfb(start=stw,  resfn=wres.MM, rate = Treated$rate, conc=Treated$conc, 
+                  trace=FALSE) # Note: weights are inside function already here
+summary(Pur.wnlfb)
+print(Pur.wnlfb)
+## check estimates with nls() result
+coef(Pur.wnls) - coef(Pur.wnlfb)
+## and with nlxb result
+coef(Pur.wnlxb) - coef(Pur.wnlfb)
+
+wres0.MM <- function(prm, rate, conc) {
+      Vm <- prm[1]
+      K <- prm[2]
+      pred <- (Vm * conc)/(K + conc)
+    (rate - pred) # NOTE: NO weights
+}
+Pur.wnlfb0 <- nlfb(start=stw,  resfn=wres0.MM, rate = Treated$rate, conc=Treated$conc, 
+                  weights=1/Treated$rate, trace=FALSE) # Note: explicit weights
+summary(Pur.wnlfb0)
+print(Pur.wnlfb0)
+## check estimates with nls() result
+coef(Pur.wnls) - coef(Pur.wnlfb0)
+## and with nlxb result
+coef(Pur.wnlxb) - coef(Pur.wnlfb0)
+
+wss.MM <- function(prm, rate, conc) {
+  ss <- as.numeric(crossprod(wres.MM(prm, rate, conc)))
+}
+library(optimx)
+osol <- optimr(stw, fn=wss.MM, gr="grnd", method="Nelder-Mead", control=list(trace=0), 
+            rate=Treated$rate, conc=Treated$conc)
+print(osol)
+## difference from nlxb
+osol$par - coef(Pur.wnlxb)
+```
+
+## How QR decomposition is used to effect the Levenberg-Marquardt stabilization
+
+If the nonlinear least squares problem is defined by minimizing the sum of
+squares of a vector of residuals that are functions of a vector of parameters `x`
+
+` r =  f(x) `
+
+Then the minimization of ` S(x) = r^T r ` is our goal. 
+
+`nls()` attempts to minimize a sum of squared residuals by a Gauss-Newton method. If we
+compute a Jacobian matrix `J` and a vector of residuals `r` from a vector of parameters `x`, 
+then we can define a linearized problem 
+
+`  J^T J  \delta  = - J^T r `
+
+This leads to an iteration where, from a set of starting parameters `x0`, we compute
+
+` x_{i+1} = x_i + \delta`
+
+This is commonly modified to use a step factor `step`
+
+` x_{i+1} = x_i + step * \delta`
+
+It is in the mechanisms to choose the size of `step` and to decide when to terminate the
+iteration that Gauss-Newton methods differ. Indeed, though I have tried several times, I
+find the very convoluted code behind `nls()` very difficult to decipher. Unfortunately, its
+authors have now (as far as I am aware) all ceased to maintain the code.
+
+Both `nlsr::nlxb()` and `minpack.lm::nlsLM` use a Levenberg-Marquardt stabilization of the iteration.
+(@jncnm79), solving
+
+` (J^T J + \lambda D)   \delta  = - J^T r `
+
+where `D` is some diagonal matrix and lambda is a number of modest size initially. Clearly
+for `\lambda = 0` we have a Gauss-Newton method. Typically, the sum of squares of the residuals
+calculated at the "new" set of parameters is used as a criterion for keeping those parameter
+values. If so, the size of `\lambda` is reduced. If not, we increase the size of `\lambda` and
+compute a new `\delta`. Note that a new 'J`, the expensive step in each iteration, is NOT
+required. 
+
+As for Gauss-Newton methods, the details of how to start, adjust and terminate the iteration
+lead to many variants, increased by different possibilities for specifying `D`. See
+@jncnm79.
+
+We could implement the methods using the equations above. However, the accumulation of
+inner products in `J^T J` occasions some numerical error, and it is generally both safer
+and more efficient to use matrix decompositions. In particular, if we form the QR decomposition
+of `J`
+
+    `Q R = J`
+    
+where Q is an orthonormal matrix and R is Right or Upper triangular, we can easily
+solve
+
+`  R \delta = Q^T r`
+
+But how do we get the Marquardt stabilization?
+
+If we augment `J` with a square matrix ` sqrt(\lambda D)` whose diagonal elements are the
+square roots of `\lambda` times the diagonal elements of `D`, and augment the vector `r` with `n` zeros
+where `n` is the column dimension of `J` and `D`, we achieve our goal. 
+
+Typically we can use `D = 1_n` (the identidy of order n), but @Marq63 showed that using the 
+diagonal elements of `J^T J` for D. @jn77ima pointed out that on computers with limited
+arithmetic (which now are rare since the IEEE 754 standard appeared in 1985), underflow might
+cause a problem of very small elements in `D` and proposed adding `\phi 1_n` to the diagonals
+of `J^T J` before multiplying by `\lambda` in the Marquardt stabilization. This avoids some
+awkward cases with very little extra overhead. It is accomplished with the QR approach by
+appending `sqrt(\phi * \lambda)` times a unit matrix `1_n` to the matrix already augmented
+matrix. We must also append `n` zeros to the augmented `r`. 
+
+## Relative offset convergence criterion
+
+In October 2020, I suggested a patch to the `stats::nls()` function to avoid
+a zero-divide in the relative offset convergence criterion. The explanation of 
+this in the proposed manual file `nls.Rd' is
+
+"**Warning**
+
+  **The default settings of `nls` generally fail on small-residual problems.**
+
+  The `nls` function uses a relative-offset convergence criterion
+  that compares the numerical imprecision at the current parameter
+  estimates to the residual sum-of-squares.  To avoid a zero-divide in 
+  computing the test value, a positive constant `convTestAdd` should 
+  be added to the sum-of-squares. This quantity is set via `nls.control()`,
+  as in the example below."
+  
+
+
+## Missing capabilities
+
+#### Multi-line function expressions
+
+Multi-line functions present a challenge. This is in part because
+the chain rule may have to be applied backwards (last line first), but
+also because there may be structures that are not always differentiable,
+such as *if* statements.
+
+Note that the functional approach to nonlinear least squares -- accessible via
+function `nlfb` -- does let us prepare residuals and Jacobians of complexity
+limited only by the capabilities of **R**.
+
+#### Automatic differentiation
+
+This is the natural extension of Multi-line expressions. The authors would welcome
+collaboration with someone who has expertise in this area.
+
+#### Vector parameters
+
+We would like to be able to find the Jacobian or gradient of functions
+that have as their parameters a vector, e.g., *prm*. At time of writing
+(January 2015) we cannot specify such a vector within **nlsr**. 
+?? is this true?
+
+#### Examples of capabilities and weaknesses
+
+The following (rather long) script shows things that work or fail. In particular, 
+it shows that the calls needed to get derivatives need to be set up precisely. This
+is not unique to R -- the same sort of attention to (syntax specific) detail is 
+present in other systems like Macsyma/Maxima.
+
+First we set up the Hobbs weed problem. Initially it seemed a good idea to put the data
+WITHIN the residual function so that it would not have to be passed to the function.
+In retrospect, this is a bad idea because y and t are needed. To make the use of the
+data explicit, it is saved in the variables `tdat` for time and `ydat` for the weed
+data.
+
+```{r hobbsrestest}
+# tryhobbsderiv.R
+ydat<-c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558, 50.156, 62.948,
+       75.995, 91.972)
+tdat<-1:12
+# try setting t and y here
+t <- tdat
+y <- ydat
+# now define a function
+
+hobbs.res<-function(x, t, y){ # Hobbs weeds problem -- residual
+  # This variant uses looping
+#  if(length(x) != 3) stop("hobbs.res -- parameter vector n!=3")
+#  if(abs(12*x[3])>50) {
+#    res<-rep(Inf,12)
+#  } else {
+    res<-x[1]/(1+x[2]*exp(-x[3]*t)) - y
+#  }
+}
+# test it
+start1 <- c(200, 50, .3)
+## residuals at start1
+r1 <- hobbs.res(start1, t=tdat, y=ydat)
+print(r1)
+```
+Now we try some of the derivative capabilities of `nlsr`.
+
+```{r hobbnlsr, error=TRUE, warning=TRUE, messages=TRUE}
+## NOTE: some functions may be seemingly correct for R, but we do not
+## get the result desired, despite no obvious error. Always test.
+require(nlsr)
+# Try directly to differentiate the residual vector. r1 is numeric, so this should
+# return a vector of zeros in a mathematical sense. In fact it gives an error, 
+# since R does not want to differentiate a numeric vector.
+Jr1a <- fnDeriv(r1, "x")
+# Set up a function containing expression with subscripted parameters x[]
+hobbs1 <- function(x, t, y){ res<-x[1]/(1+x[2]*exp(-x[3]*t)) - y }
+# test the residuals
+print(hobbs1(start1, t=tdat, y=ydat))
+# Alternatively, let us set up t and y
+y<-c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558, 50.156, 62.948,
+       75.995, 91.972)
+t<-1:12
+# try different calls. Note that we need to include t and y data somehow
+print(hobbs1(start1))
+print(hobbs1(start1, t, y))
+print(hobbs1(start1, tdat, ydat))
+# We remove t and y, to ensure we don't get results from their presence
+rm(t)
+rm(y)
+# Set up a function containing an expression with named (with numbers) parameters 
+# Note that we need to link these to the values in x
+hobbs1m <- function(x, t, y){
+  x001 <- x[1]
+  x002 <- x[2]
+  x003 <- x[3]
+  res<-x001/(1+x002*exp(-x003*t)) - y 
+}
+print(hobbs1m(x=start1, t=tdat, y=ydat))
+# Function with explicit use of the expression() 
+hobbs1me <- function(x, t, y){
+  x001 <- x[1]
+  x002 <- x[2]
+  x003 <- x[3]
+  expression(x001/(1+x002*exp(-x003*t)) - y) 
+}
+print(hobbs1me(start1, t=tdat, y=ydat))
+# note failure (because the expression is not evaluated?)
+#
+# Now try to take derivatives
+Jr11m <- fnDeriv(hobbs1m, c("x001", "x002", "x003"))
+# fails because expression is INSIDE a function (i.e., closure)
+#
+# try directly differentiating the expression
+Jr11ex <-fnDeriv(expression(x001/(1+x002*exp(-x003*t)) - y)
+                  , c("x001", "x002", "x003"))
+# this seems to "work". Let us display the result
+Jr11ex
+# Set the values of the parameters by name
+x001 <- start1[1]
+x002 <- start1[2]
+x003 <- start1[3]
+# and try to evaluate
+print(eval(Jr11ex))
+# we need t and y, so set them
+t<-tdat
+y<-ydat
+print(eval(Jr11ex))
+# But there is still a problem. WHY???
+#
+# Let us try it piece by piece (column by column)
+resx <- expression(x001/(1+x002*exp(-x003*t)) - y)
+res1 <- Deriv(resx, "x001", do_substitute=FALSE)
+res1
+col1 <- eval(res1)
+res2 <- Deriv(resx, "x002", do_substitute=FALSE)
+res2
+col2 <- eval(res2)
+res3 <- Deriv(resx, "x003", do_substitute=FALSE)
+res3
+col3 <- eval(res3)
+hobJac <- cbind(col1, col2, col3)
+print(hobJac)
+```
+
+Clearly there is still some work to do to make the mechanism for getting derivatives
+more easily, and with less chance of error. Work still to do???.
+
+### Jacobians
+
+Jacobians, the matrices of partial derivatives of residuals with respect
+to the parameters, have a vector input (the parameters). `nlsr` attempts
+to generate the code for this computation. **This is the first key improvement
+of `nlsr` over `nls()`.** It will likely be a continuing effort to enlarge the
+set of functions and expressions that can be handled and to deal with them 
+more efficiently. Also it would be nice to automate the generation of numerical
+approximations for those components of the Jacobian for which analytic derivatives
+are not available. 
+
+Note that the Jacobian inner product (J^T J) differs from the Hessian of the
+sum of squares by a matrix whose elements that are an inner product of the residuals with
+their second derivatives with respect to the parameters. This is a summation of m matrices
+each involving a residual times its (n by n) partial derivatives with respect to the
+parameters. Generally we treat this matrix as "ignorable" on the basis that the residuals
+should be "small", but clearly this is not always the case.
+
+## Implementation of nonlinear least squares methods
+
+### Gauss-Newton variants
+
+Nonlinear least squares methods are mostly founded on some or
+other variant of the Gauss-Newton algorithm. The function we
+wish to minimize is the sum of squares of the (nonlinear) 
+residuals r(x) where there are m observations (elements of r)
+and n parameters x. Hence the function is
+
+    f(x) = sum(r(k)^2)
+
+Newton's method starts with an original set of parameters x[0].
+At a given iteraion, which could be the first, we want to solve
+
+    x[k+1]  =  x[k]  -   H^(-1) g
+   
+where H is the Hessian and g is the gradient at x[k]. We can 
+rewrite this as a solution, at each iteration, of 
+  
+    H delta = -g
+
+with
+
+    x[k+1]  =  x[k] + delta
+         
+For the particular sum of squares, the gradient is 
+
+    g(x) = 2 * r(k)
+
+and 
+
+    H(x) = 2 ( J' J  +  sum(r * Z))
+
+where J is the Jacobian (first derivatives of r w.r.t. x)
+and Z is the tensor of second derivatives of r w.r.t. x).
+Note that J' is the transpose of J. 
+
+The primary simplification of the Gauss-Newton method is to
+assume that the second term above is negligible. As there is
+a common factor of 2 on each side of the Newton iteration 
+after the simplification of the Hessian, the Gauss-Newton
+iteration equation is
+
+    J' J  delta = - J' r
+           
+This iteration frequently fails. The approximation of the Hessian
+by the Jacobian inner-product is one reason, but there is also
+the possibility that the sum of squares function is not
+"quadratic" enough that the unit step reduces it. @Hartley61
+introduced a line search along delta, while @Marq63 suggested
+replacing J' J with (J' J + lambda * D) where D is a diagonal
+matrix intended to partially approximate the omitted portion of
+the Hessian. 
+
+Marquardt suggested D = I (a unit matrix) or D = (diagonal part
+of J' J). The former approach, when lambda is large enough that
+the iteration is essentially
+
+    delta = - g / lambda
+      
+we get a version of the steepest descents algorithm. Using the 
+diagonal of J' J, we have a scaled version of this 
+(see https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm)
+
+@jn77ima found that on low precision machines, it
+was common for diagonal elements of J' J to underflow. A very
+small modification to solve
+
+    (J' J + lambda * (D + phi * I)) * delta = - g
+    
+where phi is a small number (phi = 1 seems to work quite well) ??
+check??. 
+
+In jncnm79, the iteration equation was solved as stated. However, this
+involves forming the sum of squares and cross products of J, a process that
+loses some numerical precision. A better way to solve the linear equations is
+to apply the QR decomposition to the matrix J itself. However, we still need
+to incorporate the lambda * I or lambda * D adjustments. This is done by 
+adding rows to J that are the square roots of the "pieces". We add 1 row for
+each diagonal element of I and each diagonal element of D. 
+
+In each iteration, we reduce the lambda parameter before solution. If the
+resulting sum of squares is not reduced, lambda is increased, otherwise we
+move to the next iteration. Various authors (including the present one)
+have suggested different strategies for this. My current opinion is that
+a "quick" increase, say a factor of 10, and a "slow" decrease, say a factor
+of 0.2, work quite well. However, it is important to check that lambda has
+not got too small or underflowed before applying the increase factor. On
+the other hand, it is useful to be able to set lambda = 0 in the code so
+that a pure Gauss-Newton method can be evaluated with the program(s). The
+current code `nlfb()` uses the line
+
+   `if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps`
+   
+to ensure we get an increase. To force a Gauss-Newton algorithm, the 
+controls `laminc` and `lamdec` are set to 0.
+
+**The Levenberg-Marquardt adjustment to the Gauss-Newton approach is the
+second major improvement of `nlsr` (and also its predecessor `nlmrt` and 
+the package `minpack-lm`) over `nls()`.**
+
+### Termination and convergence tests
+
+The success of many optimization codes often depends on knowing when no more
+progress can be made. For the present codes, one simple procedure increases
+the damping parameter lamda whenever the sum of squares cannot be 
+decreased, with termination when the parameters are not altered by the addition
+of delta. While this "works", it does incur unnecessary computational effort.
+
+A better approach is that of @BatesWatts81. Their relative offset criterion 
+considers the potential progress that could be made in reducing the current
+residuals to the initial sum of squares. This is a sensible and very effective
+strategy for most situations, but is dangerous where the problem has very 
+small or zero residuals, as in the case of an interpolation problem or nonlinear
+equations. 
+
+To illustrate this for zero residual problems, let us set up a simple test.
+
+```{r smallresid}
+## test small resid case with roffset
+tt <- 1:25
+ymod <- 10 * exp(-0.01*tt) + 5
+n <- length(tt)
+evec0 <- rep(0, n)
+evec1 <- 1e-4*runif(n, -.5, .5)
+evec2 <-  1e-1*runif(n, -.5, .5)
+y0 <- ymod + evec0
+y1 <- ymod + evec1
+y2 <- ymod + evec2
+mydata <- data.frame(tt, y0, y1, y2)
+st <- c(aa=1, bb=1, cc=1)
+```
+We provide three sizes of residuals here, but will only illustrate the consequences of
+zero residuals (the problem with y0). Let us run the nonlinear least squares problem
+to get the interpolating function, first with `nls()`, then with `nlxb()`. In the
+second case we have turned off the trace, as the approach "works" because we have 
+taken care in the code to provide for problems with small residuals. 
+
+```{r nlsfit0}
+nlsfit0 <-  try(nls(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=TRUE))
+nlsfit0
+library(nlsr)
+nlsrfit0 <- try(nlxb(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=FALSE))
+nlsrfit0
+```
+We can approximate what `nls()` is doing by running a simple Gauss-Newton method one
+step at a time. It is (or was at the time of writing) easier to do this in functional 
+form with explicit derivatives. Note that we test these functions! 
+
+```{r trf}
+trf <- function(par, data) {
+    tt <- data[,"tt"]
+    res <- par["aa"]*exp(-par["bb"]*tt) + par["cc"] - y0
+}
+print(trf(st, data=mydata))
+trj <- function(par, data) {
+    tt <- data[,"tt"]
+    m <- dim(data)[1]
+    JJ <- matrix(NA, nrow=m, ncol=3)
+    JJ[,1] <- exp(-par["bb"]*tt)
+    JJ[,2] <- - tt * par["aa"] * exp(-par["bb"]*tt)
+    JJ[,3] <- 1
+    JJ
+}
+Ja <- trj(st, data=mydata)
+print(Ja)
+
+library(numDeriv)
+Jn <- jacobian(trf, st, data=mydata)
+print(Jn)
+print(max(abs(Jn-Ja)))
+ssf <- function(par, data){
+   rr <- trf(par, data)
+   ss <- crossprod(rr)
+}
+print(ssf(st, data=mydata))
+
+library(numDeriv)
+print(jacobian(trf, st, data=mydata))
+```
+
+The traditional way to implement a Gauss Newton method was to form the sum of 
+squares and cross-products matrix at in traditional linear regression, using
+the Jacobian as the data matrix. The right hand side uses the inner product
+of the Jacobian with the negative residuals. This approach increases the 
+condition number of the problem, and a more direct QR decomposition of the
+Jacobian is now the preferred approach. However, let us try both to ensure we
+are getting similar answers. First the QR approach.
+
+```{r gnjn, eval=FALSE}
+gnjn <- function(start, resfn, jacfn = NULL, trace = FALSE, 
+		data=NULL, control=list(), ...){
+# simplified Gauss Newton
+   offset = 1e6 # for no change in parms
+   stepred <- 0.5 # start with this as per nls()
+   par <- start
+   cat("starting parameters:")
+   print(par)
+   res <- resfn(par, data, ...)
+   ssbest <- as.numeric(crossprod(res))
+   cat("initial ss=",ssbest,"\n")
+   par0 <- par
+   kres <- 1
+   kjac <- 0
+   keepon <- TRUE
+   while (keepon) {
+      cat("kjac=",kjac,"  kres=",kres,"  SSbest now ", ssbest,"\n")
+      print(par)
+      JJ <- jacfn(par, data, ...)
+      kjac <- kjac + 1
+      QJ <- qr(JJ)
+      delta <- qr.coef(QJ, -res)
+      ss <- ssbest + offset*offset # force evaluation
+      step <- 1.0
+      if (as.numeric(max(par0+delta)+offset) != as.numeric(max(par0+offset)) ) {
+         while (ss > ssbest) {
+           par <- par0+delta * step
+           res <- resfn(par, data, ...)
+           ss <- as.numeric(crossprod(res))
+           kres <- kres + 1
+##           cat("step =", step,"  ss=",ss,"\n")
+##           tmp <- readline("continue")
+           if (ss > ssbest) {
+              step <- step * stepred
+           } else {
+              par0 <- par
+              ssbest <- ss
+           }
+         } # end inner loop
+         if (kjac >= 4)  { 
+            keepon = FALSE
+            cat("artificial stop at kjac=4 -- we only want to check output") 
+         }
+      } else { keepon <- FALSE # done }
+   } # end main iteration
+} # seems to need this
+
+} # end gnjne
+
+fitgnjn0 <- gnjn(st, trf, trj, data=mydata)
+## Another way
+#- set lamda = 0 in nlxb, fix laminc, lamdec
+library(nlsr)
+nlx00 <- try(nlxb(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=TRUE,
+                     control=list(lamda=0, laminc=0, lamdec=0, watch=TRUE)))
+nlx00
+
+```
+
+The first iteration more or less matches the `nls()` result. The problem is quite
+ill-conditioned, and `nls()` is using a numerical approximation to the Jacobian,
+so deviations of this magnitude from the iterations are not unexpected.
+
+Let us test with a traditional Gauss-Newton.
+
+
+```{r gnjn2, eval=FALSE}
+gnjn2 <- function(start, resfn, jacfn = NULL, trace = FALSE, 
+		data=NULL, control=list(), ...){
+# simplified Gauss Newton
+   offset = 1e6 # for no change in parms
+   stepred <- 0.5 # start with this as per nls()
+   par <- start
+   cat("starting parameters:")
+   print(par)
+   res <- resfn(par, data, ...)
+   ssbest <- as.numeric(crossprod(res))
+   cat("initial ss=",ssbest,"\n")
+   kres <- 1
+   kjac <- 0
+   par0 <- par
+   keepon <- TRUE
+   while (keepon) {
+      cat("kres=",kres,"  kjac=",kjac,"   SSbest now ", ssbest,"\n")
+      print(par)
+      JJ <- jacfn(par, data, ...)
+      kjac <- kjac + 1
+      JTJ <- crossprod (JJ)
+      JTr <- crossprod (JJ, res)
+      delta <- - as.vector(solve(JTJ, JTr))
+      ss <- ssbest + offset*offset # force evaluation
+      step <- 1.0
+      if (as.numeric(max(par0+delta)+offset) != as.numeric(max(par0+offset)) ) {
+         while (ss > ssbest) {
+           par <- par0+delta * step
+           res <- resfn(par, data, ...)
+           ss <- as.numeric(crossprod(res))
+           kres <- kres + 1
+##           cat("step =", step,"  ss=",ss,"  best is",ssbest,"\n")
+##           tmp <- readline("continue")
+           if (ss > ssbest) {
+              step <- step * stepred
+           } else {
+              par0 <- par
+              ssbest <- ss
+           }
+         } # end inner loop
+         if (kjac >= 4)  { 
+            keepon = FALSE
+            cat("artificial stop at kjac=4 -- we only want to check output") 
+         }
+      } else { keepon <- FALSE # done }
+   } # end main iteration
+} # seems to need this
+} # end gnjn2
+
+fitgnjn20 <- gnjn2(st, trf, trj, data=mydata)
+
+```
+
+### Implementing the Marquardt stabilization in QR form
+
+?? to add
+
+### Implementing a relative offset convergence test
+
+
+### Nonlinear equations
+
+Solution of sets of nonlinear equations is generally NOT a problem that
+is commonly required for statisticians or data analysts. My experience is that
+the occasions where it does arise are when workers try to solve the first order
+conditions for optimality of a function, rather than try to optimize the
+function. If this function is a sum of squares, then we have a nonlinear
+least squares problem, and generally such problems are best approached my
+methods of the type discussed in this article. 
+
+Conversely, since our problem is, using the notation above, equivalent to
+
+   r(x) = 0 
+  
+the solution of a nonlinear least squares problem for which the final sum
+of squares is zero provides a solution to the nonlinear equations. In my 
+experience this is a valid approach to the nonlinear equations problem, 
+especially if there is concern that a solution may not exist. Note that
+there are methods for nonlinear equations, some of which (??ref) are 
+available in R packages.
+
+## Function versus expression approach
+
+In `nlsr`, we provide for modelling via R functions that generate
+the residuals and Jacobian, and we call the nonlinear least squares
+minimizer through `nlfb`. Alternatively, we can do the modelling
+via the `nlxb` function that
+takes a model expression as an argument and converts it to the 
+functional form. The actual least squares minimization is then
+carried out by a common routine (`nlfb`). Generally `nlxb` is a 
+lot less programming work, but it is also more limited, as we can
+only handle single line expressions, and some expressions may not
+be differentiable within the package, even if there are mathematically
+feasible ways to compute them analytically.
+
+
+## Providing extra data to expressions
+
+Almost all statistical functions have exogenous data that is needed
+to compute residuals or likelihoods and is not dependent on the
+model parameters. (This section starts from Notes140806.)
+
+model2rjfun does NOT have ... args. 
+
+Should it have? i.e., a problem where we are fitting a set of 
+time series, 1 for each plant/animal, with some sort of start
+parameter for each that is NOT estimated (e.g., pH of soil, 
+some index of health). 
+
+Difficulty in such a problem is that the residuals are then a
+matrix, and the nlfb rather than nlxb is a better approach.
+However, fitting 1 series would still need this data, and example
+nlsrtryextraparms.txt shows that the extra parm (ms in this case)
+needs to be in the user's globalenv.
+
+```{r scaling}
+rm(list=ls())
+require(nlsr)
+# want to have data AND extra parameters (NOT to be estimated)
+traceval  <-  TRUE  # traceval set TRUE to debug or give full history
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+          38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+startf1  <-  c(b1=1, b2=1, b3=.1)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+cat("LOCAL DATA IN DATA FRAMES\n")
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+cat("weeddata contains the original data\n")
+ms <- 2 # define the external parameter here
+cat("wdata scales y by ms =",ms,"\n")
+wdata <- data.frame(y=ydat/ms, tt=tdat)
+wdata
+cat("estimate the UNSCALED model with SCALED data\n")
+anlxbs  <-  try(nlxb(eunsc, start=start1, trace=traceval, data=wdata))
+print(anlxbs)
+escal <-  y ~ ms*b1/(1+b2*exp(-b3*tt))
+cat("estimate the SCALED model with scaling provided in the call (ms=0.5)\n")
+anlxbh  <-  try(nlxb(escal, start=start1, trace=traceval, data=weeddata1, ms=0.5))
+print(anlxbh)
+cat("\n scaling is now using the globally defined value of ms=",ms,"\n")
+anlxb1a  <-  try(nlxb(escal, start=start1, trace=traceval, data=weeddata1))
+print(anlxb1a)
+ms <- 1
+cat("\n scaling is now using the globally re-defined value of ms=",ms,"\n")
+anlxb1b  <-  try(nlxb(escal, start=start1, trace=traceval, data=weeddata1))
+print(anlxb1b)
+```
+
+
+## Examples of use
+
+### Nonlinear least squares with expressions
+
+We use the Hobbs Weeds problem (Nash, 1979 and Nash, 2014). Note that
+nls() fails from start1.
+
+```{r useex1}
+require(nlsr)
+traceval <- FALSE
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+          38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+
+cat("LOCAL DATA IN DATA FRAMES\n")
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+weeddata2  <-  data.frame(y=1.5*ydat, tt=tdat)
+
+anlxb1  <-  try(nlxb(eunsc, start=start1, trace=TRUE, data=weeddata1,
+                     control=list(watch=FALSE)))
+print(anlxb1)
+
+anlsb1 <-  try(nls(eunsc, start=start1, trace=TRUE, data=weeddata1))
+print(anlsb1)
+```
+
+A different start causes nlxb to return a large sum of squares. Note
+that nls() again fails. 
+
+```{r usex2}
+startf1  <-  c(b1=1, b2=1, b3=.1)
+anlsf1 <-  try(nls(eunsc, start=startf1, trace=TRUE, data=weeddata1))
+print(anlsf1)
+
+library(nlsr)
+anlxf1  <-  try(nlxb(eunsc, start=startf1, trace=TRUE, data=weeddata1,
+                     control=list(watch=FALSE)))
+print(anlxf1)
+
+# anlxb2  <-  try(nlxb(eunsc, start=start1, trace=FALSE, data=weeddata2))
+# print(anlxb2)
+```
+
+We can discover quickly the difficulty here by computing the Jacobian
+at this "solution" and checking its singular values.
+
+```{r usex3}
+cf1 <- coef(anlxf1)
+print(cf1)
+jf1 <- anlxf1$jacobian
+svals <- svd(jf1)$d
+print(svals)
+```
+
+Here we see that the Jacobian is only rank 1, even though there are 3
+coefficients. It is therefore not surprising that our nonlinear least 
+squares program has concluded we are unable to make further progress.
+
+### Nonlinear least squares with functions
+
+We can run the same example as above using **R** functions rather than 
+expressions, but now we need to have a gradient function as well as one to
+compute residuals. **nlsr** has tools to create these functions from expressions,
+as we shall see here. First we again set up the data and load the package.
+
+```{r usex4}
+require(nlsr)
+traceval <- FALSE
+# Data for Hobbs problem
+ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
+            38.558, 50.156, 62.948, 75.995, 91.972) # for testing
+tdat  <-  seq_along(ydat) # for testing
+
+# A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
+start1  <-  c(b1=1, b2=1, b3=1)
+
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
+
+cat("LOCAL DATA IN DATA FRAMES\n")
+weeddata1  <-  data.frame(y=ydat, tt=tdat)
+
+
+weedrj <- model2rjfun(modelformula=eunsc, pvec=start1, data=weeddata1)
+weedrj
+rjfundoc(weedrj) # Note how useful this is to report status
+
+```
+
+### check modelexpr() works with an ssgrfun ??
+
+### test model2rjfun vs model2rjfunx ??
+
+### Why is resss difficult to use in optimization?
+
+```{r mod2rjopt}
+y <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558,
+50.156, 62.948, 75.995, 91.972)
+tt <- seq_along(y) # for testing
+mydata <- data.frame(y = y, tt = tt)
+f <- y ~ 100*b1/(1 + 10*b2 * exp(-0.1 * b3 * tt))
+p <- c(b1 = 1, b2 = 1, b3 = 1)
+rjfn <- model2rjfun(f, p, data = mydata)
+rjfn(p)
+
+myfn <- function(p, resfn=rjfn){
+  val <- resss(p, resfn)
+}
+
+p <- c(b1 = 2, b2=2, b3=1)
+
+a1 <- optim(p, myfn, control=list(trace=0))
+a1
+```
+
+We can also embed the function directly. 
+
+```{r embedfn}
+a2 <- optim(p, function(p,resfn=rjfn){resss(p,resfn)}, control=list(trace=0))
+a2
+```
+
+### Need more extensive discussion of Simplify??
+
+## Using derivative functions to generate gradient functions
+
+?? from a different vignette, need to integrate
+
+One of the common needs for optimization computations is the availability
+of accurate gradients of the objective functions. While differentiation is
+relatively straightforward, it is tedious and error-prone.
+
+At 2015-1-24, I have not determined how to automate the use the output
+of the derivatives generated by **nlsr** to create a working gradient
+function. However, the following write-up shows how such a function can
+be generated in a semi-automatic way.
+
+We use an example that appeared on the R-help mailing list on Jan 14, 2015. 
+Responses by Ravi Varadhan and others, along with some modification I made,
+gave the following negative log likelihood function to be minimized.
+
+```{r weibull}
+require(nlsr)
+
+y=c(5,11,21,31,46,75,98,122,145,165,195,224,245,293,321,330,350,420) # data set
+
+Nweibull2 <- function(x,prm){
+  la <- prm[1]
+  al <- prm[2]
+  be<- prm[3]
+  val2 <- la*be*(x/al)^(be-1)* exp( (x/al)^be+la*al*(1-exp((x/al)^be) ) )
+  val2
+}
+LL2J <- function(par,y) {
+R = Nweibull2(y,par)
+-sum(log(R))
+}
+```
+
+We want the gradient of LL3J() with respect to *par*, and first compute the
+derivatives of Nweibull2() with respect to the paramters *prm*
+
+We start with the central expression in Nweibull2() and compute its
+partial derivatives. The expression is:
+
+      la*be*(x/al)^(be-1)* exp( (x/al)^be+la*al*(1-exp((x/al)^be) ) )
+
+```{r weibull2}
+# Put in the main expression for the Nweibull pdf.
+## we generate the three gradient components
+g1n <- nlsDeriv(~ la*be*(x/al)^(be-1)* exp( (x/al)^be+la*al*(1-exp((x/al)^be) ) ), "la")
+g1n
+g2n <- nlsDeriv(~ la*be*(x/al)^(be-1)* exp( (x/al)^be+la*al*(1-exp((x/al)^be) ) ), "al")
+g2n
+g3n <- nlsDeriv(~ la*be*(x/al)^(be-1)* exp( (x/al)^be+la*al*(1-exp((x/al)^be) ) ), "be")
+g3n
+```
+
+By copying and pasting the output above into a function structure, we get
+Nwei2g() below.
+
+```{r nwei2g}
+Nwei2g <- function(x, prm){
+  la <- prm[1]
+  al <- prm[2]
+  be<- prm[3]
+g1v <- la * be * (x/al)^(be - 1) * (exp((x/al)^be + la * al * (1 - exp((x/al)^be))) * 
+    (al * (1 - exp((x/al)^be)))) + be * (x/al)^(be - 1) * exp((x/al)^be + 
+    la * al * (1 - exp((x/al)^be)))
+
+g2v <- la * be * (x/al)^(be - 1) * (exp((x/al)^be + la * al * (1 - exp((x/al)^be))) * 
+    (be * (x/al)^(be - 1) * -(x/al^2) + (la * al * -(exp((x/al)^be) * 
+        (be * (x/al)^(be - 1) * -(x/al^2))) + la * (1 - exp((x/al)^be))))) + 
+    la * be * ((be - 1) * (x/al)^(be - 1 - 1) * -(x/al^2)) * 
+        exp((x/al)^be + la * al * (1 - exp((x/al)^be)))
+
+g3v <- la * be * (x/al)^(be - 1) * (exp((x/al)^be + la * al * (1 - exp((x/al)^be))) * 
+    ((x/al)^be * log(x/al) + la * al * -(exp((x/al)^be) * ((x/al)^be * 
+        log(x/al))))) + (la * be * ((x/al)^(be - 1) * log(x/al)) + 
+    la * (x/al)^(be - 1)) * exp((x/al)^be + la * al * (1 - exp((x/al)^be)))
+gg <- matrix(data=c(g1v, g2v, g3v), ncol=3)
+}
+```
+
+We can check this gradient functionusing the grad() function from package
+**numDeriv**.
+
+```{r checkgrad}
+start1 <- c(lambda=.01,alpha=340,beta=.8)
+start2 <- c(lambda=.01,alpha=340,beta=.7)
+
+require(numDeriv)
+ganwei <- Nwei2g(y, prm=start1)
+
+require(numDeriv)
+Nw <- function(x, y) {
+   Nweibull2(y, x)
+} # to allow grad() to work
+
+gnnwei <- matrix(NA, nrow=length(y), ncol=3)
+for (i in 1:length(y)){
+   gnrow <- grad(Nw, x=start1, y=y[i])
+   gnnwei[i,] <- gnrow
+}
+gnnwei
+ganwei
+cat("max(abs(gnnwei - ganwei))= ",   max(abs(gnnwei - ganwei)),"\n")
+```
+
+Now we can build the gradient of the objective function. This requires
+an application of the chain rule to the summation of logs of the
+elements of the quantity *R*. Since the derivative of log(R) w.r.t. R is
+simply 1/R, this is relatively simple. However, I have not found how
+to automate this.
+
+```{r LL2J}
+## and now we can build the gradient of LL2J
+LL2Jg <- function(prm, y) {
+    R = Nweibull2(y,prm)
+    gNN <- Nwei2g(y, prm)
+#    print(str(gNN)
+    gL <- - as.vector( t(1/R) %*% gNN) 
+}
+# test
+gaLL2J <- LL2Jg(start1, y)
+gaLL2J
+gnLL2J <- grad(LL2J, start1, y=y)
+gnLL2J
+cat("max(abs(gaLL2J-gnLL2J))= ", max(abs(gaLL2J-gnLL2J)), "\n" )
+```
+
+## Appendix A: Providing exogenous data
+
+These examples show dotargs do NOT work for any of nlsr, nls, or minpack.lm.
+Use of a dataframe or local (calling) environment objects does work in all.
+
+
+```{r appx1, cache=FALSE, echo=FALSE}
+## rm(list=ls())
+library(knitr)
+# try different ways of supplying data to R nls stuff
+ydata <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558,
+           50.156, 62.948, 75.995, 91.972)
+ttdata <- seq_along(ydata) # for testing
+
+mydata <- data.frame(y = ydata, tt = ttdata)
+
+hobsc <- y ~ 100*b1/(1 + 10*b2 * exp(-0.1 * b3 * tt))
+
+ste <- c(b1 = 2, b2 = 5, b3 = 3)
+
+# let's try finding the variables
+
+findmainenv <- function(formula, prm) {
+  vn <- all.vars(formula)
+  pnames <- names(prm)
+  ppos <- match(pnames, vn)
+  datvar <- vn[-ppos]
+  cat("Data variables:")
+  print(datvar)
+  cat("Are the variables present in the current working environment?\n")
+  for (i in seq_along(datvar)){
+    cat(datvar[[i]]," : present=",exists(datvar[[i]]),"\n")
+  }
+}
+
+
+findmainenv(hobsc, ste)
+y <- ydata
+tt <- ttdata
+findmainenv(hobsc, ste)
+rm(y)
+rm(tt)
+
+# ===============================
+
+
+# let's try finding the variables in dotargs
+
+finddotargs <- function(formula, prm, ...) {
+  dots <- list(...)
+  cat("dots:")
+  print(dots)
+  cat("names in dots:")
+  dtn <- names(dots)
+  print(dtn)
+  vn <- all.vars(formula)
+  pnames <- names(prm)
+  
+  ppos <- match(pnames, vn)
+  datvar <- vn[-ppos]
+  cat("Data variables:")
+  print(datvar)
+  cat("Are the variables present in the dot args?\n")
+  for (i in seq_along(datvar)){
+    dname <- datvar[[i]]
+    cat(dname," : present=",(dname %in% dtn),"\n")
+  }
+}
+
+finddotargs(hobsc, ste, y=ydata, tt=ttdata)
+# ===============================
+
+y <- ydata
+tt <- ttdata
+tryq <- try(nlsquiet <- nls(formula=hobsc, start=ste))
+if (class(tryq) != "try-error") {print(nlsquiet)} else {cat("try-error\n")}
+#- OK
+rm(y)
+rm(tt)
+
+## this will fail
+## tdots<-try(nlsdots <- nls(formula=hobsc, start=ste, y=ydata, tt=ttdata))
+## but ...
+mydata<-data.frame(y=ydata, tt=ttdata)
+tdots<-try(nlsdots <- nls(formula=hobsc, start=ste, data=mydata))
+if ( class(tdots) != "try-error") {print(nlsdots)} else {cat("try-error\n")}
+#- Fails
+tframe <- try(nlsframe <- nls(formula=hobsc, start=ste, data=mydata))
+if (class(tframe) != "try-error") {print(nlsframe)} else {cat("try-error\n")}
+#- OK
+
+library(nlsr)
+y <- ydata
+tt <- ttdata
+tquiet <- try(nlsrquiet <- nlxb(formula=hobsc, start=ste))
+if ( class(tquiet) != "try-error") {print(nlsrquiet)}
+#- OK
+rm(y)
+rm(tt)
+test <- try(nlsrdots <- nlxb(formula=hobsc, start=ste, y=ydata, tt=ttdata))
+if (class(test) != "try-error") { print(nlsrdots) } else {cat("Try error\n") }
+#- Note -- does NOT work -- do we need to specify the present env. in nlfb for y, tt??
+test2 <- try(nlsframe <- nls(formula=hobsc, start=ste, data=mydata))
+if (class(test) != "try-error") {print(nlsframe) } else {cat("Try error\n") }
+#- OK
+
+
+library(minpack.lm)
+y <- ydata
+tt <- ttdata
+nlsLMquiet <- nlsLM(formula=hobsc, start=ste)
+print(nlsLMquiet)
+#- OK
+rm(y)
+rm(tt)
+## Dotargs
+## Following fails
+## tdots <- try(nlsLMdots <- nlsLM(formula=hobsc, start=ste, y=ydata, tt=ttdata))
+## but ... 
+tdots <- try(nlsLMdots <- nlsLM(formula=hobsc, start=ste, data=mydata))
+if (class(tdots) != "try-error") { print(nlsLMdots) } else {cat("try-error\n") }
+#-  Note -- does NOT work
+## dataframe
+tframe <- try(nlsLMframe <- nlsLM(formula=hobsc, start=ste, data=mydata) )
+if (class(tdots) != "try-error") {print(nlsLMframe)} else {cat("try-error\n") }
+#- does not work
+
+## detach("package:nlsr", unload=TRUE)
+## Uses nlmrt here for comparison
+## library(nlmrt)
+## txq <- try( nlxbquiet <- nlxb(formula=hobsc, start=ste))
+## if (class(txq) != "try-error") {print(nlxbquiet)} else { cat("try-error\n")}
+#- Note -- does NOT work
+## txdots <- try( nlxbdots <- nlxb(formula=hobsc, start=ste, y=y, tt=tt) )
+## if (class(txdots) != "try-error") {print(nlxbdots)} else {cat("try-error\n")}
+#- Note -- does NOT work
+## dataframe
+## nlxbframe <- nlxb(formula=hobsc, start=ste, data=mydata)
+## print(nlxbframe)
+#- OK
+```
+
+
+# References
+

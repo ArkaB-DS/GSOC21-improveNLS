@@ -1,0 +1,11 @@
+
+```{r cache=FALSE, echo=FALSE}
+library(knitr)
+# read chunk (does not run code)
+read_chunk('/home/john/rsvnall/optimizer/pkg/nlsr/inst/dev-files/nlsdata.R')
+# We use this approach to avoid having differences between file here and in inst/extdata/
+```
+
+```{r}
+<<nlsdata.R>>
+```

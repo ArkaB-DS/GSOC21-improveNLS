@@ -1,0 +1,47 @@
+##
+##  NAMESPACE
+##
+
+# Public routines
+export(
+   nlxb,
+   nlfb,
+   wrapnlsr,
+   resss,
+   resgr,
+   res,
+   modelexpr,
+   model2rjfun,
+   model2ssgrfun,
+   predict.nlsr,
+   print.nlsr,
+   res,
+   summary.nlsr,
+   coef.nlsr,
+   rjfundoc,
+   nlsDeriv, 
+   codeDeriv,
+   fnDeriv,
+   dex,
+   nlsSimplify,
+   newDeriv,
+   sysDerivs,
+   newSimplification,
+   sysSimplifications,
+   findSubexprs,
+   isFALSE,
+   isZERO,
+   isONE,
+   isMINUSONE,
+   isCALL
+)
+
+importFrom(digest, digest)
+importFrom("stats", "deriv", "nls", "pt")
+
+S3method(print, rjfundoc)
+S3method(coef, nlsr)
+S3method(print, nlsr)
+S3method(summary, nlsr)
+S3method(predict, nlsr)
+# S3method(resid, nlsr)

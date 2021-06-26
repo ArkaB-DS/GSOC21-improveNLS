@@ -1,0 +1,98 @@
+Notes on review of nlsr package Jan 2017 by JN 
+
+TODO: 
+
+170120 cannot figure out how to use isCALL and why.
+
+170119 justifications for the is??? functions
+
+170117
+- res() function working, but resid() caused difficulties. Some
+sort of clash with generic.
+
+170116
+- summary no longer invisible?
+
+- summary for nlxb and nlfb both now should work. 
+  If there is no name for a parameter, the name p_(position)
+  is created. 
+
+- weights should be working OK. Residuals will be weighted ones.
+
+- added resid.nlsr() function. However, predict.nlsr() is NOT
+  present, since we can create problems with residuals (e.g.,
+  nonlinear equations) that do not have a model structure
+
+170113
+- output of summary.nlsr is class = "summary.nlsr" like summary.nls is "summary.nls"?
+
+170110
+
+- weights (fixed) added and documented in nlsr-devdoc.Rmd
+
+- nlfb: sumsquares via crossprod needs to be as.numeric(). Done.
+
+170108
+- removed dot args from nlxb declaration and its internal call to nlfb(),
+  and fixed nlxb.Rd. Note nls() help says of dot args "None are used at present."
+  
+- moved model2rjfunx and .Rd file to inst/dev-files
+
+- should we add weights to nlxb? nlfb? Note that nlfb() can use functionally
+  created weights, but nls uses FIXED weights. We could add fixed weights to 
+  nlxb() and pass to nlfb() via its dot args.
+  
+170107
+  
+- added detailed output to dex() examples that show different classes of the returned objects.
+
+- made clear where the .MissingVal usage is to be found in Rd file for nlsDeriv.
+
+- in nlsr-devdoc.Rmd added silly joe(x) example to show possible trouble spot
+
+
+On 10/01/2017 2:11 PM, John Nash wrote:
+
+>
+> 2) In summary.nlsr we just have a list, but summary.nls gives standard
+> error and t-stats and p-values. I'm thinking I should mimic nls() at
+> least to that extent.
+
+I agree that makes sense.  Part of the decision is how much to put in the result of summary.nlsr, and how much goes in the print.summary.nlsr method.  Generally I think it works best when the print method doesn't do any significant computing, it just does formatting and printing.
+
+>
+> 3) I've added fixed weights into nlxb and nlfb. These compare fine with
+> nls(), though nls() itself lacks an example of use, but has a functional
+> example. Go figure. FYI, we can't do Martin Maechler's 2001 example in
+> nlxb(). I can do it in nlfb() after modifying the function. For now, I
+> propose to leave things as they are. The problem is doable, but in a
+> slightly different way from nls().
+
+Okay.
+>
+> 4) Some of the result functions like coef() and summary() were returning
+> with invisible(). This means they don't print results. nls() does, and
+> my intention is to make all of these functions print.
+
+I think that makes sense, but do note we shouldn't write a coef or summary function, just coef.nlsr and summary.nlsr methods.  We can import coef from stats, summary from base.  Doing it this way does require that the headers are compatible with the originals, which are
+
+coef(object, ...)
+summary(object, ...)
+
+This means the first arg must be named "object", and there must be a ... argument.  There can be other arguments before or after it.
+
+> 5) I think I should add resid.nlsr() and predict.nlsr() functions.
+
+Those make sense.  The generics have the same args as coef and summary.
+
+Duncan
+
+>
+> If you think of others, let me know.
+>
+> So I have a reference to my own activities, I'm adding this stuff to the
+> nlsr-devdoc.Rmd. Messy, but a good resource for later maintenance.
+>
+> Cheers, JN
+>
+
