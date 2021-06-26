@@ -190,9 +190,13 @@ $$ (J^t J + \lambda (D + \phi 1_n)  \delta  =  - J^t r $$
 
 where phi is a modest number such as 1. 
 
-
-?? note that we form JTJ in nlfb, which is extra work. Then sqrt(lambda),
-so may want to think more about this.
+Note that we form JTJ in `nlfb()` to provide the scaled stabilization, 
+which is quite a lot of computational work. The experimental package
+`nlsralt` has been built to add functions `nlxbx()` and `nlfbx()` that
+use ONLY the fixed element (i.e., unit matrix) stabilizations. A very
+preliminary timing ([2021-6-26]) using the Hobbs unscaled problem shows
+a slight improvement for the simplified version in timing with equivalent
+solution.
 
 ## Others
 
@@ -410,13 +414,28 @@ the $K$ matrix with another $n$ by $n$ block $Z2$ which is a diagonal matrix whe
 $$ Z2_{k,k}  = \sqrt(\lambda) \sqrt(\phi)  $$
 
 Unfortunately, there is a need for each major iteration to compute at least the diagonal elements of the
-SSCP matrix. It may, in fact, be more efficient to omit the $Z1$ augmentation. ?? needs testing??
+SSCP matrix. It may, in fact, be more efficient to omit the $Z1$ augmentation. Package `nlsralt`, as
+mentioned, does this with functions `nlxbx()` (for formula-specified models) and `nlfbx()` (for problems
+specified with `res()` and `jac()` functions). This gives the following preliminary example using the 
+Hobbs weed problem.
+
+<!-- https://bookdown.org/yihui/rmarkdown-cookbook/source-script.html -->
+<!-- ```{r, include=FALSE} -->
+<!-- source("your-script.R", local = knitr::knit_global()) -->
+<!-- # or sys.source("your-script.R", envir = knitr::knit_global()) -->
+<!-- ``` -->
+
+```{r hobbtime1}
+source("HobbsTiming.R", echo=TRUE)
+```
 
 
+### Other storage approaches.
 
-
-
-Other storage approaches.
+?? do we want to report any other approaches here?
+In particular, should we look at minpack.lm to see how the Marquardt stabilization 
+is applied? This is a very complicated program, since it calls C to call Fortran,
+and the Fortran is layered in a way that is well-documented but non-obvious.
 
 
 ## Sequential or full Jacobian computation
@@ -426,18 +445,52 @@ and process this before computing the next row etc. This means the full Jacobian
 does not have to be stored. In Nashlib, Algorithms 3 and 4, we used row-wise data 
 entry in linear least squares via Givens' triangularization (QR decompostition),
 with the possibility of extending the QR to a singular value decomposition.
-Forming the SSCP matrix can also be generated row-wise as well.
+Forming the SSCP matrix can also be generated row-wise as well. We do not 
+anticipate that any of these approaches will offer advantages that are so
+great that we would choose them.
 
 
 ## Analytic or approximate Jacobian
 
-Use of finite difference approximations??
+`nls()` and `minpack.lm` use finite difference approximations to compute the Jacobian.
+In the case of `minpack.lm` it seems that the standard `numericDeriv()` (from the 
+set of routines in file `nls.R`) is used initially for the "gradient", but within
+the iteration, the Fortran routine lmdif.f computes its own approximations for
+the Jacobian, adding another layer of potential confusion.
+
+The `nlsr` package, however, attempts to compute analytic derivatives using symbolic
+and analytic derivative possibilities from other parts of R. A great advantage of
+these is that they are for a given point, and do not suffer the issue that a step
+must be taken, thereby chancing the violation of a constraint or else an inadmissible
+set of arguments for special functions. In my experience, the use of analytic derivatives
+is not much faster than the finite difference approximations, and generally finite
+difference methods iterate as quickly as the "exact" derivative methods to the 
+neighbourhood of a solution. It is in allowing good estimates of convergence 
+criteria that the analytic derivatives seem to show their advantage i.e., knowing
+we are at a solution rather than speed in getting there.
 
 
 ## Problem interfacing
 
 R allows the nonlinear least squares problem to be presented via a formula
-for the model. 
+for the model. This is generally very attractive to users, since they can
+specify their problem in ways that often accord with how they think about them.
+Many (most?) researchers do not write program code, so preparing residual and
+jacobian functions is foreign to them. 
+
+From the point of view of package or system developers, specifications as
+formulas pose some particular issues:
+
+- translating a formula to a function for its actual evaluation may be tricky,
+  since we must essentially parse the formula. R has some tools for this that
+  we use.
+  
+- even if we can translate a formula to a function, we need to check that we
+  have all the data and parameter inputs to enable the evaluation. Moreover,
+  we need to check if the inputs are valid or admissible. 
+  
+- checking for correctness of inputs and translations can be considered to
+  take up most of the code in a reliable and robust package.
 
 # Saving storage
 
