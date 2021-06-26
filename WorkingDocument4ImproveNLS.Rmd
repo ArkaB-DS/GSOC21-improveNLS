@@ -424,7 +424,7 @@ work with nlsModel() seems to indicate that the "m" object is set up to provide
 all the infrastructure for the rest of the code to work with for a particular 
 nonlinear model. 
 
-### [2021-6-23]  [2021-6-24] Tidying
+### [2021-6-23]  [2021-6-25] Tidying and documenting nlsModel
 
 - JN cleaned up DerivsNLS. Extracted ssasymptot model and tested in nlsalt.
   numericDeriv must be working, but not explicitly tested. Note that the
@@ -441,7 +441,8 @@ nonlinear model.
   therefore easier to understand and keep correct). Note the R documentation
   `?assignOps` as well as the `assign()` and `get()` functions.
 
-- 
+- created nlsModelx.R file with nlsModelx(), and then added print statements
+  to allow understanding of the function and build developer documentation.
 
 
 ============end diary only portion ========================

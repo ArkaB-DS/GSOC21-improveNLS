@@ -102,7 +102,7 @@ though Hartley recommends a quadratic (parabolic) line search where two "new" po
 are evaluated and we then try a third at the suggested minimum of the parabola fitted
 to the existing and two new sum of squares functions. 
 
-## Marquardt
+## Marquardt stabilized Gauss-Newton
 
 @Marquardt1963 is perhaps one of the most important developments in nonlinear least squares
 apart from the Gauss-Newton method. There are several ways to view the method.
@@ -175,6 +175,25 @@ itself and declare equality. When $x$ is very large, OFFSET does not change it a
 we compare $x$ with a value that is identical to it. Moreover, we use very little
 extra code.
 
+### Automatic scaling
+
+In @Marquardt63, it is shown that the use of the diagonal elements of $Jt J$
+instead of $1_n$ in the Marquardt stabilized Gauss-Newton equations is equivalent
+to having a similar scale for all the parameters. Call this diagonal matrix $D$.
+Generally this is the preferred
+approach to Levenberg-Marquardt stabilizations. However, in low-precision 
+arithmetic, elements of the diagonal may underflow to zero and cause issues of
+singularity in the equations to be solved. A simple workaround is to slightly
+modify the equations to 
+
+$$ (J^t J + \lambda (D + \phi 1_n)  \delta  =  - J^t r $$
+
+where phi is a modest number such as 1. 
+
+
+?? note that we form JTJ in nlfb, which is extra work. Then sqrt(lambda),
+so may want to think more about this.
+
 ## Others
 
 There have been many proposed approaches to nonlinear least squares. 
@@ -183,10 +202,40 @@ There have been many proposed approaches to nonlinear least squares.
 
 @Jones70Spiral is a method ... 
 
+### Approaches to Newton's method
+
+Newton (and his sometime associated worker Raphson) used the algorithm we attribute
+to them applied to a very special case and in a manner unrecognizable as that described
+above.  (See \url{https://en.wikipedia.org/wiki/Newton%27s_method}).
+
+The main attraction of the Gauss-Newton method is that the Jacobian only needs first
+derivatives, which are generally much, much easier to compute than the full second
+derivatives of the Hessian. However, there have been suggestions 
+Newton-like approaches, possibly for special types of models where some short cut
+to the Hessian is available. These may or may 
+not make sense in the context of
+a given user or group of users. I regard these approaches as part of the
+computational infrastructure of the special cases rather than as general nonlinear
+least squares methods.
+
+
+### Hybrid methods
+
+The central idea of Hartley's method is a line search and that of Marquardt a
+parametrized stabilization that can be shown to reduce a sum of squares for large
+enough stabilization parameter. There is nothing to prevent use of a line
+search additional to the Marquardt stabilization, and there are, of course, 
+several reasonable choices for line search. Also we could solve the (possibly
+stabilized) Gauss-Newton equations by several quite different numerical linear
+algebra techniques, or even approximations. In certain situations, some of these
+choices may be important, but here I will not pursue them further.
 
 # Sources of implementation variety
 
 The sources of variety in implementation include:
+
+- structuring of the algorithm, that is, how we set up and sequence the
+  parts of the overall computation
 
 - programming language
 
@@ -204,6 +253,30 @@ The sources of variety in implementation include:
 - higher level presentation of the problem to the computer, as
   in R^ts `nls` or packages `minpack.lm` and `nlsr`.
 
+
+## Algorithm structure
+
+The R function `nls()` and also the package `minpack.lm` both set up the nonlinear
+least squares computation for estimating a model specified as a **formula** (an
+R object class) by building an `nlsModel` object, which we will lable `m`. This 
+object is a set of functions that provide the information needed to compute the 
+residuals, jacobian, the search direction, and many other objects required for
+the nonlinear least squares solution as well as ancillary information used in
+the post-solution analysis and reporting.
+
+In the package `nslr` (@nlsr-manual), the function `nlxb()` calls `model2rjfun()`
+to create functions `res()` and `jac()` that are used in `nlfb()` (the function
+`nls.lm()` in `minpack.lm` is very similar) to find a
+nonlinear least squares solution. However, post-solution information is built
+explicitly AFTER a solution is found.
+
+The essential difference is that `nls()` and `minpack.lm` build a toolbox, `m`,
+while `nlsr` creates its required objects as they are needed for the Marquardt
+computations.
+
+
+
+
 ## Programming language
 
 We have a versions of the Nashlib Algorithm 23 in BASIC, Fortran, Pascal, and R, 
@@ -216,6 +289,11 @@ Generally, for modern computers, the operating system and its localization do no
 have much influence on the way in which we set up nonlinear least squares computations.
 I will comment below about some issues where speed and size of data storage may favour
 some approaches over others. However, such issues are less prominent today.
+
+One aspect of the computational environment that has proved important to me has
+been that of low-precision arithmetic. In the 1970s, it was common to have only
+the equivalent of 6 o 7 (decimal) digits of precision. In such environments, 
+
 
 ## Solver for the least squares or linear equations sub-problems
 
@@ -259,13 +337,14 @@ How to do this??
 
 ## Storage stucture
 
-J, J^tJ, If J^tJ, then vector form of lower triangle. ??
-
 If the choice of approach to Gauss-Newton or Marquardt is to build the normal
 equations and hence the sum of squares and cross products (SSCP) matrix, we
-know by construnction that this is a symmetric matrix and also positive definite.
-In this case, we can use algorithms that specifically take advantage of both these
-properties, namely Algorithms 7, 8 and 9 of Nashlib. Algorithms 7 and 8 are the
+know by construnction that this is a symmetric matrix and also non-negative definite.
+(Generally, unless we have a strict linear dependence between the columns of
+the Jacobian, we can say "positive definite".)
+If we use an SSCP form, we can apply algorithms that specifically take advantage of both these
+properties, including programs that store the working matrix in special formats. 
+Some of these are Algorithms 7, 8 and 9 of Nashlib (@jncnm79). Algorithms 7 and 8 are the
 Cholesky decomposition and back-solution using a vector of length `n*(n+1)/2`
 to store just the lower triangle of the SSCP matrix. Algorithm 9 inverts this
 matrix *in situ*. 
@@ -274,7 +353,10 @@ The original @jncnm79 Algorithm 23 (Marquardt nonlinear least squares solution) 
 the SSCP matrix $J^t J$  and solves the Marquardt-Nash augmented normal equations
 with the Cholesky approach. This was continued in the Second Edition @nlacatvn1060620 and
 in @jnmws87. However, in the now defunct @jnnlmrt12 and successor @nlsr-manual, the choice
-has been to use a QR decomposition as described below in ???. The particular QR calculations
+has been to use a QR decomposition of an augmented Jacobian. `nls()` uses a QR decomposition
+of the Jacobian without augmentation (referred to as the "gradient", however).
+
+The particular QR calculations
 are in these packages internal to R-base, complicating comparisons of storage, complexity
 and performance.
 
