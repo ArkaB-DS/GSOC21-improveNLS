@@ -177,7 +177,7 @@ extra code.
 
 ### Automatic scaling
 
-In @Marquardt63, it is shown that the use of the diagonal elements of $Jt J$
+In @Marquardt1963, it is shown that the use of the diagonal elements of $Jt J$
 instead of $1_n$ in the Marquardt stabilized Gauss-Newton equations is equivalent
 to having a similar scale for all the parameters. Call this diagonal matrix $D$.
 Generally this is the preferred
@@ -275,8 +275,6 @@ while `nlsr` creates its required objects as they are needed for the Marquardt
 computations.
 
 
-
-
 ## Programming language
 
 We have a versions of the Nashlib Algorithm 23 in BASIC, Fortran, Pascal, and R, 
@@ -356,9 +354,66 @@ in @jnmws87. However, in the now defunct @jnnlmrt12 and successor @nlsr-manual, 
 has been to use a QR decomposition of an augmented Jacobian. `nls()` uses a QR decomposition
 of the Jacobian without augmentation (referred to as the "gradient", however).
 
-The particular QR calculations
-are in these packages internal to R-base, complicating comparisons of storage, complexity
-and performance.
+The particular QR calculations in these packages and in R-base are quite well-hidden in internal
+code, complicating comparisons of storage, complexity and performance. The present exposition
+is an attempt to provide some documentation.
+
+### Storage in Nash/Walker-Smith (1987) BASIC code
+
+In @Nash1987a, each major iteration generates a $A = J^t J$ matrix and the right hand side $-g = J^t r$
+at parameters $x$ using functions for the residuals and Jacobian.
+The lower triangle of $A$ is stored as a vector of $n (n+1)/2$ elements (row-wise ordering of $C$). 
+The diagonal elements are then multiplied by $(1 + \lambda)$ and $\lambda * \phi$ is added to each,
+where $\lambda$ is our Marquardt parameter and $\phi$ is the adjustment suggested in @jn77ima to
+overcome potential underflow to zero of the accumulation of the diagonal elements in low-precision
+arithmetic. Let us call the augmented SSCP matrix $C$.
+
+Solving $C \delta = -g$, we compute the new sum of squares at $x + \delta$. If this value is greater than
+or equal to the current best (i.e., lowest) sum of squares, we increase $\lambda$ and generate a new
+$C$ matrix. Note that we do not, however, need to build a new SSCP matrix or gradient $g$, just make the diagonal
+adjustment. 
+
+The code in @Nash1987a is much more complicated than this description suggests because of
+
+- bounds and masks on the parameters
+
+- tests for "non-computability", where we allow the user to provide an explicit flag that the function cannot
+  be computed at the trial parameters. This was included to avoid some of the weaknesses in evaluation of 
+  special functions, e.g., `log()` for small arguments or `exp()` for large ones, or for problem specific
+  situations where some parameter combinations might be considered inadmissible. 
+
+- situations where rounding and truncation errors make the Cholesky decomposition return with an indication
+  that $C$ is "singular", at least in the particular computational arithmetic.
+  
+### Approach in package `nlsr`
+
+In @nlsr-manual, the approach to the augmented Gauss-Newton equations is nominally equivalent to that in @Nash1987a,
+except that we perform the solution using a QR decomposition, in fact a modification of the DQRDC routine from 
+@lapack99, which uses Householder transformations.
+
+One of the issues with creating the SSCP matrix $A$ is that we lose information in finite arithmetic 
+(See @jncnm79, Chapter 5). A QR approach to the traditional Gauss-Newton codes is to solve
+
+$$  J \delta = -r $$
+
+That is, we assume a generalized inverse of $J^t$ can be applied to both sides of the Gauss-Newton equations.
+
+To move to the Marquardt variant of the Gauss-Newton, we need to augment $J$. Let us call this augmented matrix
+$K$. We will also need to augment $r$ by an appropriate number of zeros. For the traditional Marquardt method, we
+need to use the square roots of the diagonal elements of $J^t J$, that is, an $n$ by $n$ $Z1$ where 
+
+$$ Z1_{k,k}  = \sqrt(\lambda) \sqrt(J^t J)_{k,k}  $$
+
+and $r$ is extended by $n$ zeros. For the Nash modification, we add a further $n$ zeros to $r$ and augment
+the $K$ matrix with another $n$ by $n$ block $Z2$ which is a diagonal matrix where the diagonal elements are
+
+$$ Z2_{k,k}  = \sqrt(\lambda) \sqrt(\phi)  $$
+
+Unfortunately, there is a need for each major iteration to compute at least the diagonal elements of the
+SSCP matrix. It may, in fact, be more efficient to omit the $Z1$ augmentation. ?? needs testing??
+
+
+
 
 
 Other storage approaches.
