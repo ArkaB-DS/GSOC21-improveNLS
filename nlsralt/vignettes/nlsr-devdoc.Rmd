@@ -68,7 +68,7 @@ extracts and displays the coefficients for a model
     estimated by nlxb() or nlfb() in the nlsr structured object. 
 
 ```{r  c001}
-library(nlsr)
+library(nlsralt)
 ydat<-c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 38.558, 50.156, 62.948,
        75.995, 91.972)
 tdat<-1:12
@@ -91,7 +91,7 @@ be added. The following is an expanded and commented version of the
 examples from the manual for these functions.
 
 ```{r c002}
-require(nlsr)
+require(nlsralt)
 newDeriv() # a call with no arguments returns a list of available functions
            # for which derivatives are currently defined
 newDeriv(sin(x)) # a call with a function that is in the list of available derivatives
@@ -442,7 +442,7 @@ Pur.wnls <- nls( rate ~ (Vm * conc)/(K + conc), data = Treated,
 summary(Pur.wnls)
 
 ## nlsr::nlxb should give essentially the same result
-library(nlsr)
+library(nlsralt)
 ## Note that we put in the dataframe name to explicitly specify weights
 Pur.wnlxb <- nlxb( rate ~ (Vm * conc)/(K + conc), data = Treated,
                 start = list(Vm = 200, K = 0.1), weights=1/Treated$rate)
@@ -660,7 +660,7 @@ Now we try some of the derivative capabilities of `nlsr`.
 ```{r hobbnlsr, error=TRUE, warning=TRUE, messages=TRUE}
 ## NOTE: some functions may be seemingly correct for R, but we do not
 ## get the result desired, despite no obvious error. Always test.
-require(nlsr)
+require(nlsralt)
 # Try directly to differentiate the residual vector. r1 is numeric, so this should
 # return a vector of zeros in a mathematical sense. In fact it gives an error, 
 # since R does not want to differentiate a numeric vector.
@@ -898,7 +898,7 @@ taken care in the code to provide for problems with small residuals.
 ```{r nlsfit0}
 nlsfit0 <-  try(nls(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=TRUE))
 nlsfit0
-library(nlsr)
+library(nlsralt)
 nlsrfit0 <- try(nlxb(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=FALSE))
 nlsrfit0
 ```
@@ -999,7 +999,7 @@ gnjn <- function(start, resfn, jacfn = NULL, trace = FALSE,
 fitgnjn0 <- gnjn(st, trf, trj, data=mydata)
 ## Another way
 #- set lamda = 0 in nlxb, fix laminc, lamdec
-library(nlsr)
+library(nlsralt)
 nlx00 <- try(nlxb(y0 ~ aa * exp(-bb*tt) + cc, start=st, data=mydata, trace=TRUE,
                      control=list(lamda=0, laminc=0, lamdec=0, watch=TRUE)))
 nlx00
@@ -1131,7 +1131,7 @@ needs to be in the user's globalenv.
 
 ```{r scaling}
 rm(list=ls())
-require(nlsr)
+require(nlsralt)
 # want to have data AND extra parameters (NOT to be estimated)
 traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 # Data for Hobbs problem
@@ -1174,7 +1174,7 @@ We use the Hobbs Weeds problem (Nash, 1979 and Nash, 2014). Note that
 nls() fails from start1.
 
 ```{r useex1}
-require(nlsr)
+require(nlsralt)
 traceval <- FALSE
 # Data for Hobbs problem
 ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
@@ -1206,7 +1206,7 @@ startf1  <-  c(b1=1, b2=1, b3=.1)
 anlsf1 <-  try(nls(eunsc, start=startf1, trace=TRUE, data=weeddata1))
 print(anlsf1)
 
-library(nlsr)
+library(nlsralt)
 anlxf1  <-  try(nlxb(eunsc, start=startf1, trace=TRUE, data=weeddata1,
                      control=list(watch=FALSE)))
 print(anlxf1)
@@ -1238,7 +1238,7 @@ compute residuals. **nlsr** has tools to create these functions from expressions
 as we shall see here. First we again set up the data and load the package.
 
 ```{r usex4}
-require(nlsr)
+require(nlsralt)
 traceval <- FALSE
 # Data for Hobbs problem
 ydat  <-  c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443, 
@@ -1313,7 +1313,7 @@ Responses by Ravi Varadhan and others, along with some modification I made,
 gave the following negative log likelihood function to be minimized.
 
 ```{r weibull}
-require(nlsr)
+require(nlsralt)
 
 y=c(5,11,21,31,46,75,98,122,145,165,195,224,245,293,321,330,350,420) # data set
 
@@ -1513,7 +1513,7 @@ tframe <- try(nlsframe <- nls(formula=hobsc, start=ste, data=mydata))
 if (class(tframe) != "try-error") {print(nlsframe)} else {cat("try-error\n")}
 #- OK
 
-library(nlsr)
+library(nlsralt)
 y <- ydata
 tt <- ttdata
 tquiet <- try(nlsrquiet <- nlxb(formula=hobsc, start=ste))

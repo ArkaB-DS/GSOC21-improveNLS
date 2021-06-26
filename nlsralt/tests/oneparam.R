@@ -1,5 +1,5 @@
 ## Problem in 1 parameter to ensure methods work in trivial case
-require(nlsr)
+require(nlsralt)
 cat("1 parameter problem\n")
 nobs<-8
 tt <- seq(1,nobs)

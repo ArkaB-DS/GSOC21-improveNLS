@@ -1,5 +1,6 @@
 \name{nlxb}
 \alias{nlxb}
+\alias{nlxbx}
 \title{Nash variant of Marquardt nonlinear least squares solution via
      qr linear solver.
 }
@@ -16,6 +17,10 @@
 \usage{
    nlxb(formula, start, trace=FALSE, data, lower=-Inf, upper=Inf,
         masked=NULL, weights=NULL, control)
+        
+   nlxbx(formula, start, trace=FALSE, data, lower=-Inf, upper=Inf,
+        masked=NULL, weights=NULL, control)
+
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -92,6 +97,9 @@
     a variant of Marquardt's approach to stabilizing the Gauss-Newton method using
     the Levenberg-Marquardt adjustment. This is explained in Nash (1979 or 1990) in
     the sections that discuss Algorithm 23. 
+    
+    \code{nlxbx} is similar, but uses \code{nlfbx} as the minimizer rather than 
+    \code{nlfb}, that is, a simpler stabilization based on an identity matrix.
 
     In this code, we solve the (adjusted) Marquardt equations by use of the 
     \code{qr.solve()}. Rather than forming the \verb{J'J + lambda*D} matrix, we augment

@@ -155,7 +155,7 @@ DD(expression(sin(x^2)), "x", 3)
 ### nlsr
 
 ```{r chunk02}
-require(nlsr)
+require(nlsralt)
 dx2xn <- nlsDeriv(~ x^2, "x")
 dx2xn
 mode(dx2xn)
@@ -408,7 +408,7 @@ By comparison, **nlsr**
 
 ```{r chunk06}
 rm(x) # in case it is defined
-library(nlsr)
+library(nlsralt)
 try(nlsDeriv(x, "x")  ) # fails, not a formula
 try(nlsDeriv(as.expression("x"), "x")  ) # expression(NULL)
 try(nlsDeriv(~x, "x")  ) # 1
@@ -431,11 +431,11 @@ provided by Gabor Grothendieck.
 
 
 ```{r chunk07, eval = require(Ryacas)}
-require(nlsr)
-dnlsr <- nlsr::nlsDeriv(~ sin(x+y), "x")
+require(nlsralt)
+dnlsr <- nlsralt::nlsDeriv(~ sin(x+y), "x")
 print(dnlsr)
 class(dnlsr)
-detach("package:nlsr", unload=TRUE)
+detach("package:nlsralt", unload=TRUE)
 detach("package:Deriv", unload=TRUE)
 
 ## New Ryacas mechanism as of 2019-8-29 from mikl@math.aau.dk (Mikkel Meyer Andersen)
@@ -477,7 +477,7 @@ This package supports the derivatives that `D` supports, as well
 as a few others, and users can add their own definitions.  The current
 list is
 ```{r chunk08}
-ls(nlsr::sysDerivs)
+ls(nlsralt::sysDerivs)
 ```
 
 ### Derivatives table
@@ -486,7 +486,7 @@ Here is a slightly expanded testing of the elements of the `nlsr` derivatives
 table.
 
 ```{r chunk09}
-require(nlsr)
+require(nlsralt)
 ## Try different ways to supply the log function
 aDeriv <- nlsDeriv(~ log(x), "x")
 class(aDeriv)
@@ -646,13 +646,13 @@ fnDeriv(quote(sign(x)), "x")
 ### Notes:
 
 - the base tool `deriv` (and `deriv3`)  and 
-`nlsr::codeDeriv` are intended to output an expression to compute a derivative. 
+`nlsralt::codeDeriv` are intended to output an expression to compute a derivative. 
 `deriv` generates an expression object, while `codeDeriv` will generate a language object. 
 Note that input to `deriv` is of the form of a 
 tilde expression with no left hand side, while `codeDeriv` is
 more flexible:  quoted expressions, or length-1 expression vectors may also be used. 
 
-- the base tool `D` and `nlsr::nlsDeriv` generate expressions, but `D` requires an
+- the base tool `D` and `nlsralt::nlsDeriv` generate expressions, but `D` requires an
 expression, while `nlsDeriv` can handle the expression without a wrapper. ?? Do we need 
 to discuss more??
 
@@ -666,14 +666,14 @@ derivative is almost certainly acceptable in computations. Similarly for `sign(x
 **nlsr** also includes some tools for simplification of algebraic expressions, extensible by the user.  Currently these
 involve the following functions:
 ```{r chunk10}
-ls(nlsr::sysSimplifications)
+ls(nlsralt::sysSimplifications)
 ```
 
 ```{r chunk11}
 #- Remove ##? to see reproducible error
 #- ?? For some reason, if we leave packages attached, we get errors.
 #- Here we detach all the non-base packages and then reload nlsr
-##? require(nlsr)
+##? require(nlsralt)
 ##? sessionInfo()
 ##? ##? nlsSimplify(quote(+(a+b)))
 ##? nlsSimplify(quote(-5))
@@ -686,9 +686,9 @@ ls(nlsr::sysSimplifications)
 sessionInfo()
 if ("Deriv" %in% loadedNamespaces()){detach("package:Deriv", unload=TRUE)} 
   #- ?? Do we need to unload too.
-if ("nlsr" %in% loadedNamespaces() ){detach("package:nlsr", unload=TRUE)}
+if ("nlsralt" %in% loadedNamespaces() ){detach("package:nlsralt", unload=TRUE)}
 if ("Ryacas" %in% loadedNamespaces() ){detach("package:Ryacas", unload=TRUE)}
-require(nlsr)
+require(nlsralt)
 #- require(Deriv)
 #- require(stats)
 #- Various simplifications
@@ -873,8 +873,8 @@ We also note that the different tools for symbolic derivatives use slightly
 different inputs. For example, for the derivative of log(x), we have
 
 ```{r chunk14}
-require(nlsr)
-dlogx <- nlsr::nlsDeriv(~ log(x), "x")
+require(nlsralt)
+dlogx <- nlsralt::nlsDeriv(~ log(x), "x")
 str(dlogx)
 print(dlogx)
 ```
@@ -886,13 +886,13 @@ Here we
 show how to do this implicitly and with an explicit object.
 
 ```{r chunk15}
-require(nlsr)
-dlogxs <- nlsr::nlsDeriv(expression(log(x)), "x", do_substitute=FALSE)
+require(nlsralt)
+dlogxs <- nlsralt::nlsDeriv(expression(log(x)), "x", do_substitute=FALSE)
 str(dlogxs)
 print(dlogxs)
 cat(as.character(dlogxs), "\n")
 fne <- expression(log(x))
-dlogxe <- nlsr::nlsDeriv(fne, "x", do_substitute=FALSE)
+dlogxe <- nlsralt::nlsDeriv(fne, "x", do_substitute=FALSE)
 str(dlogxe)
 print(dlogxe)
 
@@ -921,7 +921,7 @@ the whole setup?
 
 
 ```{r chunk16}
-require(nlsr)
+require(nlsralt)
 # require(stats)
 # require(Deriv)
 # require(Ryacas)
@@ -1027,12 +1027,12 @@ show the example and its resolution, then give an explanation.
 ```{r chunk20}
 zzz <- expression(y[3]*r1 + r2)
 try(deriv(zzz,c("r1","r2")))
-require(nlsr)
-try(nlsr::nlsDeriv(zzz, c("r1","r2")))
+require(nlsralt)
+try(nlsralt::nlsDeriv(zzz, c("r1","r2")))
 try(fnDeriv(zzz, c("r1","r2")))
 newDeriv(`[`(x,y), stop("no derivative when indexing"))
-try(nlsr::nlsDeriv(zzz, c("r1","r2")))
-try(nlsr::fnDeriv(zzz, c("r1","r2")))
+try(nlsralt::nlsDeriv(zzz, c("r1","r2")))
+try(nlsralt::fnDeriv(zzz, c("r1","r2")))
 ```
 
 Richard Heiberger pointed out that internally, **R** stores
@@ -1053,9 +1053,9 @@ noted also by Sergei Sokol in the manual for package **Deriv**. The
 following examples illustrate this.
 
 ```{r chunk21}
-try(nlsr::nlsDeriv(zzz, "y[3]"))
-try(nlsr::nlsDeriv(y3*r1+r2,"y3"))
-try(nlsr::nlsDeriv(y[3]*r1+r2,"y[3]"))
+try(nlsralt::nlsDeriv(zzz, "y[3]"))
+try(nlsralt::nlsDeriv(y3*r1+r2,"y3"))
+try(nlsralt::nlsDeriv(y[3]*r1+r2,"y[3]"))
 ```
 
 ## References

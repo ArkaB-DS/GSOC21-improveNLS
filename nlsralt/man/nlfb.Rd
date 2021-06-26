@@ -1,5 +1,6 @@
 \name{nlfb}
 \alias{nlfb}
+\alias{nlfbx}
 \title{Nash variant of Marquardt nonlinear least squares solution via
      qr linear solver.
 }
@@ -15,6 +16,11 @@
 \usage{
    nlfb(start, resfn, jacfn=NULL, trace=FALSE, lower=-Inf, upper=Inf, 
          maskidx=NULL, weights=NULL, data=NULL, control, ...)
+
+
+   nlfbx(start, resfn, jacfn=NULL, trace=FALSE, lower=-Inf, upper=Inf, 
+         maskidx=NULL, weights=NULL, data=NULL, control, ...)
+
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -103,6 +109,10 @@
     a variant of Marquardt's approach to stabilizing the Gauss-Newton method using
     the Levenberg-Marquardt adjustment. This is explained in Nash (1979 or 1990) in
     the sections that discuss Algorithm 23.
+    
+    \code{nlfbx} is very similar to \code{nlfb} but only uses a unit matrix 
+    stabilization rather than the scaled stabilization via the diagonal elements
+    of the sum of squares and cross products of the Jacobian.
 
     In this code, we solve the (adjusted) Marquardt equations by use of the 
     \code{qr.solve()}. Rather than forming the J'J + lambda*D matrix, we augment

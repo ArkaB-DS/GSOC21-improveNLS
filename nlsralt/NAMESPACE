@@ -5,7 +5,9 @@
 # Public routines
 export(
    nlxb,
+   nlxbx,
    nlfb,
+   nlfbx,
    wrapnlsr,
    resss,
    resgr,

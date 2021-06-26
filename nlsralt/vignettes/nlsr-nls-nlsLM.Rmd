@@ -182,7 +182,7 @@ edtat <- data.frame(t0t=t0t, y1t=y1t)
 
 start1 <- c(a=1, b=1)
 try(nlsy0t0ax <- nls(formula=y1~a*(t0a^b), start=start1, data=edta, control=nls.control(maxiter=10000)))
-library(nlsr)
+library(nlsralt)
 nlsry1t0a <- nlxb(formula=y1~a*(t0a^b), start=start1, data=edta)
 library(minpack.lm)
 nlsLMy1t0a <- nlsLM(formula=y1~a*(t0a^b), start=start1, data=edta)
@@ -275,7 +275,7 @@ This adjustment to the convergence test has been in `nlsr` since its creation.
 <!-- y <- 2.5 * (x ^ 0.33) -->
 <!-- fmla <- y ~ a * (x^b) -->
 <!-- edta <- data.frame(x=x, y=y) -->
-<!-- library(nlsr) -->
+<!-- library(nlsralt) -->
 <!-- library(minpack.lm) -->
 <!-- enls <- try(nls(fmla, start=c(a=1, b=1), data=edta)) -->
 <!-- enlxb <- try(nlxb(fmla, start=c(a=1, b=1), data=edta)) -->
@@ -316,7 +316,7 @@ cprint(nlsy0t0t)
 ### nlsr
 
 ```{r extry1nlsr}
-library(nlsr)
+library(nlsralt)
 nlsry1t0 <- try(nlxb(formula=y1~a*(t0^b), start=start1, data=edta))
 cprint(nlsry1t0)
 nlsry1t0a <- nlxb(formula=y1~a*(t0a^b), start=start1, data=edta)
@@ -359,7 +359,7 @@ need some extra iterations to find the solution to this somewhat nasty problem.
 m <- 20
 t <- seq(1, m) / 5
 y <- rep(0,m)
-library(nlsr)
+library(nlsralt)
 library(minpack.lm)
 
 bddata <- data.frame(t=t, y=y)

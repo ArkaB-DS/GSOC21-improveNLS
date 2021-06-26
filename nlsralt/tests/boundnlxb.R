@@ -1,5 +1,5 @@
 rm(list=ls())
-require(nlsr)
+require(nlsralt)
 
 traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 

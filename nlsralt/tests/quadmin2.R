@@ -2,7 +2,7 @@
 
 fexp <- ~ ((x-1)^2)*((y-3)^2)
 fexp
-library(nlsr)
+library(nlsralt)
 myder <- fnDeriv(fexp, c("x","y"), hessian=TRUE)
 myder
 old <- c(x=0, y=-0)

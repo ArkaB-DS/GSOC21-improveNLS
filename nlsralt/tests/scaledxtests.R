@@ -1,4 +1,4 @@
-require(nlsr)
+require(nlsralt)
 traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 # Data for Hobbs problem
