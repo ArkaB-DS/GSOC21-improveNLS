@@ -152,8 +152,7 @@ summary(fit)
         stop(gettextf("parameters without starting value in 'data': %s",
                       paste(nnn, collapse=", ")), domain = NA)
     }
-  }
-  else { ## length(varNames) == 0
+  } else { ## length(varNames) == 0
     if(length(pnames) && any((np <- sapply(pnames, lenVar)) == -1)) {
       ## Can fit a model with pnames even if no varNames
       message(sprintf(ngettext(sum(np == -1),
@@ -162,8 +161,7 @@ summary(fit)
                       paste(sQuote(pnames[np == -1]), collapse=", ")),
               domain = NA)
       n <- integer()
-    }
-    else
+    } else
       stop("no parameters to fit")
   }
   
@@ -211,8 +209,7 @@ summary(fit)
     }
     if (any(wts < 0 | is.na(wts)))
       stop("missing or negative weights not allowed")
-  }
-  else {
+  } else {
     ## length(n) == 0 : Some problems might have no official varNames
     ##                  but still parameters to fit
     varIndex <- logical()
@@ -392,8 +389,8 @@ summary(fit)
     convInfo <- NULL # temporary assignment	
     nls.out <- list(m = m, convInfo = convInfo,
                     data = substitute(data), call = cl)
-  } # end of default and plinear options
-  else { ## "port" i.e., PORT algorithm
+  # end of default and plinear options
+  } else { ## "port" i.e., PORT algorithm
     pfit <- nls_port_fit(m, start, lower, upper, control, trace,
                          give.v=TRUE)
     iv <- pfit[["iv"]]
@@ -434,7 +431,7 @@ summary(fit)
   nls.out$control <- control
   class(nls.out) <- "nls"
   nls.out
-}
+
 
 # library(nlsr)
 # library(minpack.lm)
