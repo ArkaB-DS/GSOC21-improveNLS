@@ -1,26 +1,5 @@
-#  File src/library/stats/R/nls.R
+#  File nls-noc.R
 #     nls-noc.R -- replacement for nls.R
-#  Part of the R package, https://www.R-project.org
-#
-#  Copyright (C) 2000-2020 The R Core Team
-#  Copyright (C) 1999-1999 Saikat DebRoy, Douglas M. Bates, Jose C. Pinheiro
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  A copy of the GNU General Public License is available at
-#  https://www.R-project.org/Licenses/
-
-###
-###            Nonlinear least squares for R
-###
 ## port_cpos, port_msg() , ... are in  ==> ./nlminb.R
 
 nlsx <-
