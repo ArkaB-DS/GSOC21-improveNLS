@@ -445,6 +445,24 @@ nonlinear model.
   to allow understanding of the function and build developer documentation.
 
 
+### [2021-6-26] and [2021-6-27]
+
+- expanded VarietyInNonlinearLeastSquaresCodes substantially
+
+- started unrolling nls code in Croucher examples. Some issues with if ... else and
+  brackets, possibly due to last "}" in function definition of nls().
+  
+- Note the strange "%||%" -- comes from `utils` package via base-internals.R in
+  `nlspkg` or `nlsalt` BUT looks like a language construct. ??Should we replace
+  with something inline so this does not trip up other programmers. In `minpack.lm`
+  the structure used is
+
+```  
+    env <- environment(formula)
+    if (is.null(env)) env <- parent.frame()
+```
+
+
 ============end diary only portion ========================
 
 ### 5. Implementation of nonlinear least squares methods
