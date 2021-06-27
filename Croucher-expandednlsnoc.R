@@ -52,14 +52,16 @@ summary(fit)
   formula <- Cform
   data <- Cdata
   start <- Cstart
-  control<-nls.control()
+  control<-nls.control(printEval=TRUE)
   print(control)
   trace <- TRUE
   subset <- NULL
   weights <- NULL
   lower <- -Inf
   upper <- Inf
+  model <- FALSE
   algorithm <-"default"
+  
 
     `%||%` <- utils:::`%||%` # from base-internals.R in nlspkg
   #?? Seems to be ensuring we have an environment to evaluate our model
@@ -234,12 +236,19 @@ summary(fit)
   }
   scOff  <- ctrl$scaleOffset
   nDcntr <- ctrl$nDcentral
+  convCrit <- function() {
+    if(npar == 0) return(0)
+    rr <- qr.qty(QR, c(resid)) # rotated residual vector
+    sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
+  }
   m <- switch(algorithm,
               plinear = nlsModel.plinear(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr),
               port = nlsModel (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
               default = nlsModel (formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
+  
   cat("Right after setup -- m:\n")
   print(str(m))
+  # print(m$conv) -- just gives convCrit()
   ## Iterate
   if (algorithm != "port") { ## i.e. "default" or  "plinear" :
     if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
@@ -304,26 +313,28 @@ summary(fit)
     convNew <- -1.0 # double convNew = -1. /* -Wall */; ?? what is -Wall about?
     for (i in 1:ctrl$maxiter){ # top of main iteration -- are there better ways
       #       Test for termination
+      cat("iteration ",i,"\n")
       cat("str(conv):")
       print(str(conv))
       cat("conv:")
       print(conv)
-      conv<-as.call(conv)
-      cat("str(as.call(conv)):")
+#      conv<-as.call(conv)
+#      cat("str(as.call(conv)):")
       print(str(conv))
-      convNew <-eval(conv, .GlobalEnv) # ?? do we need as.call
-      cat("str(convNew):")
-      print(str(convNew))
+      convNew <- eval(conv, .GlobalEnv)() # ?? do we need as.call
+      #?? Note adding the () forces evaluation. ?? interesting
+      
+      cat("convNew:",convNew,"\n")
       if (convNew <= ctrl$tol) {
         hasConverged <- TRUE
         break;
       }
       # incr computes the delta for Gauss-Newton. But incr calls QR, which uses 
       # setPars to create the QR matrix.
-      newIncr <- eval(as.call(incr), .GlobalEnv)
+      newIncr <- eval(incr, .GlobalEnv)()
       # BUT PROTECT(incr = lang1(incr)); in C code converts incr to a call with 0 args
       cat("newIncr:")
-      print(str(newIncr))
+      print(newIncr)
       #         double
       #         *par   = REAL(pars),
       #         *npar  = REAL(newPars),
@@ -333,14 +344,31 @@ summary(fit)
       #         
       #         while(fac >= minFac) { // 1-dim "line search"
       if(ctrl$printEval) {
+        cat("  It.",i,"  fac=",fac,"  evals=",evalCnt, evaltotCnt,"\n")
         #                 Rprintf("  It. %3d, fac= %11.6g, eval (no.,total): (%2d,%3d):",
         #                         i+1, fac, evalCnt, evaltotCnt);
         #                 evalCnt++;
         #                 evaltotCnt++;
       }
+      newPars <- pars + fac * newIncr # update parameters
       #             for(int j = 0; j < nPars; j++)
       #                 npar[j] = par[j] + fac * nIncr[j];
-      #             
+      #    
+      #?? setPars uses scoping assignment -- need to be VERY careful!!
+      setPars(newPars)
+      # ------- Here is the function -- note odd setup
+      # > setPars
+      # function(newPars) {
+      #   setPars(newPars)
+      #   resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
+      #   dev   <<- sum(resid^2) # envir = thisEnv
+      #   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
+      #   QR <<- qr(.swts * gr) # envir = thisEnv
+      #   (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
+      # }
+      # <bytecode: 0x558cf8d08470>
+      # -----------------------------
+      #   <environment: 0x558cfa5f8438>
       #             PROTECT(tmp = lang2(setPars, newPars));
       #             if (asLogical(eval(tmp, R_GlobalEnv))) { /* singular gradient */
       #                     UNPROTECT(11);
