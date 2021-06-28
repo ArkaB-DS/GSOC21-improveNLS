@@ -424,6 +424,10 @@ work with nlsModel() seems to indicate that the "m" object is set up to provide
 all the infrastructure for the rest of the code to work with for a particular 
 nonlinear model. 
 
+   - AB: reading up parts of chapter 2 and 3 of Bates and co's NRAIA
+     book[21-22 June]
+
+
 ### [2021-6-23]  [2021-6-25] Tidying and documenting nlsModel
 
 - JN cleaned up DerivsNLS. Extracted ssasymptot model and tested in nlsalt.
@@ -444,6 +448,10 @@ nonlinear model.
 - created nlsModelx.R file with nlsModelx(), and then added print statements
   to allow understanding of the function and build developer documentation.
 
+- AB: looking up some tutorials on NLS with the aim of writing an
+  article/tutorial on NLS, with the use of nls_new[24-25 June]
+  
+
 
 ### [2021-6-26] and [2021-6-27]
 
@@ -462,6 +470,13 @@ nonlinear model.
     if (is.null(env)) env <- parent.frame()
 ```
 
+- AB: looking up suitable examples in NRAIA package[23 June]
+
+- AB: looking up various testing methods in R [21-28 June]
+
+- AB: working on an Rmd file, documenting what testing strategies might be
+  taken up for our project [26-27 June]  (Made a branch, but I don't see 
+  a new branch created in the repo. May have forgotten how to do this. Will look into it.
 
 ============end diary only portion ========================
 
