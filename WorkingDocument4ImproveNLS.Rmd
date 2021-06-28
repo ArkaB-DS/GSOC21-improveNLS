@@ -13,7 +13,8 @@ output:
 
 ## TODOS
 
-- See how `dir` works in nlsalt::numericDeriv(); need some examples/tests
+- Show how `dir` works in nlsalt::numericDeriv(); need some examples/tests
+  Currently is used when approaching upper bounds.
 
 
 
@@ -477,6 +478,12 @@ nonlinear model.
 - AB: working on an Rmd file, documenting what testing strategies might be
   taken up for our project [26-27 June]  (Made a branch, but I don't see 
   a new branch created in the repo. May have forgotten how to do this. Will look into it.
+
+### [2021-6-28] continuing Croucher-expanded
+
+- JN: found that minpack.lm version of conv could be put into code and appears to 
+  function correctly. It is much simpler than code in nlspkg::nlsModel(). 
+  Still need to sort out setPars.
 
 ============end diary only portion ========================
 

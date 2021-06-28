@@ -43,6 +43,8 @@ summary(fit)
 #     nls-noc.R -- replacement for nls.R
 ## port_cpos, port_msg() , ... are in  ==> ./nlminb.R
 
+print(fit)
+
 # nlsx <-
 #  function (formula, data = parent.frame(), start, control = nls.control(),
 #            algorithm = c("default", "plinear", "port"), trace = FALSE,
@@ -421,8 +423,8 @@ summary(fit)
     # #undef NON_CONV_FINIS_1
     # #undef NON_CONV_FINIS_2
     ##------ End of nls_iter portion
-    convInfo <- NULL # temporary assignment	
-    nls.out <- list(m = m, convInfo = convInfo,
+#    convInfo <- paste("convInfo: convNew=",as.character(convNew)," hasConverged=",as.character(hasConverged))
+    nls.out <- list(m = m, convInfo = convInfo(),
                     data = substitute(data), call = cl)
   # end of default and plinear options
   } else { ## "port" i.e., PORT algorithm
