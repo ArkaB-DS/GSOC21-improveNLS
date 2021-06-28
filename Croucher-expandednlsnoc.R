@@ -249,6 +249,13 @@ summary(fit)
   cat("Right after setup -- m:\n")
   print(str(m))
   # print(m$conv) -- just gives convCrit()
+  ## ?? TEMPORARY -- substitute conv from minpack.lm
+  # ?? 210628 -- this works! What is wrong with version in nls()
+  conv = function() {
+    if (npar == 0) return(0)
+    rr <- qr.qty(QR, resid)
+    sqrt(sum(rr[1L:npar]^2)/sum(rr[-(1L:npar)]^2))
+  }
   ## Iterate
   if (algorithm != "port") { ## i.e. "default" or  "plinear" :
     if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
