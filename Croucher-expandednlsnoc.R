@@ -64,7 +64,8 @@ print(fit)
   model <- FALSE
   algorithm <-"default"
   
-
+mplmmodel<-minpack.lm:::nlsModel(form=formula, data=Cdata, start=Cstart, wts=weights, upper=NULL)
+print(mplmmodel)
     `%||%` <- utils:::`%||%` # from base-internals.R in nlspkg
   #?? Seems to be ensuring we have an environment to evaluate our model
   env <- environment(formula) %||% parent.frame()
@@ -340,7 +341,7 @@ print(fit)
       }
       # incr computes the delta for Gauss-Newton. But incr calls QR, which uses 
       # setPars to create the QR matrix.
-      newIncr <- eval(incr, .GlobalEnv)()
+      newIncr <- eval(incr, .GlobalEnv)() ##?? We NEED the () to force computation
       # BUT PROTECT(incr = lang1(incr)); in C code converts incr to a call with 0 args
       cat("newIncr:")
       print(newIncr)
@@ -364,7 +365,7 @@ print(fit)
       #                 npar[j] = par[j] + fac * nIncr[j];
       #    
       #?? setPars uses scoping assignment -- need to be VERY careful!!
-      setPars(newPars)
+      setPars(newPars) # ??? TROUBLE!!
       # ------- Here is the function -- note odd setup
       # > setPars
       # function(newPars) {
