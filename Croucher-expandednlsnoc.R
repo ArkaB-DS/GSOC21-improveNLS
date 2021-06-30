@@ -300,7 +300,8 @@ print(mplmmodel)
     if (is.null(deviance) || ! is.function(deviance)) stop("m$deviance missing")
     tracefn<-m$trace # BE CAREFUL WITH SAME NAMES !!
     if (is.null(tracefn) || ! is.function(tracefn)) stop("m$trace missing")
-    setPars<-m$setPars
+    setPars<-mplmmodel$setPars
+#??temporarily??    setPars<-m$setPars
     if (is.null(setPars) || ! is.function(setPars)) stop("m$setPars missing")
     getPars<-m$getPars
     if (is.null(getPars) || ! is.function(getPars)) stop("m$getPars missing")
