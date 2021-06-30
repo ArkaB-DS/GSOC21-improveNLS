@@ -58,7 +58,8 @@ print(fit)
   print(control)
   trace <- TRUE
   subset <- NULL
-  weights <- NULL
+  ## weights <- NULL # failed
+  weights<- rep(1, dim(data)[[1]])
   lower <- -Inf
   upper <- Inf
   model <- FALSE
@@ -66,6 +67,9 @@ print(fit)
   
 mplmmodel<-minpack.lm:::nlsModel(form=formula, data=Cdata, start=Cstart, wts=weights, upper=NULL)
 print(mplmmodel)
+
+
+
     `%||%` <- utils:::`%||%` # from base-internals.R in nlspkg
   #?? Seems to be ensuring we have an environment to evaluate our model
   env <- environment(formula) %||% parent.frame()
@@ -211,6 +215,9 @@ print(mplmmodel)
       n <- nrow(mf)
       mf <- as.list(mf)
       wts <- if (!mWeights) model.weights(mf) else rep_len(1, n)
+      cat("found wts =")
+      print(wts)
+      readline("after wts:")
     }
     if (any(wts < 0 | is.na(wts)))
       stop("missing or negative weights not allowed")
@@ -247,10 +254,11 @@ print(mplmmodel)
   m <- switch(algorithm,
               plinear = nlsModel.plinear(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr),
               port = nlsModel (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
-              default = nlsModel (formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
+              default = nlsModelx(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
   
   cat("Right after setup -- m:\n")
   print(str(m))
+  readline("cont.")
   # print(m$conv) -- just gives convCrit()
   ## ?? TEMPORARY -- substitute conv from minpack.lm
   # ?? 210628 -- this works! What is wrong with version in nls()
@@ -259,6 +267,8 @@ print(mplmmodel)
     rr <- qr.qty(QR, resid)
     sqrt(sum(rr[1L:npar]^2)/sum(rr[-(1L:npar)]^2))
   }
+  .swts<-rep(1, dim(data)[1])
+  
   ## Iterate
   if (algorithm != "port") { ## i.e. "default" or  "plinear" :
     if (!identical(lower, -Inf) || !identical(upper, +Inf)) {
@@ -322,9 +332,11 @@ print(mplmmodel)
     #     int evaltotCnt = 1;
     evaltotCnt <- 1
     convNew <- -1.0 # double convNew = -1. /* -Wall */; ?? what is -Wall about?
+    ###############################################################################
     for (i in 1:ctrl$maxiter){ # top of main iteration -- are there better ways
       #       Test for termination
       cat("iteration ",i,"\n")
+      readline("continue?")
       cat("str(conv):")
       print(str(conv))
       cat("conv:")
@@ -364,13 +376,26 @@ print(mplmmodel)
       newPars <- pars + fac * newIncr # update parameters
       #             for(int j = 0; j < nPars; j++)
       #                 npar[j] = par[j] + fac * nIncr[j];
+      cat("newPars:")
+      print(newPars)
       #    
       #?? setPars uses scoping assignment -- need to be VERY careful!!
-      setPars(newPars) # ??? TROUBLE!!
+#--sub inline??      setPars(newPars) # ??? TROUBLE!!
+      rhs <- m$getRHS()
+      lhs <- m$lhs()
+      cat("rhs:")
+      print(rhs)
+      resid <- .swts * (lhs - rhs())
+      dev   <- sum(resid^2)
+      gr <- attr(rhs, "gradient") # JACOBIAN!
+      if(length(gr) == 1L) gr <- c(gr) # ?? why needed?
+      QR <- qr(.swts * gr)
+      if (QR$rank < min(dim(QR$qr))) stop("singular Jacobian") # to catch the singular gradient matrix
+      #   (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
       # ------- Here is the function -- note odd setup
       # > setPars
       # function(newPars) {
-      #   setPars(newPars)
+      #   setPars(newPars) ## why the recursion?
       #   resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
       #   dev   <<- sum(resid^2) # envir = thisEnv
       #   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
@@ -419,6 +444,7 @@ print(mplmmodel)
       #     }
       #     else
       #         return CONV_INFO_MSG(_("converged"), 0);
+      pars <- newPars
     } # end of main loop for default iteration
     # #undef CONV_INFO_MSG
     # #undef NON_CONV_FINIS

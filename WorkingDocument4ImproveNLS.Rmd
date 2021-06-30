@@ -27,6 +27,399 @@ ongoing record of work under the Google Summer of Code 2021 of the
 first author. As such it is NOT meant to be a finished academic 
 report, but a form of extended diary of activity, issues and results.
 
+**------------------- DIARY PORTION -----------------**
+
+* In reverse date order *
+
+
+### [2021-6-28] continuing Croucher-expanded
+
+- JN: found that minpack.lm version of conv could be put into code and appears to 
+  function correctly. It is much simpler than code in nlspkg::nlsModel(). 
+  Still need to sort out setPars.
+
+
+### [2021-6-26] and [2021-6-27]
+
+- expanded VarietyInNonlinearLeastSquaresCodes substantially
+
+- started unrolling nls code in Croucher examples. Some issues with if ... else and
+  brackets, possibly due to last "}" in function definition of nls().
+  
+- Note the strange "%||%" -- comes from `utils` package via base-internals.R in
+  `nlspkg` or `nlsalt` BUT looks like a language construct. ??Should we replace
+  with something inline so this does not trip up other programmers. In `minpack.lm`
+  the structure used is
+
+```  
+    env <- environment(formula)
+    if (is.null(env)) env <- parent.frame()
+```
+
+- AB: looking up suitable examples in NRAIA package[23 June]
+
+- AB: looking up various testing methods in R [21-28 June]
+
+- AB: working on an Rmd file, documenting what testing strategies might be
+  taken up for our project [26-27 June]  (Made a branch, but I don't see 
+  a new branch created in the repo. May have forgotten how to do this. Will look into it.
+
+
+### [2021-6-23]  [2021-6-25] Tidying and documenting nlsModel
+
+- JN cleaned up DerivsNLS. Extracted ssasymptot model and tested in nlsalt.
+  numericDeriv must be working, but not explicitly tested. Note that the
+  encapsulated version in the examples of nls() seem to fail.??
+  
+- used file inport of nls.R and nls.c parts (which are now separated out
+  in improvnls)
+
+- nlsModelDoc proceeding slowly. There are many undocumented features and
+  pieces of code in nlsModel() that need careful understanding, particularly
+  the scoping assignment "<<-" in some lines of the code. In `minpack.lm` there
+  is a version of nlsModel() that uses `assign` rather than `<<-`, and some
+  documentation points out that this may be a more explicit mechanism (and
+  therefore easier to understand and keep correct). Note the R documentation
+  `?assignOps` as well as the `assign()` and `get()` functions.
+
+- created nlsModelx.R file with nlsModelx(), and then added print statements
+  to allow understanding of the function and build developer documentation.
+
+- AB: looking up some tutorials on NLS with the aim of writing an
+  article/tutorial on NLS, with the use of nls_new[24-25 June]
+  
+  
+
+### [2021-6-22] Answering some of the TODOS / nls-noc.R / nlsModelDoc.Rmd
+
+- Do we need to update nlsalt and nlspkg separately from improvenls on a machine 
+  when there are changes imported via git? Answer is that git within improvenls
+  directory seems sufficient.
+  
+- response from Doug Bates. Added him to gitlab project.
+
+- Expanded document nlsModelDoc.Rmd to show what different objects created actually
+  do. There are still plenty of questions, especially about `setPars()`.
+  
+- AB: in our documents, I am currently copying and pasting material. However, it
+  would be sensible to do an "include" of the material from the nlsalt package, but
+  to do that cleanly, we will want to separate the functions into different files.
+  This will mean we have to be careful that the package still builds OK.
+   
+  This can be accomplished via (following commented in the Rmd file). Note that
+  the issue is addressed in several ways in `/home/gramps/GrampsSetup/GrampsSetup.Rmd`,
+  which needs to be better explained here. 
+
+<!-- # Note this setup -- gives nice output -->
+<!--   ```{bash tt, echo=FALSE, comment=NA} -->
+<!--    cat ~/bin/f-g-M21 -->
+<!--   ``` -->
+
+
+https://towardsdatascience.com/rtest-pretty-testing-of-r-packages-50f50b135650
+
+
+https://towardsdatascience.com/unit-testing-in-r-68ab9cc8d211
+
+https://r-pkgs.org/tests.html
+
+JN contacted Doug Bates who indicated he may be able to provide some input on
+the code. There does not appear to be any developer documentations. Ongoing
+work with nlsModel() seems to indicate that the "m" object is set up to provide
+all the infrastructure for the rest of the code to work with for a particular 
+nonlinear model. 
+
+   - AB: reading up parts of chapter 2 and 3 of Bates and co's NRAIA
+     book[21-22 June]
+
+### Week of [2021-6-21] 
+
+Online meeting on June 21 talked about `nls-noc.R` as well as testing schemes.
+AB will try to develop a short appraisal of testing schemes and suggest a path
+for us. Some discussion of tools. 
+
+JN started `nlsModelDoc.Rmd`. There are many functions, seemingly without documentation.
+Also quite complex codes and reuse of names. In some codes the "<<-" assignment is 
+used. We will need to be very careful to document and understand this.
+
+
+### [2021-6-21] Meeting etc.
+
+Met online. 
+
+- discussed testing schemes. AB will see if he can develop a short appraisal and
+  suggestions for our use. 
+
+- talked about `nls-noc.R` process. This is ongoing by JN
+
+- later in day, JN contacted Doug Bates to ask if there are developer notes or
+  other information, as there seem to be extra features in the nlsModel() output
+  and the nls_iter code in nls.c
+  
+
+### [2021-6-15] - [2021-6-20]: nlsalt issues
+
+1) Need to ensure the name "nlsalt" is fixed DESCRIPTION, NAMESPACE (dynload line),
+.gitignore (.so line can be *.so), init.c (dynload line, R_init line)
+
+2) appears new all-R numericDeriv not quite right for all nls examples. Probably 
+(to be determined??) whether example uses a function or expression in the definition
+of the model.
+
+
+During this time did some work on splitting nls.R into separate files where major
+functions were in their own file. In particular, nlsModel() was separated out so
+that nlsModel and nlsModel.plinear did not get confused in editing, since they
+are largely the same. 
+
+The file `nls-noc.R` has the ongoing work to try to build an all-R nls_iter function.
+This is gradually proceeding, but not functional at the time of our June 21 online
+meeting.
+
+JN took a brief look at 2010 UseR! tutorial on nonlinear models. This may give
+us some ideas for documentation and tests.
+
+
+### [2021-6-12] --> [2021-6-14]
+
+Document PkgFromRbase written to document the packaging effort and report on
+the Makevars.win issue.
+
+JN diverted to update optimx package.
+
+### [2021-6-15] chunk code from file
+
+The **R Markdown Cookbook** is quite useful in giving hints on some features
+of R Markdown. In particular, sections 16.1 to 16.3 of
+
+\url{https://bookdown.org/yihui/rmarkdown-cookbook/}
+
+show how to use R scripts saved in files within chunks of R Markdown documents.
+This is important, as we may wish to list such files, but copying the script
+into the text of the document means that this copy and the original file can 
+become unsynchronized.
+
+From work on the Gramps genealogy software (and some local setup issues), JN
+found that the following chunk will allow listings in a nice format. Note
+the "comment=NA" to avoid line prefixing with hash symbols.  The code which
+follows needs surrounding by the usual three ticks before and after.
+
+``` 
+   {r lscript, comment=NA, echo=FALSE}
+   cat(readLines('/home/gramps/GrampsSetup/FrohnGramps'), sep = '\n')
+```
+
+
+### [2021-6-6] --> [2021-6-11]
+
+Had online meeting and got Rstudio more or less set up to deal with version control
+and package building, BUT ...
+
+hit a big problem with 32 bit Windows architecture NOT linking to BLAS. A posting
+to R-package-devel list got a suggestion from Dirk Eddelbeutel to check sessionInfo()
+and this shows that on the Windows R side, BLAS and LAPACK are not listed, while
+they are in Linux. Duncan Murdoch pointed to makevars.win, but severeal tries with
+some possible PKG_LIBS settings did not give any change. Noted that command line
+CMD.exe use of "R CMD build" and "R CMD INSTALL" showed the issue to be at the
+INSTALL stage, and it is clear that the 32 bit architecture is NOT finding the
+BLAS routines, but 
+
+Then found
+https://stackoverflow.com/questions/42118561/error-in-r-cmd-shlib-compiling-c-code
+and this shows what to use for makevars.win, which is the single line file
+
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+
+### [2021-6-6]
+
+Wanted package benchmarkme.
+
+install failed. Needed dependencies.
+
+So in linux, install libssl.dev
+                     libcurl4-openssl-dev
+        
+Then benchmarkme installed OK.
+
+We can use this within our benchmarking in addition to sessionInfo().
+
+### [2021-6-5]
+
+- created script `tnlsModel.R` as first step to create and produce an "m" object
+
+- Current understanding (JN): nlsModel (and nlsModel.plinear too probably) creates
+  an R object that it labels as class "nlsModel". This object contains functions
+  that are called from nls.c::nls_iter to run the interation and estimate the 
+  parameters in the model. There seem to be some extraneous functions, and we can
+  hopefully learn enough to remove the extras.
+  
+- The current structure is to particularize the functions in "m" so the (essentially)
+  external nls.c code acts on these. As a first goal, and part of learning how things
+  work, we will want to replace the nls.c::nls_iter with all-R equivalent. 
+  
+- Started document nlsModel.Rmd to document this function. 
+  ?? AB: in our documents, I am currently copying and pasting material. However, it
+  would be sensible to do an "include" of the material from the nlsalt package, but
+  to do that cleanly, we will want to separate the functions into different files.
+  This will mean we have to be careful that the package still builds OK.
+  
+## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
+
+
+### [2021-6-4]
+
+- Code for `numericDeriv()` in nls.R was extracted to `numericDeriv20210603CommentedWithC.txt`.
+
+- The code for numeric_deriv was removed from nls.c
+
+- The line in init.c that mentions numeric_deriv was commented out so it would not be linked
+  into the shared library for nlsalt (nlsalt.so)
+  
+- By launching Rstudio from the nlsalt.Rproj file, the package `nlsalt` could be rebuilt 
+  using "clean and rebuild". nlsalt.Rproj can be initiated from the "Files" menu of 
+  Rstudio. Note that rebuild is probably necessary on each machine on which nlsalt
+  is used. (?? Do we need to check this is the case?)
+
+## [2021-6-2] Converting codes to All-R -- numericDeriv
+
+In the `ExDerivs.R` script, JN tested a forward difference code in R against
+a call to numericDeriv(). On a single example, it tests OK, so next step is to
+modify nls.R in package `nlsalt`. 
+
+Note that `ExDerivs.R` is in flux. "Old" tests will be commented out. Look for
+the double question mark (??) for things that may need to be checked.
+
+Some concerns:
+ 
+- the code requires us to get() and assign() values in the environment `rho`
+  that is used to evaluate the nonlinear residual functions. There may or may
+  not be ways to make this more efficient.
+  
+- the C code uses explicit loops. A very preliminarly use of R's vectorization
+  in the difference between two residual vectors (i.e., without subscripts or
+  looping) worked fine, but there are almost certainly further optimizations.
+  By contrast, we MAY want to leave either explicit loops or commented code that
+  contains such loops as a way to provide explanation of what is happening.
+  
+The code from the trials in ExDerivs.R was ported to nls.R in nlsalt package
+and tested with TestnumericDeriv1.R (added to repo). Things seem to work OK.
+I have NOT tried changing `dir`. ??
+
+## [2021-6-1] nlsalt package mods started
+
+numericDeriv first cut at pure R. JN incorporated C code into the R code of the 
+numericDeriv function as comments, then tried to provide R statements to do what
+it appears the C is doing. Some steps and checks likely left out. 
+
+## [2021-6-1] nlspkg package created
+
+Thanks to Duncan Murdoch who created nlspkg from the R source files. This is
+a package version of the files in the source tree that will let us work with the
+code and change it. When we issue
+
+```
+library(nlspkg)
+```
+
+once we have installed it, the objects in the package will replace (mask) those
+in base-R. 
+
+To build nlspkg, I needed the inconsolata.sty font that is in the 
+`texlive-fonts-extra` package of Linux Mint. In other systems, this font may
+reside elsewhere.
+
+As of June 1, the package builds and mostly checks. There are two warnings:
+
+- a number of function objects are NOT documented. We may or may not wish to 
+  add `man` files (of type `.Rd`). The list of objects is quite long, but they
+  seem not to be needed by the user. Note that nlminb is present, likely for
+  the PORT option of the "algorithm" parameter of `nls()`.
+  
+- There is a non-standard license specification. Checking in the 
+  Writing R Extensions manual (file r-exts.pdf), suggests dropping one of
+  the two licenses listed (GPL-2 and GPL-3). Dropping the latter removed one
+  warning.
+  
+The package `nlspkg` is to provide the EXISTING nls() functionality, while the
+package `nlsalt` is for our replacement. I plan to make this all-R. If we want
+to use C (or something else) later, then we will create another "alternate"
+package. 
+
+Note that each of these packages needs its own "project". In Rstudio we choose
+to create a project using an existing directory (copy of that for `nlspkg`). 
+This sets up the control files for the project and allows the package to be
+built and checked with the Rstudio tools. The umbrella ImproveNLS project 
+handles the **git** version control.
+
+  
+### [2021-5-31] Notes on investigations
+
+1) AB managed to get R built from an R-devel expanded tarball. JN had managed
+this earlier. There appear to be some transient glitches (HT has noted also).
+These are likely due to R-core members making trial changes. MASS package in 
+particular noted. 
+
+2) Investigations of using subversion or git repo of the code so we can track
+any changes in files relevant to nls(). JN tried from https://github.com/wch/r-source/wiki
+which has some instructions. These seemed to work, but we note the need for texinfo
+and git-svn packages to be installed. Also standard "git pull" cannot be used.
+"git sv rebase" followed by "git svn fetch" tried and seem to work, but JN does
+not feel he understands what is going on.
+
+3) Started to look into development of replacement code for parts of nls(). 
+Created ReplaceNLS.R and RestoreNLS.R with the intention that source() of
+these files would replace the functions. However, first attempt, which simply
+added a cat() output to numericDeriv() function got 
+
+```
+Error in numericDeriv(rexpr, theta, rho = weedenv) : 
+  object 'C_numeric_deriv' not found
+```  
+
+##  [JN: 2021-5-19] Some thoughts on how nls() code might be modified
+
+- R-core will veto any changes that do not leave existing tests and examples as
+  they are. Therefore we will be always thinking of ways to leave the default
+  behaviour as it is now. In the relative offset convergence test that was causing
+  small-residual problems to fail, JN suggested a small change to the test. In 
+  very simplified terms, the test is a ratio of 
+       `(new sum of squares)/(baseline sum of squares)`
+  When both these quantities are small, we risk zero/zero situation. Therefore,
+  a new control parameter `convTeestAdd` that has a default of 0 was introduced.
+  This can be set in the `nls.control()` function. It is added to the denominator
+  and allows the `nls()` function to complete satisfactorily when we have problems
+  where the fit is nearly exact. Thus we are seeking similar modifications that 
+  are invoked by setting new control parameters to non-default settings to get
+  new behaviour.
+  
+- In the material below on implementing nonlinear least squares, it should be
+  possible to have a zero valued default for the Marquardt parameter $\lambda$. 
+  As long as this zero value is preserved, the legacy behaviour is used.
+  Our decisions need to be careful in situations where we really do need the
+  Marquardt stabilization. That is, should we simply fail (legacy behavior),
+  should we override the legacy behaviour, since the user almost certainly
+  does not want an avoidable failure, or should we seek an additional control
+  that allows for more nuanced outcomes. Clearly thought is needed, and we will
+  need to find some examples to illustrate our arguments.
+
+- Note that nls() is a mix of several codes, using different solution tools.
+  We will need to decide where our modifications apply and document carefully.
+  JN opinion: we may want to postpone consideration of "port" and "plinear"
+  algorithms, but it would be useful to document what they do. The current
+  documentation suggests that bounds on parameters can only be used with
+  "port". 
+  
+- The derivative code to generate the Jacobian in nls() is (JN believes??)
+  a simple forward-difference code. This may be in C rather than R. It is
+  well-known that central differences, while they cost twice the computing 
+  effort, do a better job. Can we find a way to allow that easily?
+  
+- If there are bounds on parameters, the "step" taken in estimating differences
+  may violate bounds. This is an issue well-known to workers in optimization,
+  but not on the radar of most users. Clearly a "nasty". Can we do anything to
+  at least warn users in a way that is useful?
+
 ## 2021-5-18
 
 By email, a Google Meet was set up for May 19 at noon Ottawa time. JN 
@@ -101,389 +494,6 @@ JN also set up this document.
 [2021-5-25] Meet session. AB got Linux Mint 20.1 VM going and verified. SOme 
 questions sorted out. JN added some material re: linear least squares solutions
 to the Variety document. 
-
-## Some thoughts on how nls() code might be modified [JN: 2021-5-19]
-
-- R-core will veto any changes that do not leave existing tests and examples as
-  they are. Therefore we will be always thinking of ways to leave the default
-  behaviour as it is now. In the relative offset convergence test that was causing
-  small-residual problems to fail, JN suggested a small change to the test. In 
-  very simplified terms, the test is a ratio of 
-       `(new sum of squares)/(baseline sum of squares)`
-  When both these quantities are small, we risk zero/zero situation. Therefore,
-  a new control parameter `convTeestAdd` that has a default of 0 was introduced.
-  This can be set in the `nls.control()` function. It is added to the denominator
-  and allows the `nls()` function to complete satisfactorily when we have problems
-  where the fit is nearly exact. Thus we are seeking similar modifications that 
-  are invoked by setting new control parameters to non-default settings to get
-  new behaviour.
-  
-- In the material below on implementing nonlinear least squares, it should be
-  possible to have a zero valued default for the Marquardt parameter $\lambda$. 
-  As long as this zero value is preserved, the legacy behaviour is used.
-  Our decisions need to be careful in situations where we really do need the
-  Marquardt stabilization. That is, should we simply fail (legacy behavior),
-  should we override the legacy behaviour, since the user almost certainly
-  does not want an avoidable failure, or should we seek an additional control
-  that allows for more nuanced outcomes. Clearly thought is needed, and we will
-  need to find some examples to illustrate our arguments.
-
-- Note that nls() is a mix of several codes, using different solution tools.
-  We will need to decide where our modifications apply and document carefully.
-  JN opinion: we may want to postpone consideration of "port" and "plinear"
-  algorithms, but it would be useful to document what they do. The current
-  documentation suggests that bounds on parameters can only be used with
-  "port". 
-  
-- The derivative code to generate the Jacobian in nls() is (JN believes??)
-  a simple forward-difference code. This may be in C rather than R. It is
-  well-known that central differences, while they cost twice the computing 
-  effort, do a better job. Can we find a way to allow that easily?
-  
-- If there are bounds on parameters, the "step" taken in estimating differences
-  may violate bounds. This is an issue well-known to workers in optimization,
-  but not on the radar of most users. Clearly a "nasty". Can we do anything to
-  at least warn users in a way that is useful?
-  
-### [2021-5-31] Notes on investigations
-
-1) AB managed to get R built from an R-devel expanded tarball. JN had managed
-this earlier. There appear to be some transient glitches (HT has noted also).
-These are likely due to R-core members making trial changes. MASS package in 
-particular noted. 
-
-2) Investigations of using subversion or git repo of the code so we can track
-any changes in files relevant to nls(). JN tried from https://github.com/wch/r-source/wiki
-which has some instructions. These seemed to work, but we note the need for texinfo
-and git-svn packages to be installed. Also standard "git pull" cannot be used.
-"git sv rebase" followed by "git svn fetch" tried and seem to work, but JN does
-not feel he understands what is going on.
-
-3) Started to look into development of replacement code for parts of nls(). 
-Created ReplaceNLS.R and RestoreNLS.R with the intention that source() of
-these files would replace the functions. However, first attempt, which simply
-added a cat() output to numericDeriv() function got 
-
-```
-Error in numericDeriv(rexpr, theta, rho = weedenv) : 
-  object 'C_numeric_deriv' not found
-```  
-
-## [2021-6-1] nlspkg package created
-
-Thanks to Duncan Murdoch who created nlspkg from the R source files. This is
-a package version of the files in the source tree that will let us work with the
-code and change it. When we issue
-
-```
-library(nlspkg)
-```
-
-once we have installed it, the objects in the package will replace (mask) those
-in base-R. 
-
-To build nlspkg, I needed the inconsolata.sty font that is in the 
-`texlive-fonts-extra` package of Linux Mint. In other systems, this font may
-reside elsewhere.
-
-As of June 1, the package builds and mostly checks. There are two warnings:
-
-- a number of function objects are NOT documented. We may or may not wish to 
-  add `man` files (of type `.Rd`). The list of objects is quite long, but they
-  seem not to be needed by the user. Note that nlminb is present, likely for
-  the PORT option of the "algorithm" parameter of `nls()`.
-  
-- There is a non-standard license specification. Checking in the 
-  Writing R Extensions manual (file r-exts.pdf), suggests dropping one of
-  the two licenses listed (GPL-2 and GPL-3). Dropping the latter removed one
-  warning.
-  
-The package `nlspkg` is to provide the EXISTING nls() functionality, while the
-package `nlsalt` is for our replacement. I plan to make this all-R. If we want
-to use C (or something else) later, then we will create another "alternate"
-package. 
-
-Note that each of these packages needs its own "project". In Rstudio we choose
-to create a project using an existing directory (copy of that for `nlspkg`). 
-This sets up the control files for the project and allows the package to be
-built and checked with the Rstudio tools. The umbrella ImproveNLS project 
-handles the **git** version control.
-
-## [2021-6-1] nlsalt package mods started
-
-numericDeriv first cut at pure R. JN incorporated C code into the R code of the 
-numericDeriv function as comments, then tried to provide R statements to do what
-it appears the C is doing. Some steps and checks likely left out. 
-
-## [2021-6-2] Converting codes to All-R -- numericDeriv
-
-In the `ExDerivs.R` script, JN tested a forward difference code in R against
-a call to numericDeriv(). On a single example, it tests OK, so next step is to
-modify nls.R in package `nlsalt`. 
-
-Note that `ExDerivs.R` is in flux. "Old" tests will be commented out. Look for
-the double question mark (??) for things that may need to be checked.
-
-Some concerns:
- 
-- the code requires us to get() and assign() values in the environment `rho`
-  that is used to evaluate the nonlinear residual functions. There may or may
-  not be ways to make this more efficient.
-  
-- the C code uses explicit loops. A very preliminarly use of R's vectorization
-  in the difference between two residual vectors (i.e., without subscripts or
-  looping) worked fine, but there are almost certainly further optimizations.
-  By contrast, we MAY want to leave either explicit loops or commented code that
-  contains such loops as a way to provide explanation of what is happening.
-  
-The code from the trials in ExDerivs.R was ported to nls.R in nlsalt package
-and tested with TestnumericDeriv1.R (added to repo). Things seem to work OK.
-I have NOT tried changing `dir`. ??
-
-### [2021-6-4]
-
-- Code for `numericDeriv()` in nls.R was extracted to `numericDeriv20210603CommentedWithC.txt`.
-
-- The code for numeric_deriv was removed from nls.c
-
-- The line in init.c that mentions numeric_deriv was commented out so it would not be linked
-  into the shared library for nlsalt (nlsalt.so)
-  
-- By launching Rstudio from the nlsalt.Rproj file, the package `nlsalt` could be rebuilt 
-  using "clean and rebuild". nlsalt.Rproj can be initiated from the "Files" menu of 
-  Rstudio. Note that rebuild is probably necessary on each machine on which nlsalt
-  is used. (?? Do we need to check this is the case?)
-  
-### [2021-6-5]
-
-- created script `tnlsModel.R` as first step to create and produce an "m" object
-
-- Current understanding (JN): nlsModel (and nlsModel.plinear too probably) creates
-  an R object that it labels as class "nlsModel". This object contains functions
-  that are called from nls.c::nls_iter to run the interation and estimate the 
-  parameters in the model. There seem to be some extraneous functions, and we can
-  hopefully learn enough to remove the extras.
-  
-- The current structure is to particularize the functions in "m" so the (essentially)
-  external nls.c code acts on these. As a first goal, and part of learning how things
-  work, we will want to replace the nls.c::nls_iter with all-R equivalent. 
-  
-- Started document nlsModel.Rmd to document this function. 
-  ?? AB: in our documents, I am currently copying and pasting material. However, it
-  would be sensible to do an "include" of the material from the nlsalt package, but
-  to do that cleanly, we will want to separate the functions into different files.
-  This will mean we have to be careful that the package still builds OK.
-  
-## From `nlsr` vignette `nlsr-devdoc.Rmd` [2021-5-23 onwards]
-
-### [2021-6-6]
-
-Wanted package benchmarkme.
-
-install failed. Needed dependencies.
-
-So in linux, install libssl.dev
-                     libcurl4-openssl-dev
-        
-Then benchmarkme installed OK.
-
-We can use this within our benchmarking in addition to sessionInfo().
-
-### [2021-6-6] --> [2021-6-11]
-
-Had online meeting and got Rstudio more or less set up to deal with version control
-and package building, BUT ...
-
-hit a big problem with 32 bit Windows architecture NOT linking to BLAS. A posting
-to R-package-devel list got a suggestion from Dirk Eddelbeutel to check sessionInfo()
-and this shows that on the Windows R side, BLAS and LAPACK are not listed, while
-they are in Linux. Duncan Murdoch pointed to makevars.win, but severeal tries with
-some possible PKG_LIBS settings did not give any change. Noted that command line
-CMD.exe use of "R CMD build" and "R CMD INSTALL" showed the issue to be at the
-INSTALL stage, and it is clear that the 32 bit architecture is NOT finding the
-BLAS routines, but 
-
-Then found
-https://stackoverflow.com/questions/42118561/error-in-r-cmd-shlib-compiling-c-code
-and this shows what to use for makevars.win, which is the single line file
-
-PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
-
-### [2021-6-12] --> [2021-6-14]
-
-Document PkgFromRbase written to document the packaging effort and report on
-the Makevars.win issue.
-
-JN diverted to update optimx package.
-
-### [2021-6-15] chunk code from file
-
-The **R Markdown Cookbook** is quite useful in giving hints on some features
-of R Markdown. In particular, sections 16.1 to 16.3 of
-
-\url{https://bookdown.org/yihui/rmarkdown-cookbook/}
-
-show how to use R scripts saved in files within chunks of R Markdown documents.
-This is important, as we may wish to list such files, but copying the script
-into the text of the document means that this copy and the original file can 
-become unsynchronized.
-
-From work on the Gramps genealogy software (and some local setup issues), JN
-found that the following chunk will allow listings in a nice format. Note
-the "comment=NA" to avoid line prefixing with hash symbols.  The code which
-follows needs surrounding by the usual three ticks before and after.
-
-``` 
-   {r lscript, comment=NA, echo=FALSE}
-   cat(readLines('/home/gramps/GrampsSetup/FrohnGramps'), sep = '\n')
-```
-
-
-### [2021-6-15] - [2021-6-20]: nlsalt issues
-
-1) Need to ensure the name "nlsalt" is fixed DESCRIPTION, NAMESPACE (dynload line),
-.gitignore (.so line can be *.so), init.c (dynload line, R_init line)
-
-2) appears new all-R numericDeriv not quite right for all nls examples. Probably 
-(to be determined??) whether example uses a function or expression in the definition
-of the model.
-
-<<<<<<< HEAD
-During this time did some work on splitting nls.R into separate files where major
-functions were in their own file. In particular, nlsModel() was separated out so
-that nlsModel and nlsModel.plinear did not get confused in editing, since they
-are largely the same. 
-
-The file `nls-noc.R` has the ongoing work to try to build an all-R nls_iter function.
-This is gradually proceeding, but not functional at the time of our June 21 online
-meeting.
-
-JN took a brief look at 2010 UseR! tutorial on nonlinear models. This may give
-us some ideas for documentation and tests.
-
-### Week of [2021-6-21] 
-
-Online meeting on June 21 talked about `nls-noc.R` as well as testing schemes.
-AB will try to develop a short appraisal of testing schemes and suggest a path
-for us. Some discussion of tools. 
-
-JN started `nlsModelDoc.Rmd`. There are many functions, seemingly without documentation.
-Also quite complex codes and reuse of names. In some codes the "<<-" assignment is 
-used. We will need to be very careful to document and understand this.
-=======
-### [2021-6-21] Meeting etc.
-
-Met online. 
-
-- discussed testing schemes. AB will see if he can develop a short appraisal and
-  suggestions for our use. 
-
-- talked about `nls-noc.R` process. This is ongoing by JN
-
-- later in day, JN contacted Doug Bates to ask if there are developer notes or
-  other information, as there seem to be extra features in the nlsModel() output
-  and the nls_iter code in nls.c
-  
-  
-
-### [2021-6-22] Answering some of the TODOS / nls-noc.R / nlsModelDoc.Rmd
-
-- Do we need to update nlsalt and nlspkg separately from improvenls on a machine 
-  when there are changes imported via git? Answer is that git within improvenls
-  directory seems sufficient.
-  
-- response from Doug Bates. Added him to gitlab project.
-
-- Expanded document nlsModelDoc.Rmd to show what different objects created actually
-  do. There are still plenty of questions, especially about `setPars()`.
-  
-- AB: in our documents, I am currently copying and pasting material. However, it
-  would be sensible to do an "include" of the material from the nlsalt package, but
-  to do that cleanly, we will want to separate the functions into different files.
-  This will mean we have to be careful that the package still builds OK.
-   
-  This can be accomplished via (following commented in the Rmd file). Note that
-  the issue is addressed in several ways in `/home/gramps/GrampsSetup/GrampsSetup.Rmd`,
-  which needs to be better explained here. 
-
-<!-- # Note this setup -- gives nice output -->
-<!--   ```{bash tt, echo=FALSE, comment=NA} -->
-<!--    cat ~/bin/f-g-M21 -->
-<!--   ``` -->
-
-
-https://towardsdatascience.com/rtest-pretty-testing-of-r-packages-50f50b135650
-
-
-https://towardsdatascience.com/unit-testing-in-r-68ab9cc8d211
-
-https://r-pkgs.org/tests.html
-
-JN contacted Doug Bates who indicated he may be able to provide some input on
-the code. There does not appear to be any developer documentations. Ongoing
-work with nlsModel() seems to indicate that the "m" object is set up to provide
-all the infrastructure for the rest of the code to work with for a particular 
-nonlinear model. 
-
-   - AB: reading up parts of chapter 2 and 3 of Bates and co's NRAIA
-     book[21-22 June]
-
-
-### [2021-6-23]  [2021-6-25] Tidying and documenting nlsModel
-
-- JN cleaned up DerivsNLS. Extracted ssasymptot model and tested in nlsalt.
-  numericDeriv must be working, but not explicitly tested. Note that the
-  encapsulated version in the examples of nls() seem to fail.??
-  
-- used file inport of nls.R and nls.c parts (which are now separated out
-  in improvnls)
-
-- nlsModelDoc proceeding slowly. There are many undocumented features and
-  pieces of code in nlsModel() that need careful understanding, particularly
-  the scoping assignment "<<-" in some lines of the code. In `minpack.lm` there
-  is a version of nlsModel() that uses `assign` rather than `<<-`, and some
-  documentation points out that this may be a more explicit mechanism (and
-  therefore easier to understand and keep correct). Note the R documentation
-  `?assignOps` as well as the `assign()` and `get()` functions.
-
-- created nlsModelx.R file with nlsModelx(), and then added print statements
-  to allow understanding of the function and build developer documentation.
-
-- AB: looking up some tutorials on NLS with the aim of writing an
-  article/tutorial on NLS, with the use of nls_new[24-25 June]
-  
-
-
-### [2021-6-26] and [2021-6-27]
-
-- expanded VarietyInNonlinearLeastSquaresCodes substantially
-
-- started unrolling nls code in Croucher examples. Some issues with if ... else and
-  brackets, possibly due to last "}" in function definition of nls().
-  
-- Note the strange "%||%" -- comes from `utils` package via base-internals.R in
-  `nlspkg` or `nlsalt` BUT looks like a language construct. ??Should we replace
-  with something inline so this does not trip up other programmers. In `minpack.lm`
-  the structure used is
-
-```  
-    env <- environment(formula)
-    if (is.null(env)) env <- parent.frame()
-```
-
-- AB: looking up suitable examples in NRAIA package[23 June]
-
-- AB: looking up various testing methods in R [21-28 June]
-
-- AB: working on an Rmd file, documenting what testing strategies might be
-  taken up for our project [26-27 June]  (Made a branch, but I don't see 
-  a new branch created in the repo. May have forgotten how to do this. Will look into it.
-
-### [2021-6-28] continuing Croucher-expanded
-
-- JN: found that minpack.lm version of conv could be put into code and appears to 
-  function correctly. It is much simpler than code in nlspkg::nlsModel(). 
-  Still need to sort out setPars.
 
 ============end diary only portion ========================
 

@@ -258,11 +258,11 @@ The sources of variety in implementation include:
   in R^ts `nls` or packages `minpack.lm` and `nlsr`.
 
 
-## Algorithm structure
+## Algorithm structure 
 
 The R function `nls()` and also the package `minpack.lm` both set up the nonlinear
 least squares computation for estimating a model specified as a **formula** (an
-R object class) by building an `nlsModel` object, which we will lable `m`. This 
+R object class) by building an `nlsModel` object, which we will label `m`. This 
 object is a set of functions that provide the information needed to compute the 
 residuals, jacobian, the search direction, and many other objects required for
 the nonlinear least squares solution as well as ancillary information used in
@@ -277,6 +277,22 @@ explicitly AFTER a solution is found.
 The essential difference is that `nls()` and `minpack.lm` build a toolbox, `m`,
 while `nlsr` creates its required objects as they are needed for the Marquardt
 computations.
+
+
+
+
+### Issues with this structure
+
+A major criticism of this approach is that the collection of information needed
+at any one time -- the "environment" in which residuals and jacobians are calculated,
+as well as the solution methods -- is not at all well-documented. If the software is
+to be updated or maintained, the location and purpose of the many elements that
+reside in different environments is difficult to determine without much effort.
+In my opinion, this renders the structure prone to collapse if there are infrastructure
+or other changes. Documentation would go a long way to correcting this problem, but
+even better would be clearer structuring. Separation of the problem from the method
+would also be useful. At the time of writing of this document, the Gauss-Newton 
+METHOD is embedded in the functions created by `nlsModel()` for a given PROBLEM.
 
 
 ## Programming language

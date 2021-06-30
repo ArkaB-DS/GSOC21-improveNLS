@@ -37,12 +37,16 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     # set the "promise" for the lhs of the model
     rhs <- eval(form[[3L]], envir = env)
     # similarly for the rhs
+    #?? WHY THE DOT -- does this not hide the weights??
     .swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
     ##JN: the weights, which are put into the env
     cat(".swts:")
     print(.swts)
     env$.swts <- .swts
+    cat("env$.swts:")
+    print(env$.swts)
+    readline("cont.")
 
     resid <- .swts * (lhs - rhs)
     cat("resid:")
@@ -154,6 +158,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     gradient = function() .swts * attr(rhs, "gradient"),
 	     conv = function() convCrit(),
 	     incr = function() qr.coef(QR, resid),
+             ##?? Why all the global (scoping) assignments? To put in .GlobalEnv??
 	     setVarying = function(vary = rep_len(TRUE, np)) {
                  np <- length(useParams)
 		 useParams <<- useP <-
@@ -198,9 +203,12 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     },
 	     Rmat = function() qr.R(QR),
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), env)
+                 eval(form[[3L]], as.list(newdata), env),
+             getRHS = function() getRHS # JN added 20210630 temporarily
 	     )
     class(m) <- "nlsModel"
+    cat("Contents of 'env':")
+    ls.str(env)
     m
 }
 
