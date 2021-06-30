@@ -1,56 +1,20 @@
-# Croucher-example1.R -- https://walkingrandomly.com/?p=5254
+# Croucher-expandednlsnoc.R -- https://walkingrandomly.com/?p=5254
 # construct the data vectors using c()
 rm(list=ls())
 xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
 ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
 
-# look at it
-plot(xdata,ydata)
-
 # some starting values
 p1 = 1
 p2 = 0.2
 
-# do the fit
-fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
-
-# summarise
-summary(fit)
-
-## Try numericDeriv() function
 Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
 Ccall<-call("-",Cform[[3]], Cform[[2]])
 Cstart=list(p1=p1,p2=p2)
 Cdata<-data.frame(xdata, ydata)
 Ctheta<-c("p1","p2")
-ndorig0<-numericDeriv(Ccall, Ctheta)
-ndorig0
 
-library(nlsalt)
-ndalt0<-numericDeriv(Ccall, Ctheta)
-print(all.equal(ndorig0, ndalt0))
-
-# retest nls
-fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
-
-# summarise
-
-summary(fit)
-# try new all-R form
-# fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
-
-#  File nls-noc.R
-#     nls-noc.R -- replacement for nls.R
-## port_cpos, port_msg() , ... are in  ==> ./nlminb.R
-
-print(fit)
-
-# nlsx <-
-#  function (formula, data = parent.frame(), start, control = nls.control(),
-#            algorithm = c("default", "plinear", "port"), trace = FALSE,
-#            subset, weights, na.action, model = FALSE,
-#            lower = -Inf, upper = Inf, ...)
-##?? Artificially set the arguments
+# Elements of nls() function
   formula <- Cform
   data <- Cdata
   start <- Cstart
@@ -64,26 +28,17 @@ print(fit)
   upper <- Inf
   model <- FALSE
   algorithm <-"default"
+  nDcentral<-FALSE
   
-mplmmodel<-minpack.lm:::nlsModel(form=formula, data=Cdata, start=Cstart, wts=weights, upper=NULL)
-print(mplmmodel)
+    
+  env <- environment(formula)
+  if (is.null(env)) env <- parent.frame() 
+  print(ls.str(env))
 
-
-
-    `%||%` <- utils:::`%||%` # from base-internals.R in nlspkg
-  #?? Seems to be ensuring we have an environment to evaluate our model
-  env <- environment(formula) %||% parent.frame()
-  
-
-  ## canonicalize the arguments
+  ## canonicalize the arguments ?? Does this mean force formula structure?
   formula <- as.formula(formula)
-##?? no args at moment??  algorithm <- match.arg(algorithm)
   
-  if(!is.list(data) && !is.environment(data))
-    stop("'data' must be a list or an environment")
-  
-  mf <- cl <- match.call()		# for creating the model frame
-  ## ?? is this going to cause trouble
+  mf <- cl <- match.call()	# for creating the model frame
   
   
   varNames <- all.vars(formula) # parameter and variable names from formula
@@ -119,17 +74,6 @@ print(mplmmodel)
     } else
       names(start)
   print(pnames)
-  #?? In following line the operator %||% gives trouble sometimes
-  # ?? what does this operator mean. 
-  # > print(utils:::'%||%')
-  # function (L, R) 
-  #   if (is.null(L)) R else L
-  # <bytecode: 0x556de64bb9e0>
-  #   <environment: namespace:utils>
-  #   > 
-  
-  ## Heuristics for determining which names in formula represent actual
-  ## variables :
   
   ## If it is a parameter it is not a variable (nothing to guess here :-)
   if(length(pnames)) ## Should give back names of variables (no parameters)
@@ -172,14 +116,14 @@ print(mplmmodel)
       n <- integer()
     } else
       stop("no parameters to fit")
-  }
-  
+  } # Check if no parameters
+  cat("after check if no parameters\n")
   
   ## If its length is a multiple of the response or LHS of the formula,
   ## then it is probably a variable.
   ## This may fail (e.g. when LHS contains parameters):
   respLength <- length(eval(formula[[2L]], data, env))
-  
+
   if(length(n) > 0L) {
     varIndex <- n %% respLength == 0
     if(is.list(data) && diff(range(n[names(n) %in% names(data)])) > 0) {
@@ -233,7 +177,7 @@ print(mplmmodel)
   if(missing(start))
     start <- getInitial(formula, data=mf, control=control, trace=trace)
   for(var in varNames[!varIndex])
-    mf[[var]] <- eval(as.name(var), data, env)
+    mf[[var]] <- eval(as.name(var), data, env)()
   varNamesRHS <- varNamesRHS[ varNamesRHS %in% varNames[varIndex] ]
   
   ## requires 'control' to not contain extra entries (not fulfilled for several CRAN packages)
@@ -249,12 +193,227 @@ print(mplmmodel)
   convCrit <- function() {
     if(npar == 0) return(0)
     rr <- qr.qty(QR, c(resid)) # rotated residual vector
-    sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
+#    sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
+    sqrt( sum(rr[1L:npar]^2) / (scOff + sum(rr[-(1L:npar)]^2)))
   }
-  m <- switch(algorithm,
-              plinear = nlsModel.plinear(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr),
-              port = nlsModel (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
-              default = nlsModelx(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
+  # m <- switch(algorithm,
+  #             plinear = nlsModel.plinear(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr),
+  #             port = nlsModel (formula, mf, start, wts, upper, scaleOffset=scOff, nDcentral=nDcntr),
+  #             default = nlsModelx(formula, mf, start, wts, scaleOffset=scOff, nDcentral=nDcntr))
+  
+  ## This file to generate a lot of output so we can see where information
+  ##  is generated. JN 2021-6-25
+  # nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+  # {
+    ## thisEnv <- environment() # shared by all functions in the 'm' list; variable no longer needed
+    form<-formula
+    wts <- weights
+    env <- new.env(hash = TRUE, parent = environment(form))
+    cat("env content (at this stage may be empty):")
+    print(ls(env))
+    for(i in names(data)) env[[i]] <- data[[i]]
+    ind <- as.list(start)
+    parLength <- 0L
+    for(i in names(ind) ) {
+      temp <- start[[i]]
+      storage.mode(temp) <- "double"
+      env[[i]] <- temp
+      ind[[i]] <- parLength + seq_along(temp)
+      parLength <- parLength + length(temp)
+    }
+    cat("After looping over names in data -- env:")
+    print(ls(env))
+    
+    getPars.noVarying <- function() unlist(mget(names(ind), env))
+    getPars <- getPars.noVarying
+    cat("getPars:")
+    print(getPars)
+    cat("Running nlsModel -- just set getPars\n")
+    print(str(getPars))
+    internalPars <- getPars()
+    cat("internalPars:")
+    print(internalPars)
+    
+    if(!is.null(upper)) upper <- rep_len(upper, parLength)
+    # Expand upper to a full vector
+    useParams <- rep_len(TRUE, parLength)
+    # JN Seems to be a logical vector to indicate free parameters.
+    lhs <- eval(form[[2L]], envir = env)
+    cat("lhs:"); print(lhs)
+    # set the "promise" for the lhs of the model
+    rhs <- eval(form[[3L]], envir = env)
+    cat("rhs:"); print(rhs)
+    # similarly for the rhs
+    #?? WHY THE DOT -- does this not hide the weights??
+    .swts <- if(!missing(wts) && length(wts))
+      sqrt(wts) else rep_len(1, length(rhs))
+    ##JN: the weights, which are put into the env
+    env$.swts <- .swts
+    cat("env$.swts:")
+    print(env$.swts)
+    resid <- .swts * (lhs - rhs)
+    cat("resid:")
+    print(resid)
+    
+    dev <- sum(resid^2)
+    cat("dev=",dev,"\n")
+    if(is.null(attr(rhs, "gradient"))) {
+      cat("attribute gradient in rhs is null\n")
+      getRHS.noVarying <- function() {
+        if(is.null(upper)) # always for "default"
+          numericDeriv(form[[3L]], names(ind), env, central = nDcentral)
+        else # possibly with "port"
+          numericDeriv(form[[3L]], names(ind), env,
+                       dir = ## ifelse(internalPars < upper, 1, -1)
+                         -1 + 2*(internalPars < upper), central = nDcentral)
+      }
+      ## ?? above changes from forward to backward diff if on upper bound. 
+      ## assumes that we step away from lower bound
+      getRHS <- getRHS.noVarying
+      rhs <- getRHS()
+      cat("when no gradient, rhs:")
+      print(rhs)
+    } else {
+      getRHS.noVarying <- function() eval(form[[3L]], envir = env)
+      getRHS <- getRHS.noVarying
+      cat("Have gradient, getRHS:")
+      print(getRHS)
+    }
+    dimGrad <- dim(attr(rhs, "gradient"))
+    marg <- length(dimGrad)
+    cat("dimGrad, marg:",dimGrad,marg,"\n")
+    ##JN marg is number of dimensions of "gradient" matrix. Should be 2??
+    if(marg > 0L) {
+      gradSetArgs <- vector("list", marg + 1L)
+      for(i in 2L:marg)
+        gradSetArgs[[i]] <- rep_len(TRUE, dimGrad[i-1L])
+      useParams <- rep_len(TRUE, dimGrad[marg])
+    } else {
+      gradSetArgs <- vector("list", 2L)
+      useParams <- rep_len(TRUE, length(attr(rhs, "gradient")))
+    }
+    cat("gradSetArgs:")
+    print(gradSetArgs)
+    # JN: What is purpose of gradSetArgs??
+    
+    npar <- length(useParams)
+    cat("npar=",npar,"\n")
+    gradSetArgs[[1L]] <- (~attr(ans, "gradient"))[[2L]]
+    #JN: Note that this assigns a FORMULA object
+    #JN??: we need to be VERY careful to get the right pieces of the model!
+    cat("new gradSetArgs[[1L]]:")
+    print(gradSetArgs[[1L]])
+    #JN: This appears to be the EXPRESSION for the jacobian matrix.
+    
+    gradCall <-
+      switch(length(gradSetArgs) - 1L,
+             call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], drop = FALSE),
+             call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
+                  drop = FALSE),
+             call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
+                  gradSetArgs[[3L]], drop = FALSE),
+             call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
+                  gradSetArgs[[3L]], gradSetArgs[[4L]], drop = FALSE))
+    getRHS.varying <- function()
+    {
+      ans <- getRHS.noVarying()
+      attr(ans, "gradient") <- eval(gradCall)
+      ans
+    }
+    #JN??: next line seems to be working with 1 dimensional model.
+    if(length(gr <- attr(rhs, "gradient")) == 1L)
+      attr(rhs, "gradient") <- gr <- as.vector(gr)
+    QR <- qr(.swts * gr)
+    qrDim <- min(dim(QR$qr))
+    if(QR$rank < qrDim)
+      stop("singular gradient matrix at initial parameter estimates")
+    
+    getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
+    setPars.noVarying <- function(newPars)
+    {
+      internalPars <<- newPars # envir = thisEnv
+      for(i in names(ind))
+        env[[i]] <- unname(newPars[ ind[[i]] ])
+    }
+    setPars.varying <- function(newPars)
+    {
+      internalPars[useParams] <<- newPars
+      for(i in names(ind))
+        env[[i]] <- unname(internalPars[ ind[[i]] ])
+    }
+    setPars <- setPars.noVarying
+    
+    if(scOff) scOff <- (length(resid)-npar) * scaleOffset^2 #??JN check if right
+    convCrit <- function() {
+      if(npar == 0) return(0)
+      rr <- qr.qty(QR, c(resid)) # rotated residual vector
+      sqrt( sum(rr[1L:npar]^2) / (scOff + sum(rr[-(1L:npar)]^2)))
+    }
+    
+    on.exit(remove(i, data, parLength, start, temp, m, gr,
+                   marg, dimGrad, qrDim, gradSetArgs))
+    ## must use weighted resid for use with "port" algorithm.
+    m <-
+      list(resid = function() resid,
+           fitted = function() rhs,
+           formula = function() form,
+           deviance = function() dev,
+           lhs = function() lhs,
+           gradient = function() .swts * attr(rhs, "gradient"),
+           conv = function() convCrit(),
+           incr = function() qr.coef(QR, resid),
+           ##?? Why all the global (scoping) assignments? To put in .GlobalEnv??
+           setVarying = function(vary = rep_len(TRUE, np)) {
+             np <- length(useParams)
+             useParams <<- useP <-
+               if(is.character(vary)) {
+                 temp <- logical(np)
+                 temp[unlist(ind[vary])] <- TRUE
+                 temp
+               } else if(is.logical(vary) && length(vary) != np)
+                 stop("setVarying : 'vary' length must match length of parameters")
+             else
+               vary # envir = thisEnv
+             gradCall[[length(gradCall) - 1L]] <<- useP
+             if(all(useP)) {
+               setPars <<- setPars.noVarying
+               getPars <<- getPars.noVarying
+               getRHS  <<-  getRHS.noVarying
+               npar    <<- length(useP)
+             } else {
+               setPars <<- setPars.varying
+               getPars <<- getPars.varying
+               getRHS  <<-  getRHS.varying
+               npar    <<- sum(useP)
+             }
+           },
+           setPars = function(newPars) {
+             setPars(newPars)
+             resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
+             dev   <<- sum(resid^2) # envir = thisEnv
+             if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
+             QR <<- qr(.swts * gr) # envir = thisEnv
+             (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
+           },
+           getPars = function() getPars(),
+           getAllPars = function() getPars(),
+           getEnv = function() env,
+           trace = function() {
+             d <- getOption("digits")
+             cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(scaleOffset > 0),
+                         formatC(dev, digits=d, flag="#"),
+                         convCrit(),
+                         paste(vapply(getPars(), format, ""), collapse=" ")))
+           },
+           Rmat = function() qr.R(QR),
+           predict = function(newdata = list(), qr = FALSE)
+             eval(form[[3L]], as.list(newdata), env),
+           getRHS = function() getRHS # JN added 20210630 temporarily
+      )
+    class(m) <- "nlsModel"
+    cat("Contents of 'env':")
+    ls.str(env)
+    m
   
   cat("Right after setup -- m:\n")
   print(str(m))
@@ -267,7 +426,7 @@ print(mplmmodel)
     rr <- qr.qty(QR, resid)
     sqrt(sum(rr[1L:npar]^2)/sum(rr[-(1L:npar)]^2))
   }
-  .swts<-rep(1, dim(data)[1])
+  .swts <- env$.swts
   
   ## Iterate
   if (algorithm != "port") { ## i.e. "default" or  "plinear" :
@@ -485,20 +644,14 @@ print(mplmmodel)
   }
   
   ## we need these (evaluated) for profiling
-  nls.out$call$algorithm <- algorithm
-  nls.out$call$control <- ctrl
-  nls.out$call$trace <- trace
+  # nls.out$call$algorithm <- algorithm
+  # nls.out$call$control <- ctrl
+  # nls.out$call$trace <- trace
   
-  nls.out$na.action <- attr(mf, "na.action")
-  nls.out$dataClasses <- attr(attr(mf, "terms"), "dataClasses")[varNamesRHS]
-  if(model) nls.out$model <- mf
-  if(!mWeights) nls.out$weights <- wts
-  nls.out$control <- control
-  class(nls.out) <- "nls"
-  nls.out
-
-
-# library(nlsr)
-# library(minpack.lm)
-# print(nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
-# print(nlsLM(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
+  # nls.out$na.action <- attr(mf, "na.action")
+  # nls.out$dataClasses <- attr(attr(mf, "terms"), "dataClasses")[varNamesRHS]
+  # if(model) nls.out$model <- mf
+  # if(!mWeights) nls.out$weights <- wts
+  # nls.out$control <- control
+  # class(nls.out) <- "nls"
+  # nls.out

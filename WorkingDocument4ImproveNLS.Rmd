@@ -43,6 +43,12 @@ report, but a form of extended diary of activity, issues and results.
 - JN: discussion with Paul Gilbert about recursive calls and global assignment
   in nlsModel and setPars. Email to Doug Bates got rather discouraging reply
   that Doug unable to recall or figure out why setPars is recursive.
+  
+- setPars(): search shows it is in nls-profile() as well as nls(). The calls
+  to it are unusual, first with no argument, then with an argument. We need
+  to understand how it works, though nls-profile is a tool that may not be
+  sensible to keep in R. However, "profile" is a tool in R, and "profile.nls"
+  is documented, with an example. 
 
 ### [2021-6-28] continuing Croucher-expanded
 
