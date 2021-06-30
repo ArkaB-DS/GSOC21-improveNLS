@@ -27,10 +27,22 @@ ongoing record of work under the Google Summer of Code 2021 of the
 first author. As such it is NOT meant to be a finished academic 
 report, but a form of extended diary of activity, issues and results.
 
-**------------------- DIARY PORTION -----------------**
+## ----------- DIARY PORTION ------------
 
 * In reverse date order *
 
+
+### [2021-6-29] and [2021-6-30] Struggling with nls() structure
+
+- JN: worked on the Croucher-expandednlsnoc.R file. A number of issues related 
+  to the setPars() function. This was expanded to try to work around the issue
+  that it is recursively defined (why?). Then troubles with getRHS(), which
+  does not seem to be exposed for access in the top level code. Moreover, issues
+  with .swts, which is hidden (why? again).
+  
+- JN: discussion with Paul Gilbert about recursive calls and global assignment
+  in nlsModel and setPars. Email to Doug Bates got rather discouraging reply
+  that Doug unable to recall or figure out why setPars is recursive.
 
 ### [2021-6-28] continuing Croucher-expanded
 
@@ -38,6 +50,9 @@ report, but a form of extended diary of activity, issues and results.
   function correctly. It is much simpler than code in nlspkg::nlsModel(). 
   Still need to sort out setPars.
 
+- Online meeting -- some issues with git, Google Meet. Discussed diary portion 
+  of this document, some issues related to testing, and plans for this week.
+  Agreed to meet Sunday July 4 to avoid collision with UseR!2021.
 
 ### [2021-6-26] and [2021-6-27]
 
