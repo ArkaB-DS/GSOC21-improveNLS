@@ -22,7 +22,7 @@ library(nlsalt)
 # source("nlsModel-minpack.R")
 
 m <- nlsModelx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), data=Cdata, start=Cstart, wts=Cwts)
-# setPars <- function(newPars) {
+# setPars <- function(newPars) { # Original -- can we replace??
 #   setPars(newPars)
 #   resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
 #   dev   <<- sum(resid^2) # envir = thisEnv
@@ -34,6 +34,13 @@ m <- nlsModelx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), data=Cdata, start=Cs
 # ?? where are the elements QR, resid, rhs, gr
 # <bytecode: 0x55745560c398>
 #   <environment: 0x55745792ffd8>
+
+#?? where is useParams, which is supposed to be global.
+cat("looking for useParams\n")
+if ("useParams" %in% ls(.GlobalEnv)) cat("in .GlobalEnv\n") else cat("not in .GlobalEnv\n")
+
+ls(m)
+
 wts<-Cwts
 rhs <- m$getRHS()
 lhs <- m$lhs
@@ -56,3 +63,6 @@ np1<-c(p1=0.5, p2=0.6)
 sp1<-m$setPars(np1)
 sp1a<-sP2(np1)
 
+# ?? Note the incredible amount of stuff!!
+sv<-m$setVarying()
+ls.str(sv)

@@ -254,6 +254,8 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
                 numericDeriv(form[[3L]], names(ind), env,
                              dir = ## ifelse(internalPars < upper, 1, -1)
                                  -1 + 2*(internalPars < upper), central = nDcentral)
+        ## 210701JN: Above line should check for nDcentral=FALSE when approaching
+        ## upper bound, as central diff is same whether dir is +1 or -1. ???
         }
         getRHS <- getRHS.noVarying
         rhs <- getRHS()

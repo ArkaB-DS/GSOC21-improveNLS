@@ -38,6 +38,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     rhs <- eval(form[[3L]], envir = env)
     # similarly for the rhs
     #?? WHY THE DOT -- does this not hide the weights??
+    ## non-zero is TRUE; note that missing() is a VERY special function 
     .swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
     ##JN: the weights, which are put into the env
@@ -211,4 +212,3 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     ls.str(env)
     m
 }
-
