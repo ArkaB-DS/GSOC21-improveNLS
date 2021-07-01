@@ -49,6 +49,10 @@ report, but a form of extended diary of activity, issues and results.
   to understand how it works, though nls-profile is a tool that may not be
   sensible to keep in R. However, "profile" is a tool in R, and "profile.nls"
   is documented, with an example. 
+  
+- note also that setPars() works with gradient in rhs only. This is NOT
+  OK when lhs and rhs have parameters, which can be the case when we are
+  not modeling a single variable. Should use `resid`.
 
 ### [2021-6-28] continuing Croucher-expanded
 
