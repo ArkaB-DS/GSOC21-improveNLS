@@ -1,7 +1,0 @@
-getInitial              Get Initial Parameter Estimates
-nls                     Nonlinear Least Squares
-nlsModel                Nonlinear Least Squares model object creation
-nlsj.control            Control the Iterations in nlsj
-numericDeriv            Evaluate Derivatives Numerically
-setNames                Set the Names in an Object
-sortedXyData            Create a 'sortedXyData' Object
