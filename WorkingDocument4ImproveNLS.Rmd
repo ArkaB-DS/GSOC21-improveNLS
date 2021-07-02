@@ -16,8 +16,6 @@ output:
 - Show how `dir` works in nlsalt::numericDeriv(); need some examples/tests
   Currently is used when approaching upper bounds.
 
-
-
 ## Abstract
 
 nls() is the primary nonlinear modeling tool in base R. It has a great
@@ -27,9 +25,102 @@ ongoing record of work under the Google Summer of Code 2021 of the
 first author. As such it is NOT meant to be a finished academic 
 report, but a form of extended diary of activity, issues and results.
 
+## Project repository
+
+\url{https://gitlab.com/nashjc/improvenls}
+
 ## ----------- DIARY PORTION ------------
 
 * In reverse date order *
+
+### [2021-7-1] to [2021-7-?] nlsj
+
+
+The following is from an email to Patrice Kiener, a co-mentor on the Google Summer
+of code NNBenchmark projects for 2019 and 2020.
+
+```
+The nls() stuff is going much more slowly than I'd like. I knew when we started that
+the student is willing and generally capable but not very experienced in R internals.
+But then, my own experience is strong on nonlinear optimization, but not so much on
+the quirkiness of R + C interaction. Heather and I decided to try to segment the work
+so there are some sub-projects that can be completed, though they might not be
+directly on the original topic. I'm leading the code digging, and getting Arkajyoti
+to try to follow and ask questions to force us to keep honest. This is working quite
+well, and between us we are learning and moving the frontier forward. However, as my
+doctoral supervisor (C. A. Coulson FRS) said "pi is the ratio of how long a task
+takes over how long you thought it would take".
+
+The big obstacle at the moment is a key routine created by nls() in its "model"
+object "m" called "setPars". Here is the output of fit <- nls([a simple problem])
+
+
+fit$m$setPars
+function(newPars) {
+		 setPars(newPars)
+		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
+		 dev   <<- sum(resid^2) # envir = thisEnv
+		 if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
+		 QR <<- qr(.swts * gr) # envir = thisEnv
+		 (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
+	     }
+<bytecode: 0x55f3e6c05cb0>
+<environment: 0x55f3e6c27360>
+>
+
+You'll note:
+ 1) it is recursive
+ 2) it creates a bunch of functions and objects, but only returns a single LOGICAL
+ 3) if you run nls() finding QR and other objects just doesn't seem possible easily
+   (I haven't been able to find them! But they are the key solution item.)
+ 4) "global" assignments are used "<<-"
+ 5) "hidden" objects are used (.swts)
+ 6) if the problem has nonlinear parameters in the lhs, then this fails, because it
+    only builds the jacobian for the rhs of the model. Problems like
+    that aren't traditional in statistics, but can arise in optimization.
+
+So a real mess. I've been in contact with Doug Bates, who is supposedly the author and who
+said he would help if he could. He switched to Julia a few years ago. He can't recall why
+the recursion is needed. But if you run the function outside of nls(), it blows the C
+language stack! Sigh.
+
+I plan to refactor, eliminating the recursion and globals and use a proper list() return
+so all objects are in known locations. However, that will certainly cause us some pain when
+it comes to profile.nls() and possibly some other features. And truthfully, I'd like to
+understand the code, even if we replace it. My intention is to continue for a few more
+days to run calls of the function under different initial conditions to create a
+"reproducible example" (I think reprex is becoming the abbreviation) so I can post on
+r-devel and see if there is anyone who can help to decode this. I strongly suspect that
+the R-core maintainers are praying that no changes in the R and C infrastructure will
+break the current code, as I'm pretty sure there's no developer documentation to provide
+a guide.
+
+On the bright side, I have got numericDeriv() function all in R. It's a bit slower than the
+mixed R+C, but much shorter and more easily maintained and adapted -- the plan is to offer
+the analytic derivatives as an option. Also to change the name to "jacobian" or "jacobian.nls".
+And we've drafts of several short articles on some issues tangential to the project,
+including one I'm preparing on the variety of ways nonlinear least squares can be
+structured and implemented. Also one on a neat idea from Duncan Murdoch on how to extract
+base-R code into a package that can be modified, thereby avoiding rebuilds of full R.
+```
+
+In that JN has NOT been able to satisfactorily understand the structure of setPars()
+and setVarying() (the latter produces a huge set of functions, and it is not clear
+how it has been defined), I decided to do a zero-base build of a new set of functions
+in a package called `nlsj`. This will hopefully have fully documented functions and
+features. However, I expect that it will need quite a lot of work to add the 
+equivalent of `profile.nls()` and similar features. We note, from the `nls()`
+documentation, that
+
+```
+An nls object is a type of fitted model object. It has methods for the generic 
+functions anova, coef, confint, deviance, df.residual, fitted, formula, logLik, 
+predict, print, profile, residuals, summary, vcov and weights.
+```
+
+Thus we will have to build equivalent capability, but we can possibly avoid a lot
+of the extraneous material in the current infrastructure and also document what we
+do provide.
 
 
 ### [2021-6-29] and [2021-6-30] Struggling with nls() structure

@@ -199,8 +199,6 @@ difference is specified when near a bound.
   
   
 
-
-
 ## Symbolic methods from `nlsr`
 
 The package `nlsr` has a function `model2rjfun()` that converts an expression
@@ -281,7 +279,6 @@ max(abs(jeunsc-attr(vfunsc,"gradient")))
 ```
 
 
-
 # Performance results for different computing environments
 
 Here we present tables of the results, preceded by identified descriptions of the machines we
@@ -294,24 +291,71 @@ M21-LM20.1
 
 ?? What machines provide a range of possibilities.
 
-## Appendix 1: Base R numericDeriv code
+# Discussion of derivative computation for nonlinear least squares
+
+In no particular order, we comment on some issues relating to the Jacobian calculations
+in nonlinear least squares.
+
+## Nomenclature
+
+R is not in step with many other areas of numerical computation when labelling different
+objects in the nonlinear least squares problem. In particular, R uses the term "gradient"
+when the object of interest is the Jacobian matrix. In that it is useful in performing 
+iterations of the Gauss-Newton or related equations to have the Jacobian associated with
+the residuals, and the rows of the Jacobian matrix are "gradients" of the respective
+residuals, we can accept the attribute name "gradient" to select the required information.
+Moreover, as in package `nlsr` it is very useful to have the Jacobian matrix as an 
+attribute of the residual vector, since the main solver function, in this case `nlsr::nlfb()`,
+can be called with the same input for the arguments `res` and `jac`. These are the functions
+required to compute the residual and the Jacobian, and using the same function for both is
+very convenient, but needs some way to return both the residual vector and Jacobian matrix
+in a coherent fashion. 
+
+## Numerical approximation near constraints
+
+As far as we are aware there is no software that implements a fully safeguarded system to
+compute numerical approximation of the Jacobian (or gradients in general optimization) near
+constraints. The same statement applies even in the case of the much simpler bounds constraints.
+Users have a perverse tendency to devise ways to foil our best efforts. For example, they may
+decide that a good way to specify fixed (i.e., masked) parameters that they do not want to vary
+during a particular calculation is to specify the lower and upper bound of a parameter at the
+same value. Later runs may want the parameter constraints relaxed. 
+
+In `nlsr::nlxb()`, users may, in fact, specify masked parameters this way. This is a case of 
+"if you can't beat them, join them", but it does provide an easily understood way for users to
+fix values. 
+
+More tricky is dealing with constraints that are close together. Note that these may arise from,
+for example, two linear (planar) constraints that approach at a narrow angle. In the apex where
+these constraints intersect, we will have tight bounds on parameters. If the constraint is not
+one that is imposed by the nature of the residual or objective function, for example, a log() 
+or square root near zero, then we can generally proceed and allow the derivative approximator
+to evaluate outside the constraints. Things are decidedly nastier if we do have inadmissible
+values. 
+
+The issue of constraints and the need for a step in parameter values for derivative approximations
+was one of the motivations for trying to find analytic derivatives in package `nlsr` and the 
+continuing effort to bring them into other R tools.
+
+
+# Appendix 1: Base R numericDeriv code
 
 This code is in two files, nls.R and nls.c and is extracted here.
 
-### From nls.R
+## From nls.R
 
 ```{r nlsR, comment=NA, echo=FALSE}
    cat(readLines('./nlsND.R'), sep = '\n')
 ```
 
 
-### From nls.c
+## From nls.c
 
 ```{r nlsc, comment=NA, echo=FALSE}
    cat(readLines('./nlsND.c'), sep = '\n')
 ```
 
-## Appendix 2: numericDeriv() from nlsalt package (all in R)
+# Appendix 2: numericDeriv() from nlsalt package (all in R)
 
 ```{r nlsndnew, comment=NA, echo=FALSE}
    cat(readLines('./nlsalt/R/nlsnd.R'), sep = '\n')

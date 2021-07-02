@@ -1,52 +1,93 @@
-## This file to generate a lot of output so we can see where information
-##  is generated. JN 2021-6-25
-nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
 {
-    ## thisEnv <- environment() # shared by all functions in the 'm' list; variable no longer needed
-    env <- new.env(hash = TRUE, parent = environment(form))
-    cat("env content (at this stage may be empty):")
-    print(ls(env))
-    for(i in names(data)) env[[i]] <- data[[i]]
-    ind <- as.list(start)
-    parLength <- 0L
-    for(i in names(ind) ) {
-        temp <- start[[i]]
-        storage.mode(temp) <- "double"
-        env[[i]] <- temp
-        ind[[i]] <- parLength + seq_along(temp)
-        parLength <- parLength + length(temp)
-    }
-    cat("After looping over names in data -- env:")
-    print(ls(env))
+# This function is designed to set up the information needed to estimate the model
+# which it defines and for which it provides the tools
+# Needed:
+# (formula)		formula: form
+# (char vec)		parameters names
+# (char vec)		data variable names
+# (df)			data frame: data
+# (num vec)		weights: wts
+# (named num vec)	??not yet -- bounds upper and lower
+# (named num vec)	starting parameters (or ...)
+# (function)		residual function --> resid vector
+# (num vec)		resid
+# (function)		jacobian function (puts matrix J in attribute "gradient" of resid vector)
+# (num matrix)		J
+# (list)		controls: ctrl 
+# (function)		convtest function --> returns a logical TRUE when we can TERMINATE,
+#			Do we want attributes e.g., message, other information?
+# (num)			npar (number of parameters) ?? not critical but nice
+# (num)			mres (number of residuals) ?? not critical but nice
+# (function)		qsol - set up the solution and produce matrix decomp.
+#                       ?? this may have several forms eventually
+# (function)		incr -- increment the parameters. May include bounds and masks??
+# (environment)         nlenv -- do we need this or not?? If so, we need it better documented.
 
-    getPars.noVarying <- function() unlist(mget(names(ind), env))
-    getPars <- getPars.noVarying
-    cat("getPars:")
-    print(getPars)
-    cat("Running nlsModel -- just set getPars\n")
-    print(str(getPars))
-    internalPars <- getPars()
-    cat("internalPars:")
-    print(internalPars)
+
+# nlsModel() gives m:
+#  "conv"       "deviance"   "fitted"     "formula"    "getAllPars" "getEnv"     "getPars"   
+#  "gradient"   "incr"   "lhs"     "predict"    "resid"      "Rmat"       "setPars"   
+#  "setVarying" "trace"    
+
+# First segment of this function is to check the specification is valid 
+# beyond checks already done in nlsj before call to nlsjModel()
+
+    stopifnot(inherits(form, "formula"))
+
+    nlenv <- new.env(hash = TRUE, parent = environment(form))
+    dnames<-colnames(data) # Possibly could pull in from nlsj
+    nlnames <- deparse(substitute(nlenv)) 
+    for (v in dnames){
+       if (v %in% nlnames) warning(sprintf("Variable %s already in nlenv!", v))
+       nlenv[[v]] = data[[v]]
+    }
+    nlenv$prm <- start # start MUST be defined at this point
+    npar <- length(start)
+    nlenv$npar <- npar
+# ?? number of residuals altered by "subset" which is NOT yet functional
+# ?? Do we want to copy the data to a working array, or subset on the fly?
+    mres <- dim(data)[1] # Get the number of residuals (no subset)
+    nlenv$mres <- mres
+    if (is.null(wts)) wts <- rep(1, mres) # ?? more complicated if subsetting
+    nlenv$wts <- wts # 
+
+# By the time we get here, we assume nlsj has checked data and parameter names.
+# If nlsjModel called otherwise, be it on head of caller!
+
+# ?? Can we simplify this -- it seems to set up the param
+    getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
+    # oneSidedFormula ?? Should we be more explicit
+    if (length(form) == 2) {
+        residexpr <- form[[2]]
+        lhs <- NULL
+        rhs <- eval(form[[3L]], envir = nlenv)
+    } else if (length(form) == 3) {
+        residexpr <- call("-", form[[3]], form[[2]])
+        lhs <- eval(form[[2L]], envir = nlenv)
+        # set the "promise" for the lhs of the model
+        rhs <- eval(form[[3L]], envir = nlenv)
+    } else stop("Unrecognized formula")
+
 
     if(!is.null(upper)) upper <- rep_len(upper, parLength)
     # Expand upper to a full vector
     useParams <- rep_len(TRUE, parLength)
     # JN Seems to be a logical vector to indicate free parameters.
-    lhs <- eval(form[[2L]], envir = env)
+    lhs <- eval(form[[2L]], envir = nlenv)
     # set the "promise" for the lhs of the model
-    rhs <- eval(form[[3L]], envir = env)
+    rhs <- eval(form[[3L]], envir = nlenv)
     # similarly for the rhs
     #?? WHY THE DOT -- does this not hide the weights??
     ## non-zero is TRUE; note that missing() is a VERY special function 
     .swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
-    ##JN: the weights, which are put into the env
+    ##JN: the weights, which are put into the nlenv
     cat(".swts:")
     print(.swts)
-    env$.swts <- .swts
-#    cat("env$.swts:")
-#    print(env$.swts)
+    nlenv$.swts <- .swts
+#    cat("nlenv$.swts:")
+#    print(nlenv$.swts)
 #    readline("cont.")
 
     resid <- .swts * (lhs - rhs)
@@ -58,9 +99,9 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     if(is.null(attr(rhs, "gradient"))) {
         getRHS.noVarying <- function() {
             if(is.null(upper)) # always for "default"
-                numericDeriv(form[[3L]], names(ind), env, central = nDcentral)
+                numericDeriv(form[[3L]], names(ind), nlenv, central = nDcentral)
             else # possibly with "port"
-                numericDeriv(form[[3L]], names(ind), env,
+                numericDeriv(form[[3L]], names(ind), nlenv,
                              dir = ## ifelse(internalPars < upper, 1, -1)
                                  -1 + 2*(internalPars < upper), central = nDcentral)
         }
@@ -71,7 +112,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
         cat("when no gradient, rhs:")
         print(rhs)
     } else {
-        getRHS.noVarying <- function() eval(form[[3L]], envir = env)
+        getRHS.noVarying <- function() eval(form[[3L]], envir = nlenv)
         getRHS <- getRHS.noVarying
         cat("Have gradient, getRHS:")
         print(getRHS)
@@ -125,18 +166,18 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     if(QR$rank < qrDim)
         stop("singular gradient matrix at initial parameter estimates")
 
-    getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
+    getPars.varying <- function() unlist(mget(names(ind), nlenv))[useParams]
     setPars.noVarying <- function(newPars)
     {
-        internalPars <<- newPars # envir = thisEnv
+        internalPars <<- newPars # envir = thisnlenv
         for(i in names(ind))
-            env[[i]] <- unname(newPars[ ind[[i]] ])
+            nlenv[[i]] <- unname(newPars[ ind[[i]] ])
     }
     setPars.varying <- function(newPars)
     {
         internalPars[useParams] <<- newPars
         for(i in names(ind))
-            env[[i]] <- unname(internalPars[ ind[[i]] ])
+            nlenv[[i]] <- unname(internalPars[ ind[[i]] ])
     }
     setPars <- setPars.noVarying
 
@@ -170,7 +211,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
                      } else if(is.logical(vary) && length(vary) != np)
                          stop("setVarying : 'vary' length must match length of parameters")
                      else
-                         vary # envir = thisEnv
+                         vary # envir = thisnlenv
 		 gradCall[[length(gradCall) - 1L]] <<- useP
 		 if(all(useP)) {
 		     setPars <<- setPars.noVarying
@@ -186,10 +227,10 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     },
 	     setPars = function(newPars) {
 		 setPars(newPars)
-		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
-		 dev   <<- sum(resid^2) # envir = thisEnv
+		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisnlenv {2 x}
+		 dev   <<- sum(resid^2) # envir = thisnlenv
 		 if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
-		 QR <<- qr(.swts * gr) # envir = thisEnv
+		 QR <<- qr(.swts * gr) # envir = thisnlenv
 		 (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
 	     },
              setparj = function(newPars) {
@@ -197,17 +238,17 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 		#   rhs <- m$getRHS()
 		#   lhs <- m$lhs
 		   resid <- wts * (lhs() - rhs())
-		   dev   <- sum(resid^2) # envir = thisEnv
+		   dev   <- sum(resid^2) # envir = thisnlenv
 		   gr <- NULL # to define in case no attr.
 		#   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
 		   if(length(gr <- attr(resid, "gradient")) == 1L) gr <- c(gr)
-		   QR <- qr(wts * gr) # envir = thisEnv
+		   QR <- qr(wts * gr) # envir = thisnlenv
 		   singular <- (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
 		   spobj <- list(singular=singular, QR=QR, gr=gr, dev=dev, resid=resid)
 	      },
 	     getPars = function() getPars(),
 	     getAllPars = function() getPars(),
-	     getEnv = function() env,
+	     getEnv = function() nlenv,
 	     trace = function() {
 		 d <- getOption("digits")
 		 cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(scaleOffset > 0),
@@ -217,11 +258,11 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     },
 	     Rmat = function() qr.R(QR),
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), env),
+                 eval(form[[3L]], as.list(newdata), nlenv),
              getRHS = function() getRHS # JN added 20210630 temporarily
 	     )
     class(m) <- "nlsModel"
-    cat("Contents of 'env':")
-    ls.str(env)
+    cat("Contents of 'nlenv':")
+    ls.str(nlenv)
     m
 }

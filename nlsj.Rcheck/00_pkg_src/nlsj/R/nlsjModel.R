@@ -1,25 +1,24 @@
 ## This file to generate a lot of output so we can see where information
 ##  is generated. JN 2021-6-25
-nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
+nlsjModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 {
-    ## thisEnv <- environment() # shared by all functions in the 'm' list; variable no longer needed
-    env <- new.env(hash = TRUE, parent = environment(form))
-    cat("env content (at this stage may be empty):")
-    print(ls(env))
-    for(i in names(data)) env[[i]] <- data[[i]]
+    nlenv <- new.env(hash = TRUE, parent = environment(form))
+    cat("nlenv content (at this stage may be empty):")
+    print(ls(nlenv))
+    for(i in names(data)) nlenv[[i]] <- data[[i]]
     ind <- as.list(start)
     parLength <- 0L
     for(i in names(ind) ) {
         temp <- start[[i]]
         storage.mode(temp) <- "double"
-        env[[i]] <- temp
+        nlenv[[i]] <- temp
         ind[[i]] <- parLength + seq_along(temp)
         parLength <- parLength + length(temp)
     }
-    cat("After looping over names in data -- env:")
-    print(ls(env))
+    cat("After looping over names in data -- nlenv:")
+    print(ls(nlenv))
 
-    getPars.noVarying <- function() unlist(mget(names(ind), env))
+    getPars.noVarying <- function() unlist(mget(names(ind), nlenv))
     getPars <- getPars.noVarying
     cat("getPars:")
     print(getPars)
@@ -33,20 +32,20 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     # Expand upper to a full vector
     useParams <- rep_len(TRUE, parLength)
     # JN Seems to be a logical vector to indicate free parameters.
-    lhs <- eval(form[[2L]], envir = env)
+    lhs <- eval(form[[2L]], envir = nlenv)
     # set the "promise" for the lhs of the model
-    rhs <- eval(form[[3L]], envir = env)
+    rhs <- eval(form[[3L]], envir = nlenv)
     # similarly for the rhs
     #?? WHY THE DOT -- does this not hide the weights??
     ## non-zero is TRUE; note that missing() is a VERY special function 
     .swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
-    ##JN: the weights, which are put into the env
+    ##JN: the weights, which are put into the nlenv
     cat(".swts:")
     print(.swts)
-    env$.swts <- .swts
-#    cat("env$.swts:")
-#    print(env$.swts)
+    nlenv$.swts <- .swts
+#    cat("nlenv$.swts:")
+#    print(nlenv$.swts)
 #    readline("cont.")
 
     resid <- .swts * (lhs - rhs)
@@ -58,9 +57,9 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     if(is.null(attr(rhs, "gradient"))) {
         getRHS.noVarying <- function() {
             if(is.null(upper)) # always for "default"
-                numericDeriv(form[[3L]], names(ind), env, central = nDcentral)
+                numericDeriv(form[[3L]], names(ind), nlenv, central = nDcentral)
             else # possibly with "port"
-                numericDeriv(form[[3L]], names(ind), env,
+                numericDeriv(form[[3L]], names(ind), nlenv,
                              dir = ## ifelse(internalPars < upper, 1, -1)
                                  -1 + 2*(internalPars < upper), central = nDcentral)
         }
@@ -71,7 +70,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
         cat("when no gradient, rhs:")
         print(rhs)
     } else {
-        getRHS.noVarying <- function() eval(form[[3L]], envir = env)
+        getRHS.noVarying <- function() eval(form[[3L]], envir = nlenv)
         getRHS <- getRHS.noVarying
         cat("Have gradient, getRHS:")
         print(getRHS)
@@ -125,18 +124,18 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
     if(QR$rank < qrDim)
         stop("singular gradient matrix at initial parameter estimates")
 
-    getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
+    getPars.varying <- function() unlist(mget(names(ind), nlenv))[useParams]
     setPars.noVarying <- function(newPars)
     {
-        internalPars <<- newPars # envir = thisEnv
+        internalPars <<- newPars # envir = thisnlenv
         for(i in names(ind))
-            env[[i]] <- unname(newPars[ ind[[i]] ])
+            nlenv[[i]] <- unname(newPars[ ind[[i]] ])
     }
     setPars.varying <- function(newPars)
     {
         internalPars[useParams] <<- newPars
         for(i in names(ind))
-            env[[i]] <- unname(internalPars[ ind[[i]] ])
+            nlenv[[i]] <- unname(internalPars[ ind[[i]] ])
     }
     setPars <- setPars.noVarying
 
@@ -170,7 +169,7 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
                      } else if(is.logical(vary) && length(vary) != np)
                          stop("setVarying : 'vary' length must match length of parameters")
                      else
-                         vary # envir = thisEnv
+                         vary # envir = thisnlenv
 		 gradCall[[length(gradCall) - 1L]] <<- useP
 		 if(all(useP)) {
 		     setPars <<- setPars.noVarying
@@ -186,10 +185,10 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     },
 	     setPars = function(newPars) {
 		 setPars(newPars)
-		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
-		 dev   <<- sum(resid^2) # envir = thisEnv
+		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisnlenv {2 x}
+		 dev   <<- sum(resid^2) # envir = thisnlenv
 		 if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
-		 QR <<- qr(.swts * gr) # envir = thisEnv
+		 QR <<- qr(.swts * gr) # envir = thisnlenv
 		 (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
 	     },
              setparj = function(newPars) {
@@ -197,17 +196,17 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 		#   rhs <- m$getRHS()
 		#   lhs <- m$lhs
 		   resid <- wts * (lhs() - rhs())
-		   dev   <- sum(resid^2) # envir = thisEnv
+		   dev   <- sum(resid^2) # envir = thisnlenv
 		   gr <- NULL # to define in case no attr.
 		#   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
 		   if(length(gr <- attr(resid, "gradient")) == 1L) gr <- c(gr)
-		   QR <- qr(wts * gr) # envir = thisEnv
+		   QR <- qr(wts * gr) # envir = thisnlenv
 		   singular <- (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
 		   spobj <- list(singular=singular, QR=QR, gr=gr, dev=dev, resid=resid)
 	      },
 	     getPars = function() getPars(),
 	     getAllPars = function() getPars(),
-	     getEnv = function() env,
+	     getEnv = function() nlenv,
 	     trace = function() {
 		 d <- getOption("digits")
 		 cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(scaleOffset > 0),
@@ -217,11 +216,11 @@ nlsModelx <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcen
 	     },
 	     Rmat = function() qr.R(QR),
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), env),
+                 eval(form[[3L]], as.list(newdata), nlenv),
              getRHS = function() getRHS # JN added 20210630 temporarily
 	     )
     class(m) <- "nlsModel"
-    cat("Contents of 'env':")
-    ls.str(env)
+    cat("Contents of 'nlenv':")
+    ls.str(nlenv)
     m
 }
