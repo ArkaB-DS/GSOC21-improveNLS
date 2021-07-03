@@ -49,9 +49,10 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # beyond checks already done in nlsj before call to nlsjModel()
 
     stopifnot(inherits(form, "formula"))
-
+    pnames<-names(start)
+    resjac <- NULL # to start with
     nlenv <- new.env(hash = TRUE, parent = environment(form))
-    dnames<-colnames(data) # Possibly could pull in from nlsj
+    dnames<-colnames(data) # Possibly could pull in from nlsj ?? what if data an environment?
     nlnames <- deparse(substitute(nlenv)) 
     for (v in dnames){
        if (v %in% nlnames) warning(sprintf("Variable %s already in nlenv!", v))
@@ -84,20 +85,24 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
            lhs <- eval(form[[2L]], envir = nlenv)
            # set the "promise" for the lhs of the model
            rhs <- eval(form[[3L]], envir = nlenv)
-           lnames<-all.vars(lhs) # Check that lhs is a single variable from data
-           ldname <- which(lnames %in% dnames)
-           if (length(ldname) != 1L) {
+           lnames<-all.vars(form[[2L]]) # Check that lhs is a single variable from data
+           print(lnames)
+           ldname <- which(dnames %in% lnames)
+           str(ldname)
+           print(ldname)
+           if (length(lnames) != 1L) { # ?? why do we get to this bit -- 
               cat("lhs has names:")
-              print(ldname)
+              print(lnames)
               stop("lhs has either no named variable or more than one")
            }
+           else { cat("lhs has just the variable ",lnames,"\n")}
        } 
        else stop("Unrecognized formula")
 
-    residu <- (lhs - rhs) # this should be fine for returning unweighted resids
-    resid <- swts * residu
-    dev <- sum(resid^2) 
-
+    residu <- function() (lhs - rhs) # this should be fine for returning unweighted resids
+    resid <- swts * residu()
+    dev <- sum(resid^2)
+    
     addjac <- function(){# ?? assume resjac in nlenv
         if(is.null(resjac)) resjac<-residu()
         if(is.null(attr(resjac, "gradient"))) { # if not defined, get it
