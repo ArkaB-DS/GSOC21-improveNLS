@@ -22,14 +22,19 @@
 ###
 
 
-nlsj.control <- function(maxiter = 50, tol = 0.00001, minFactor = 1/1024,
+nlsj.control <- function(maxiter = 500, tol = 0.00001, minFactor = 1/1024,
 			printEval = FALSE, warnOnly = FALSE, scaleOffset = 0,
-                        nDcentral = FALSE) {
+                        nDcentral = FALSE, watch = FALSE, phi = 1, lamda = 0, 
+			offset = 100, laminc = 10, lamdec = 0.4, resmax = 10000, 
+			rofftest = TRUE, smallsstest = TRUE){
     stopifnot(is.numeric(tol), length(tol) == 1L, tol > 0,
               is.numeric(minFactor),   length(minFactor) == 1L,
               is.numeric(scaleOffset), length(scaleOffset) == 1L,
               is.logical(nDcentral), length(nDcentral) == 1L, !is.na(nDcentral))
     list(maxiter = maxiter, tol = tol, minFactor = minFactor,
 	 printEval = printEval, warnOnly = warnOnly,
-         scaleOffset = scaleOffset, nDcentral = nDcentral)
+         scaleOffset = scaleOffset, nDcentral = nDcentral,
+	 watch = watch, phi = phi, lamda = lamda, offset = offset, 
+         laminc = laminc, lamdec = lamdec, resmax = resmax, 
+         rofftest = rofftest, smallsstest = smallsstest)
 }

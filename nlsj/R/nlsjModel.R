@@ -1,4 +1,4 @@
-nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
+nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, control)
 {
 # This function is designed to set up the information needed to estimate the model
 # which it defines and for which it provides the tools
@@ -38,8 +38,8 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
 ##     to compute the delta (?? with or without fac)
 #  "lhs"  
 #   "predict"  
-#  "resid"   
-#   "Rmat"   
+#  "resid"  -- ?? would we be better with residu and swts separately
+#   "Rmat"  -- ?? only makes sense with QR 
 #    "setPars"  -- ?? simpler setPars. If pars changed, null resid attr "gradient"
 #  "setVarying" 
 #  "trace"    
@@ -107,115 +107,72 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
         resjac
     }
     jacobian <- function() { 
-        if (is.null(attr(resjac,"gradient") { resjac <- addjac()}
+        if (is.null(attr(resjac,"gradient"))) { resjac <- addjac()}
         JJ <- attr(resjac,"gradient")
         JJ
     }
     JJ <- jacobian() # ?? would like to save this in nlenv for later use
     # ?? for now use QR -- may have other methods later, e.g., svd
     QR <- qr(swts * JJ) # ensure we get the jacobian JJ
-
     qrDim <- min(dim(QR$qr))
+    # ?? Does it make sense to do this here
     if(QR$rank < qrDim)
-        stop("singular gradient matrix at initial parameter estimates")
+        stop("singular jacobian matrix at initial parameter estimates")
 
-    getPars.varying <- function() unlist(mget(names(ind), nlenv))[useParams]
-    setPars.noVarying <- function(newPars)
-    {
-        internalPars <<- newPars # envir = thisnlenv
-        for(i in names(ind))
-            nlenv[[i]] <- unname(newPars[ ind[[i]] ])
-    }
-    setPars.varying <- function(newPars)
-    {
-        internalPars[useParams] <<- newPars
-        for(i in names(ind))
-            nlenv[[i]] <- unname(internalPars[ ind[[i]] ])
-    }
-    setPars <- setPars.noVarying
+    parset <- function(newPars){ # nlsj new function
+       eq <- all.equal(newPars, prm) # prm in environment
+       if (! eq) {
+          prm <- newPars
+          names(prm) <- pnames # ?? do we need to ensure preserved names
+       }
+       eq
+    } # return eq -- may want to know if parameters changed
 
     if(scaleOffset) scaleOffset <- (length(resid)-npar) * scaleOffset^2
-    convCrit <- function() {
-        if(npar == 0) return(0)
-        rr <- qr.qty(QR, c(resid)) # rotated residual vector
-        sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
-    }
+    conv <- function(njac=0, nres=1) { # defaults
+        cval <- FALSE # Initially NOT converged
+        cmsg <- "Termination msg: "
+        if(npar == 0) {
+            cval <- TRUE
+            cmsg <- paste(cmsg, "No parameters for this problem")
+            ctol <- NA
+        }
+        else {
+          rr <- qr.qty(QR, c(resid)) # rotated residual vector
+          ctol <- sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
+          cval <- (ctol <= ctrl$tol) # compare relative offset criterion
+          if (ctrl$scaleOffset > 0.0) 
+              cmsg <- paste("Satisfying relative offset criterion, scaleOffset = ",scaleOffset)
+          else cmsg <- "Satisfying relative offset criterion"
+          cmsg<-paste(cmsg,"\n",cmsg)
+          if (njac > ctrl$maxiter) cmsg<-paste(cmsg,"\n",cmsg)
+	}
+        attr(cval, "cmsg") <- cmsg
+        attr(cval, "ctol") <- ctol
+    } # end conv()
 
-    on.exit(remove(i, data, parLength, start, temp, m, gr,
-                   marg, dimGrad, qrDim, gradSetArgs))
-    ## must use weighted resid for use with "port" algorithm.
+#--->
+#?? needed?
+##    on.exit(remove(i, data, parLength, start, temp, m, gr,
+##                   marg, dimGrad, qrDim, gradSetArgs))
+## must use weighted resid for use with "port" algorithm.
     m <-
 	list(resid = function() resid,
 	     fitted = function() rhs,
 	     formula = function() form,
 	     deviance = function() dev,
 	     lhs = function() lhs,
-	     gradient = function() .swts * attr(rhs, "gradient"),
-	     conv = function() convCrit(),
+	     jacobian = function() jacobian,
+	     conv = function() conv,
 	     incr = function() qr.coef(QR, resid),
-             ##?? Why all the global (scoping) assignments? To put in .GlobalEnv??
-	     setVarying = function(vary = rep_len(TRUE, np)) {
-                 np <- length(useParams)
-		 useParams <<- useP <-
-                     if(is.character(vary)) {
-                         temp <- logical(np)
-                         temp[unlist(ind[vary])] <- TRUE
-                         temp
-                     } else if(is.logical(vary) && length(vary) != np)
-                         stop("setVarying : 'vary' length must match length of parameters")
-                     else
-                         vary # envir = thisnlenv
-		 gradCall[[length(gradCall) - 1L]] <<- useP
-		 if(all(useP)) {
-		     setPars <<- setPars.noVarying
-		     getPars <<- getPars.noVarying
-		     getRHS  <<-  getRHS.noVarying
-		     npar    <<- length(useP)
-		 } else {
-		     setPars <<- setPars.varying
-		     getPars <<- getPars.varying
-		     getRHS  <<-  getRHS.varying
-		     npar    <<- sum(useP)
-		 }
-	     },
-	     setPars = function(newPars) {
-		 setPars(newPars)
-		 resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisnlenv {2 x}
-		 dev   <<- sum(resid^2) # envir = thisnlenv
-		 if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
-		 QR <<- qr(.swts * gr) # envir = thisnlenv
-		 (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
-	     },
-             setparj = function(newPars) {
-		#   sP2(newPars)
-		#   rhs <- m$getRHS()
-		#   lhs <- m$lhs
-		   resid <- wts * (lhs() - rhs())
-		   dev   <- sum(resid^2) # envir = thisnlenv
-		   gr <- NULL # to define in case no attr.
-		#   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
-		   if(length(gr <- attr(resid, "gradient")) == 1L) gr <- c(gr)
-		   QR <- qr(wts * gr) # envir = thisnlenv
-		   singular <- (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
-		   spobj <- list(singular=singular, QR=QR, gr=gr, dev=dev, resid=resid)
-	      },
 	     getPars = function() getPars(),
-	     getAllPars = function() getPars(),
 	     getEnv = function() nlenv,
-	     trace = function() {
-		 d <- getOption("digits")
-		 cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(scaleOffset > 0),
-			     formatC(dev, digits=d, flag="#"),
-			     convCrit(),
-			     paste(vapply(getPars(), format, ""), collapse=" ")))
-	     },
-	     Rmat = function() qr.R(QR),
+             parset = function() parset,
 	     predict = function(newdata = list(), qr = FALSE)
                  eval(form[[3L]], as.list(newdata), nlenv),
-             getRHS = function() getRHS # JN added 20210630 temporarily
 	     )
     class(m) <- "nlsModel"
-    cat("Contents of 'nlenv':")
-    ls.str(nlenv)
+#    cat("Contents of 'nlenv':")
+#    ls.str(nlenv)
     m
 }

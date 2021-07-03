@@ -1,10 +1,11 @@
+rm(list=ls())
 # Croucher-example1.R -- https://walkingrandomly.com/?p=5254
 # construct the data vectors using c()
 xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
 ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
 
 # look at it
-plot(xdata,ydata)
+# plot(xdata,ydata)
 
 # some starting values
 p1 = 1
@@ -25,16 +26,23 @@ Ctheta<-c("p1","p2")
 ndorig0<-numericDeriv(Ccall, Ctheta)
 ndorig0
 
-library(nlsalt)
-ndalt0<-numericDeriv(Ccall, Ctheta)
-print(all.equal(ndorig0, ndalt0))
+# library(nlsalt)
+# ndalt0<-numericDeriv(Ccall, Ctheta)
+# print(all.equal(ndorig0, ndalt0))
 
 # retest nls
-fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, trace=TRUE)
 
 # summarise
 
 summary(fit)
+
+
+library(nlsj)
+fitj <- nlsj(formula=Cform, start=Cstart, data=Cdata, trace=TRUE)
+fitj
+
+
 # try new all-R form
 fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
 
