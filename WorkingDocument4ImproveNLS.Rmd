@@ -35,6 +35,37 @@ report, but a form of extended diary of activity, issues and results.
 
 ### [2021-7-1] to [2021-7-?] nlsj
 
+Suggested directions for latter half of project.
+Should agree approximate timeline for finishing items.
+
+- Continue diary so we have a good record of what has been done.
+  [Aug 31]
+
+- AB: continue "testing" review document TestsDoc [July 16]
+
+- AB: review DerivsNLS, VarietyinNonlinearLeastSquaresCodes
+  MachineSummary and PkgFromRbase documents and report any
+  unfinished / erroneous / clumsy parts [July 16]
+
+- JN: review TestsDoc [July 12]
+
+- Both: List tests for nls() and its substitutes with explanation
+  of why they are included. [Aug 1]
+
+- JN: continue nlsj package. This is a "from zero" attempt to
+  mimic nls(), but using a different set of routines and model
+  object "m" [July 21 to first version]
+  
+- Both: Try to clear all "??" issues and check working of nlsj.
+  Prepare: "nlsj -- a substitute for nls()" [July 28]
+
+- Both: Try to document where issues remain in nlsalt package, 
+  which is an attempt to put nls() (i.e., nlspkg) entirely in
+  R and to document and clean up. [Aug 7?? Probably won't be
+  fully finished]
+  
+- Clean up repo, removing incomplete or unhelpful elements
+  [Aug 15??]
 
 The following is from an email to Patrice Kiener, a co-mentor on the Google Summer
 of code NNBenchmark projects for 2019 and 2020.
