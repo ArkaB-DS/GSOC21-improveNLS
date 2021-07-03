@@ -35,6 +35,13 @@ pnames <- all.vars(formula) # all names in the formula
 pnames <- pnames[! (pnames %in% dnames)] # the "non-data" names in the formula
 npar <- length(pnames)
 
+# from nls.R ?? 
+#    QR.rhs <- qr(.swts * rhs)
+#    lin <- qr.coef(QR.rhs, .swts * lhs)
+#    resid <- qr.resid(QR.rhs, .swts * lhs)
+
+
+
 ##??210702 -- sort out missing start. Is is.null() or is.missing() better?
     if (is.null(start)) { # start not specified
        warning("start vector not specified for nlsj")

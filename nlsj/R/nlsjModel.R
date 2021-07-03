@@ -1,4 +1,4 @@
-nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
+nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
 {
 # This function is designed to set up the information needed to estimate the model
 # which it defines and for which it provides the tools
@@ -14,7 +14,7 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
 # (num vec)		resid
 # (function)		jacobian function (puts matrix J in attribute "gradient" of resid vector)
 # (num matrix)		J
-# (list)		controls: ctrl 
+# (list)		controls: control 
 # (function)		convtest function --> returns a logical TRUE when we can TERMINATE,
 #			Do we want attributes e.g., message, other information?
 # (num)			npar (number of parameters) ?? not critical but nice
@@ -70,7 +70,7 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
 
 # ?? Can we simplify this -- it seems to set up the param
     getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
-    # oneSidedFormula ?? Should we be more explicit
+    # oneSidedFormula ?? Should we be more explicit?
     if (length(form) == 2) {
         residexpr <- form[[2]]
         lhs <- NULL
@@ -89,21 +89,24 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
     # JN Seems to be a logical vector to indicate free parameters.
     lhs <- eval(form[[2L]], envir = nlenv)
     # set the "promise" for the lhs of the model
+## ?? check if model not in standard form -- don't want parameters on lhs. 
+## Do we want lhs to be JUST one variable from the dnames set?
+    lnames<-all.vars(lhs)
+    if (any(lnames %in% pnames)) stop("lhs has parameters -- reformulate!") ##?? fix?
     rhs <- eval(form[[3L]], envir = nlenv)
     # similarly for the rhs
     #?? WHY THE DOT -- does this not hide the weights??
     ## non-zero is TRUE; note that missing() is a VERY special function 
-# .swts are square roots of wts. But why make them hidden.
-    .swts <- if(!missing(wts) && length(wts))
+
+    swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
     ##JN: the weights, which are put into the nlenv
-#    cat("nlenv$.swts:")
-#    print(nlenv$.swts)
-#    readline("cont.")
+    nlenv$swts<-swts
 
-    resid <- .swts * (lhs - rhs)
-    cat("resid:")
-    print(resid)
+    resid <- swts * (lhs - rhs)
+# ?? Do we want a "residdef" control +1 for usual, -1 for Gauss/Nash
+#    cat("resid:")
+#    print(resid)
 
     dev <- sum(resid^2)
     cat("dev=",dev,"\n")
