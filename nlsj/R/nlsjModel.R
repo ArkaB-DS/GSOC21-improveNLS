@@ -25,10 +25,23 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
 # (environment)         nlenv -- do we need this or not?? If so, we need it better documented.
 
 
-# nlsModel() gives m:
-#  "conv"       "deviance"   "fitted"     "formula"    "getAllPars" "getEnv"     "getPars"   
-#  "gradient"   "incr"   "lhs"     "predict"    "resid"      "Rmat"       "setPars"   
-#  "setVarying" "trace"    
+# nlsModel() gives m as follows. XX means we have it (or XX Name for replacement):
+#  "conv" 
+#  "deviance"  
+# "fitted"   
+#  "formula"  
+#  "getAllPars" 
+#   "getEnv"   
+#  "getPars"   
+#  "gradient" 
+#  "incr" 
+#  "lhs"  
+#   "predict"  
+#  "resid"   
+#   "Rmat"   
+#    "setPars"   
+#  "setVarying" 
+#  "trace"    
 
 # First segment of this function is to check the specification is valid 
 # beyond checks already done in nlsj before call to nlsjModel()
@@ -71,7 +84,7 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
 
 
     if(!is.null(upper)) upper <- rep_len(upper, parLength)
-    # Expand upper to a full vector
+    # Expand upper and lower to full vectors
     useParams <- rep_len(TRUE, parLength)
     # JN Seems to be a logical vector to indicate free parameters.
     lhs <- eval(form[[2L]], envir = nlenv)
@@ -80,12 +93,10 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL)
     # similarly for the rhs
     #?? WHY THE DOT -- does this not hide the weights??
     ## non-zero is TRUE; note that missing() is a VERY special function 
+# .swts are square roots of wts. But why make them hidden.
     .swts <- if(!missing(wts) && length(wts))
         sqrt(wts) else rep_len(1, length(rhs))
     ##JN: the weights, which are put into the nlenv
-    cat(".swts:")
-    print(.swts)
-    nlenv$.swts <- .swts
 #    cat("nlenv$.swts:")
 #    print(nlenv$.swts)
 #    readline("cont.")
