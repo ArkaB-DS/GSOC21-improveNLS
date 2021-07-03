@@ -1,0 +1,1056 @@
+
+R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"
+Copyright (C) 2021 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "nlsj"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> library('nlsj')
+
+Attaching package: ‘nlsj’
+
+The following objects are masked from ‘package:stats’:
+
+    numericDeriv, setNames
+
+> 
+> base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+> base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("getInitial")
+> ### * getInitial
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: getInitial
+> ### Title: Get Initial Parameter Estimates
+> ### Aliases: getInitial getInitial.default getInitial.formula
+> ### Keywords: models nonlinear manip
+> 
+> ### ** Examples
+> 
+> PurTrt <- Puromycin[ Puromycin$state == "treated", ]
+> print(getInitial( rate ~ SSmicmen( conc, Vm, K ), PurTrt ), digits = 3)
+      Vm        K 
+212.6837   0.0641 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("nlsj")
+> ### * nlsj
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: nls
+> ### Title: Nonlinear Least Squares
+> ### Aliases: nls
+> ### Keywords: nonlinear regression models
+> 
+> ### ** Examples
+> 
+> ## Don't show: 
+> od <- options(digits=5)
+> ## End(Don't show)
+> require(graphics)
+> 
+> DNase1 <- subset(DNase, Run == 1)
+> 
+> ## using a selfStart model
+> fm1DNase1 <- nls(density ~ SSlogis(log(conc), Asym, xmid, scal), DNase1)
+> summary(fm1DNase1)
+
+Formula: density ~ SSlogis(log(conc), Asym, xmid, scal)
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 0 
+Achieved convergence tolerance: 8.27e-06
+
+> ## the coefficients only:
+> coef(fm1DNase1)
+  Asym   xmid   scal 
+2.3452 1.4831 1.0415 
+> ## including their SE, etc:
+> coef(summary(fm1DNase1))
+     Estimate Std. Error t value   Pr(>|t|)
+Asym   2.3452   0.078154  30.007 2.1655e-13
+xmid   1.4831   0.081353  18.230 1.2185e-10
+scal   1.0415   0.032271  32.272 8.5069e-14
+> 
+> ## using conditional linearity
+> fm2DNase1 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(xmid = 0, scal = 1),
++                  algorithm = "plinear")
+> summary(fm2DNase1)
+
+Formula: density ~ 1/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+.lin   2.3452     0.0782    30.0  2.2e-13 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 1.11e-06
+
+> 
+> ## without conditional linearity
+> fm3DNase1 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(Asym = 3, xmid = 0, scal = 1))
+> summary(fm3DNase1)
+
+Formula: density ~ Asym/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 6 
+Achieved convergence tolerance: 2e-06
+
+> 
+> ## using Port's nl2sol algorithm
+> fm4DNase1 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(Asym = 3, xmid = 0, scal = 1),
++                  algorithm = "port")
+> summary(fm4DNase1)
+
+Formula: density ~ Asym/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Algorithm "port", convergence message: relative convergence (4)
+
+> 
+> ## weighted nonlinear regression
+> Treated <- Puromycin[Puromycin$state == "treated", ]
+> weighted.MM <- function(resp, conc, Vm, K)
++ {
++     ## Purpose: exactly as white book p. 451 -- RHS for nls()
++     ##  Weighted version of Michaelis-Menten model
++     ## ----------------------------------------------------------
++     ## Arguments: 'y', 'x' and the two parameters (see book)
++     ## ----------------------------------------------------------
++     ## Author: Martin Maechler, Date: 23 Mar 2001
++ 
++     pred <- (Vm * conc)/(K + conc)
++     (resp - pred) / sqrt(pred)
++ }
+> 
+> Pur.wt <- nls( ~ weighted.MM(rate, conc, Vm, K), data = Treated,
++               start = list(Vm = 200, K = 0.1))
+> summary(Pur.wt)
+
+Formula: 0 ~ weighted.MM(rate, conc, Vm, K)
+
+Parameters:
+   Estimate Std. Error t value Pr(>|t|)    
+Vm 2.07e+02   9.22e+00   22.42  7.0e-10 ***
+K  5.46e-02   7.98e-03    6.84  4.5e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.21 on 10 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 3.86e-06
+
+> 
+> ## Passing arguments using a list that can not be coerced to a data.frame
+> lisTreat <- with(Treated,
++                  list(conc1 = conc[1], conc.1 = conc[-1], rate = rate))
+> 
+> weighted.MM1 <- function(resp, conc1, conc.1, Vm, K)
++ {
++      conc <- c(conc1, conc.1)
++      pred <- (Vm * conc)/(K + conc)
++     (resp - pred) / sqrt(pred)
++ }
+> Pur.wt1 <- nls( ~ weighted.MM1(rate, conc1, conc.1, Vm, K),
++                data = lisTreat, start = list(Vm = 200, K = 0.1))
+> stopifnot(all.equal(coef(Pur.wt), coef(Pur.wt1)))
+> 
+> ## Chambers and Hastie (1992) Statistical Models in S  (p. 537):
+> ## If the value of the right side [of formula] has an attribute called
+> ## 'gradient' this should be a matrix with the number of rows equal
+> ## to the length of the response and one column for each parameter.
+> 
+> weighted.MM.grad <- function(resp, conc1, conc.1, Vm, K)
++ {
++   conc <- c(conc1, conc.1)
++ 
++   K.conc <- K+conc
++   dy.dV <- conc/K.conc
++   dy.dK <- -Vm*dy.dV/K.conc
++   pred <- Vm*dy.dV
++   pred.5 <- sqrt(pred)
++   dev <- (resp - pred) / pred.5
++   Ddev <- -0.5*(resp+pred)/(pred.5*pred)
++   attr(dev, "gradient") <- Ddev * cbind(Vm = dy.dV, K = dy.dK)
++   dev
++ }
+> 
+> Pur.wt.grad <- nls( ~ weighted.MM.grad(rate, conc1, conc.1, Vm, K),
++                    data = lisTreat, start = list(Vm = 200, K = 0.1))
+> 
+> rbind(coef(Pur.wt), coef(Pur.wt1), coef(Pur.wt.grad))
+         Vm        K
+[1,] 206.83 0.054611
+[2,] 206.83 0.054611
+[3,] 206.83 0.054611
+> 
+> ## In this example, there seems no advantage to providing the gradient.
+> ## In other cases, there might be.
+> 
+> 
+> ## The two examples below show that you can fit a model to
+> ## artificial data with noise but not to artificial data
+> ## without noise.
+> x <- 1:10
+> y <- 2*x + 3                            # perfect fit
+> ## terminates in an error, because convergence cannot be confirmed:
+> try(nls(y ~ a + b*x, start = list(a = 0.12345, b = 0.54321)))
+Error in nls(y ~ a + b * x, start = list(a = 0.12345, b = 0.54321)) : 
+  number of iterations exceeded maximum of 50
+> ## adjusting the convergence test by adding 'scaleOffset' to its denominator RSS:
+> nls(y ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
++     control = list(scaleOffset = 1, printEval=TRUE))
+  It.   1, fac=           1, eval (no.,total): ( 1,  1): new dev = 1.05935e-12
+Nonlinear regression model
+  model: y ~ a + b * x
+   data: parent.frame()
+a b 
+3 2 
+ residual sum-of-squares: 1.06e-12
+
+Number of iterations to convergence: 1 
+Achieved convergence tolerance: 3.64e-07
+> ## Alternatively jittering the "too exact" values, slightly:
+> set.seed(27)
+> yeps <- y + rnorm(length(y), sd = 0.01) # added noise
+> nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321))
+Nonlinear regression model
+  model: yeps ~ a + b * x
+   data: parent.frame()
+a b 
+3 2 
+ residual sum-of-squares: 0.00135
+
+Number of iterations to convergence: 2 
+Achieved convergence tolerance: 8.66e-09
+> 
+> 
+> ## the nls() internal cheap guess for starting values can be sufficient:
+> x <- -(1:100)/10
+> y <- 100 + 10 * exp(x / 2) + rnorm(x)/10
+> nlmod <- nls(y ~  Const + A * exp(B * x))
+Warning in nls(y ~ Const + A * exp(B * x)) :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+> 
+> plot(x,y, main = "nls(*), data, true function and fit, n=100")
+> curve(100 + 10 * exp(x / 2), col = 4, add = TRUE)
+> lines(x, predict(nlmod), col = 2)
+> 
+> ## Here, requiring close convergence, you need to use more accurate numerical
+> ##  differentiation; this gives Error: "step factor .. reduced below 'minFactor' .."
+> options(digits = 10) # more accuracy for 'trace'
+> ## IGNORE_RDIFF_BEGIN
+> try(nlm1 <- update(nlmod, control = list(tol = 1e-7))) # where central diff. work here:
+Warning in nls(formula = y ~ Const + A * exp(B * x), algorithm = "default",  :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+>    (nlm2 <- update(nlmod, control = list(tol = 8e-8, nDcentral=TRUE), trace=TRUE))
+Warning in nls(formula = y ~ Const + A * exp(B * x), algorithm = "default",  :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+1017460.306    (4.15e+02): par = (1 1 1)
+758164.7503    (2.34e+02): par = (13.42031396 1.961485 0.05947543745)
+269506.3538    (3.23e+02): par = (51.75719816 -13.09155957 0.8428607707)
+68969.21894    (1.03e+02): par = (76.0006985 -1.935226744 1.0190858)
+633.3672229    (1.29e+00): par = (100.3761515 8.624648405 5.104490259)
+151.4400200    (9.39e+00): par = (100.6344391 4.91349099 0.2849209605)
+53.08739697    (7.24e+00): par = (100.6830407 6.899303345 0.4637755082)
+1.344478618    (5.97e-01): par = (100.0368306 9.897714143 0.5169294934)
+0.9908415908   (1.55e-02): par = (100.0300625 9.9144191 0.5023516843)
+0.9906046057   (1.84e-05): par = (100.0288724 9.916224018 0.5025207337)
+0.9906046054   (9.96e-08): par = (100.028875 9.916228366 0.50252165)
+0.9906046054   (7.47e-08): par = (100.028875 9.916228372 0.5025216512)
+Nonlinear regression model
+  model: y ~ Const + A * exp(B * x)
+   data: parent.frame()
+      Const           A           B 
+100.0288750   9.9162284   0.5025217 
+ residual sum-of-squares: 0.9906046
+
+Number of iterations to convergence: 11 
+Achieved convergence tolerance: 7.471276e-08
+> ## --> convergence tolerance  4.997e-8 (in 11 iter.)
+> ## IGNORE_RDIFF_END
+> 
+> ## The muscle dataset in MASS is from an experiment on muscle
+> ## contraction on 21 animals.  The observed variables are Strip
+> ## (identifier of muscle), Conc (Cacl concentration) and Length
+> ## (resulting length of muscle section).
+> ## IGNORE_RDIFF_BEGIN
+> if(requireNamespace("MASS", quietly = TRUE)) withAutoprint({
++ ## The non linear model considered is
++ ##       Length = alpha + beta*exp(-Conc/theta) + error
++ ## where theta is constant but alpha and beta may vary with Strip.
++ 
++ with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
++ 
++ ## We first use the plinear algorithm to fit an overall model,
++ ## ignoring that alpha and beta might vary with Strip.
++ musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
++               start = list(th = 1), algorithm = "plinear")
++ summary(musc.1)
++ 
++ ## Then we use nls' indexing feature for parameters in non-linear
++ ## models to use the conventional algorithm to fit a model in which
++ ## alpha and beta vary with Strip.  The starting values are provided
++ ## by the previously fitted model.
++ ## Note that with indexed parameters, the starting values must be
++ ## given in a list (with names):
++ b <- coef(musc.1)
++ musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
++               start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
++ summary(musc.2)
++ })
+> with(MASS::muscle, table(Strip))
+Strip
+S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 
+  4   4   4   3   3   3   2   2   2   2   3   2   2   2   2   4   4   3   3   3 
+S21 
+  3 
+> musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle, start = list(th = 1), 
++     algorithm = "plinear")
+> summary(musc.1)
+
+Formula: Length ~ cbind(1, exp(-Conc/th))
+
+Parameters:
+         Estimate  Std. Error  t value   Pr(>|t|)    
+th      0.6081721   0.1145552  5.30899 1.8857e-06 ***
+.lin1  28.9632992   1.2297715 23.55177 < 2.22e-16 ***
+.lin2 -34.2274057   3.7925872 -9.02482 1.4064e-12 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.666216 on 57 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 9.325107e-07
+
+> b <- coef(musc.1)
+> musc.2 <- nls(Length ~ a[Strip] + b[Strip] * exp(-Conc/th), MASS::muscle, 
++     start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
+> summary(musc.2)
+
+Formula: Length ~ a[Strip] + b[Strip] * exp(-Conc/th)
+
+Parameters:
+       Estimate  Std. Error   t value   Pr(>|t|)    
+a1   23.4540819   0.7962295  29.45643 4.9571e-16 ***
+a2   28.3020428   0.7927066  35.70305 < 2.22e-16 ***
+a3   30.8007136   1.7156438  17.95286 1.7342e-12 ***
+a4   25.9211324   3.0158261   8.59504 1.3559e-07 ***
+a5   23.2007531   2.8912032   8.02460 3.5004e-07 ***
+a6   20.1200085   2.4354351   8.26136 2.3496e-07 ***
+a7   33.5953318   1.6815460  19.97884 3.0449e-13 ***
+a8   39.0526857   3.7532604  10.40500 8.6252e-09 ***
+a9   32.1369316   3.3175349   9.68699 2.4626e-08 ***
+a10  40.0052056   3.3358051  11.99267 1.0157e-09 ***
+a11  36.1904289   3.1094719  11.63877 1.6038e-09 ***
+a12  36.9108971   1.8390047  20.07113 2.8240e-13 ***
+a13  30.6346316   1.7004083  18.01604 1.6383e-12 ***
+a14  34.3118442   3.4951420   9.81701 2.0282e-08 ***
+a15  38.3952358   3.3749309  11.37660 2.2657e-09 ***
+a16  31.2258023   0.8856740  35.25654 < 2.22e-16 ***
+a17  31.2302543   0.8214462  38.01862 < 2.22e-16 ***
+a18  19.9976663   1.0108248  19.78351 3.5750e-13 ***
+a19  37.0953309   1.0705800  34.64975 < 2.22e-16 ***
+a20  32.5941641   1.1212451  29.06961 6.1805e-16 ***
+a21  30.3756809   1.0569695  28.73846 7.4819e-16 ***
+b1  -27.3003576   6.8732042  -3.97200 0.00098521 ***
+b2  -26.2701729   6.7536703  -3.88976 0.00117756 ** 
+b3  -30.9010573   2.2700237 -13.61266 1.4292e-10 ***
+b4  -32.2383592   3.8100406  -8.46142 1.6870e-07 ***
+b5  -29.9405723   3.7727989  -7.93590 4.0717e-07 ***
+b6  -20.6218720   3.6472872  -5.65403 2.8577e-05 ***
+b7  -19.6245932   8.0847806  -2.42735 0.02661027 *  
+b8  -45.7798846   4.1131227 -11.13020 3.1530e-09 ***
+b9  -31.3446373   6.3522186  -4.93444 0.00012572 ***
+b10 -38.5987262   3.9554993  -9.75824 2.2137e-08 ***
+b11 -33.9210726   3.8388091  -8.83635 9.1889e-08 ***
+b12 -38.2679567   8.9920328  -4.25576 0.00053345 ***
+b13 -22.5682821   8.1943001  -2.75414 0.01354976 *  
+b14 -36.1668892   6.3576225  -5.68874 2.6648e-05 ***
+b15 -32.9520546   6.3539349  -5.18609 7.4378e-05 ***
+b16 -47.2068076   9.5402921  -4.94815 0.00012215 ***
+b17 -33.8745812   7.6883885  -4.40594 0.00038623 ***
+b18 -15.8962440   6.2222342  -2.55475 0.02050841 *  
+b19 -28.9689853   7.2352657  -4.00386 0.00091949 ***
+b20 -36.9171071   8.0325135  -4.59596 0.00025726 ***
+b21 -26.5075439   7.0124922  -3.78005 0.00149420 ** 
+th    0.7969074   0.1265653   6.29641 8.0431e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.114868 on 17 degrees of freedom
+
+Number of iterations to convergence: 8 
+Achieved convergence tolerance: 2.185728e-06
+
+> ## IGNORE_RDIFF_END
+> ## Don't show: 
+> options(od)
+> ## End(Don't show)
+> 
+> 
+> 
+> cleanEx()
+> nameEx("nlsj.control")
+> ### * nlsj.control
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: nlsj.control
+> ### Title: Control the Iterations in nlsj
+> ### Aliases: nlsj.control
+> ### Keywords: nonlinear regression models
+> 
+> ### ** Examples
+> 
+> nls.control(minFactor = 1/2048)
+$maxiter
+[1] 50
+
+$tol
+[1] 1e-05
+
+$minFactor
+[1] 0.0004882812
+
+$printEval
+[1] FALSE
+
+$warnOnly
+[1] FALSE
+
+$scaleOffset
+[1] 0
+
+$nDcentral
+[1] FALSE
+
+> 
+> 
+> 
+> cleanEx()
+> nameEx("nlsjModel")
+> ### * nlsjModel
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: nlsjModel
+> ### Title: Nonlinear Least Squares model object creation
+> ### Aliases: nlsModel
+> ### Keywords: nonlinear regression models
+> 
+> ### ** Examples
+> 
+> ## Don't show: 
+> od <- options(digits=5)
+> ## End(Don't show)
+> require(graphics)
+> 
+> DNase1 <- subset(DNase, Run == 1)
+> 
+> ## using a selfStart model
+> fm1DNase1 <- nls(density ~ SSlogis(log(conc), Asym, xmid, scal), DNase1)
+> summary(fm1DNase1)
+
+Formula: density ~ SSlogis(log(conc), Asym, xmid, scal)
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 0 
+Achieved convergence tolerance: 8.27e-06
+
+> ## the coefficients only:
+> coef(fm1DNase1)
+  Asym   xmid   scal 
+2.3452 1.4831 1.0415 
+> ## including their SE, etc:
+> coef(summary(fm1DNase1))
+     Estimate Std. Error t value   Pr(>|t|)
+Asym   2.3452   0.078154  30.007 2.1655e-13
+xmid   1.4831   0.081353  18.230 1.2185e-10
+scal   1.0415   0.032271  32.272 8.5069e-14
+> 
+> ## using conditional linearity
+> fm2DNase1 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(xmid = 0, scal = 1),
++                  algorithm = "plinear")
+> summary(fm2DNase1)
+
+Formula: density ~ 1/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+.lin   2.3452     0.0782    30.0  2.2e-13 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 1.11e-06
+
+> 
+> ## without conditional linearity
+> fm3DNase1 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(Asym = 3, xmid = 0, scal = 1))
+> summary(fm3DNase1)
+
+Formula: density ~ Asym/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Number of iterations to convergence: 6 
+Achieved convergence tolerance: 2e-06
+
+> 
+> ## using Port's nl2sol algorithm
+> fm4DNase1 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
++                  data = DNase1,
++                  start = list(Asym = 3, xmid = 0, scal = 1),
++                  algorithm = "port")
+> summary(fm4DNase1)
+
+Formula: density ~ Asym/(1 + exp((xmid - log(conc))/scal))
+
+Parameters:
+     Estimate Std. Error t value Pr(>|t|)    
+Asym   2.3452     0.0782    30.0  2.2e-13 ***
+xmid   1.4831     0.0814    18.2  1.2e-10 ***
+scal   1.0415     0.0323    32.3  8.5e-14 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0192 on 13 degrees of freedom
+
+Algorithm "port", convergence message: relative convergence (4)
+
+> 
+> ## weighted nonlinear regression
+> Treated <- Puromycin[Puromycin$state == "treated", ]
+> weighted.MM <- function(resp, conc, Vm, K)
++ {
++     ## Purpose: exactly as white book p. 451 -- RHS for nls()
++     ##  Weighted version of Michaelis-Menten model
++     ## ----------------------------------------------------------
++     ## Arguments: 'y', 'x' and the two parameters (see book)
++     ## ----------------------------------------------------------
++     ## Author: Martin Maechler, Date: 23 Mar 2001
++ 
++     pred <- (Vm * conc)/(K + conc)
++     (resp - pred) / sqrt(pred)
++ }
+> 
+> Pur.wt <- nls( ~ weighted.MM(rate, conc, Vm, K), data = Treated,
++               start = list(Vm = 200, K = 0.1))
+> summary(Pur.wt)
+
+Formula: 0 ~ weighted.MM(rate, conc, Vm, K)
+
+Parameters:
+   Estimate Std. Error t value Pr(>|t|)    
+Vm 2.07e+02   9.22e+00   22.42  7.0e-10 ***
+K  5.46e-02   7.98e-03    6.84  4.5e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.21 on 10 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 3.86e-06
+
+> 
+> ## Passing arguments using a list that can not be coerced to a data.frame
+> lisTreat <- with(Treated,
++                  list(conc1 = conc[1], conc.1 = conc[-1], rate = rate))
+> 
+> weighted.MM1 <- function(resp, conc1, conc.1, Vm, K)
++ {
++      conc <- c(conc1, conc.1)
++      pred <- (Vm * conc)/(K + conc)
++     (resp - pred) / sqrt(pred)
++ }
+> Pur.wt1 <- nls( ~ weighted.MM1(rate, conc1, conc.1, Vm, K),
++                data = lisTreat, start = list(Vm = 200, K = 0.1))
+> stopifnot(all.equal(coef(Pur.wt), coef(Pur.wt1)))
+> 
+> ## Chambers and Hastie (1992) Statistical Models in S  (p. 537):
+> ## If the value of the right side [of formula] has an attribute called
+> ## 'gradient' this should be a matrix with the number of rows equal
+> ## to the length of the response and one column for each parameter.
+> 
+> weighted.MM.grad <- function(resp, conc1, conc.1, Vm, K)
++ {
++   conc <- c(conc1, conc.1)
++ 
++   K.conc <- K+conc
++   dy.dV <- conc/K.conc
++   dy.dK <- -Vm*dy.dV/K.conc
++   pred <- Vm*dy.dV
++   pred.5 <- sqrt(pred)
++   dev <- (resp - pred) / pred.5
++   Ddev <- -0.5*(resp+pred)/(pred.5*pred)
++   attr(dev, "gradient") <- Ddev * cbind(Vm = dy.dV, K = dy.dK)
++   dev
++ }
+> 
+> Pur.wt.grad <- nls( ~ weighted.MM.grad(rate, conc1, conc.1, Vm, K),
++                    data = lisTreat, start = list(Vm = 200, K = 0.1))
+> 
+> rbind(coef(Pur.wt), coef(Pur.wt1), coef(Pur.wt.grad))
+         Vm        K
+[1,] 206.83 0.054611
+[2,] 206.83 0.054611
+[3,] 206.83 0.054611
+> 
+> ## In this example, there seems no advantage to providing the gradient.
+> ## In other cases, there might be.
+> 
+> 
+> ## The two examples below show that you can fit a model to
+> ## artificial data with noise but not to artificial data
+> ## without noise.
+> x <- 1:10
+> y <- 2*x + 3                            # perfect fit
+> ## terminates in an error, because convergence cannot be confirmed:
+> try(nls(y ~ a + b*x, start = list(a = 0.12345, b = 0.54321)))
+Error in nls(y ~ a + b * x, start = list(a = 0.12345, b = 0.54321)) : 
+  number of iterations exceeded maximum of 50
+> ## adjusting the convergence test by adding 'scaleOffset' to its denominator RSS:
+> nls(y ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
++     control = list(scaleOffset = 1, printEval=TRUE))
+  It.   1, fac=           1, eval (no.,total): ( 1,  1): new dev = 1.05935e-12
+Nonlinear regression model
+  model: y ~ a + b * x
+   data: parent.frame()
+a b 
+3 2 
+ residual sum-of-squares: 1.06e-12
+
+Number of iterations to convergence: 1 
+Achieved convergence tolerance: 3.64e-07
+> ## Alternatively jittering the "too exact" values, slightly:
+> set.seed(27)
+> yeps <- y + rnorm(length(y), sd = 0.01) # added noise
+> nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321))
+Nonlinear regression model
+  model: yeps ~ a + b * x
+   data: parent.frame()
+a b 
+3 2 
+ residual sum-of-squares: 0.00135
+
+Number of iterations to convergence: 2 
+Achieved convergence tolerance: 8.66e-09
+> 
+> 
+> ## the nls() internal cheap guess for starting values can be sufficient:
+> x <- -(1:100)/10
+> y <- 100 + 10 * exp(x / 2) + rnorm(x)/10
+> nlmod <- nls(y ~  Const + A * exp(B * x))
+Warning in nls(y ~ Const + A * exp(B * x)) :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+> 
+> plot(x,y, main = "nls(*), data, true function and fit, n=100")
+> curve(100 + 10 * exp(x / 2), col = 4, add = TRUE)
+> lines(x, predict(nlmod), col = 2)
+> 
+> ## Here, requiring close convergence, you need to use more accurate numerical
+> ##  differentiation; this gives Error: "step factor .. reduced below 'minFactor' .."
+> options(digits = 10) # more accuracy for 'trace'
+> ## IGNORE_RDIFF_BEGIN
+> try(nlm1 <- update(nlmod, control = list(tol = 1e-7))) # where central diff. work here:
+Warning in nls(formula = y ~ Const + A * exp(B * x), algorithm = "default",  :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+>    (nlm2 <- update(nlmod, control = list(tol = 8e-8, nDcentral=TRUE), trace=TRUE))
+Warning in nls(formula = y ~ Const + A * exp(B * x), algorithm = "default",  :
+  No starting values specified for some parameters.
+Initializing ‘Const’, ‘A’, ‘B’ to '1.'.
+Consider specifying 'start' or using a selfStart model
+1017460.306    (4.15e+02): par = (1 1 1)
+758164.7503    (2.34e+02): par = (13.42031396 1.961485 0.05947543745)
+269506.3538    (3.23e+02): par = (51.75719816 -13.09155957 0.8428607707)
+68969.21894    (1.03e+02): par = (76.0006985 -1.935226744 1.0190858)
+633.3672229    (1.29e+00): par = (100.3761515 8.624648405 5.104490259)
+151.4400200    (9.39e+00): par = (100.6344391 4.91349099 0.2849209605)
+53.08739697    (7.24e+00): par = (100.6830407 6.899303345 0.4637755082)
+1.344478618    (5.97e-01): par = (100.0368306 9.897714143 0.5169294934)
+0.9908415908   (1.55e-02): par = (100.0300625 9.9144191 0.5023516843)
+0.9906046057   (1.84e-05): par = (100.0288724 9.916224018 0.5025207337)
+0.9906046054   (9.96e-08): par = (100.028875 9.916228366 0.50252165)
+0.9906046054   (7.47e-08): par = (100.028875 9.916228372 0.5025216512)
+Nonlinear regression model
+  model: y ~ Const + A * exp(B * x)
+   data: parent.frame()
+      Const           A           B 
+100.0288750   9.9162284   0.5025217 
+ residual sum-of-squares: 0.9906046
+
+Number of iterations to convergence: 11 
+Achieved convergence tolerance: 7.471276e-08
+> ## --> convergence tolerance  4.997e-8 (in 11 iter.)
+> ## IGNORE_RDIFF_END
+> 
+> ## The muscle dataset in MASS is from an experiment on muscle
+> ## contraction on 21 animals.  The observed variables are Strip
+> ## (identifier of muscle), Conc (Cacl concentration) and Length
+> ## (resulting length of muscle section).
+> ## IGNORE_RDIFF_BEGIN
+> if(requireNamespace("MASS", quietly = TRUE)) withAutoprint({
++ ## The non linear model considered is
++ ##       Length = alpha + beta*exp(-Conc/theta) + error
++ ## where theta is constant but alpha and beta may vary with Strip.
++ 
++ with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
++ 
++ ## We first use the plinear algorithm to fit an overall model,
++ ## ignoring that alpha and beta might vary with Strip.
++ musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
++               start = list(th = 1), algorithm = "plinear")
++ summary(musc.1)
++ 
++ ## Then we use nls' indexing feature for parameters in non-linear
++ ## models to use the conventional algorithm to fit a model in which
++ ## alpha and beta vary with Strip.  The starting values are provided
++ ## by the previously fitted model.
++ ## Note that with indexed parameters, the starting values must be
++ ## given in a list (with names):
++ b <- coef(musc.1)
++ musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
++               start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
++ summary(musc.2)
++ })
+> with(MASS::muscle, table(Strip))
+Strip
+S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 
+  4   4   4   3   3   3   2   2   2   2   3   2   2   2   2   4   4   3   3   3 
+S21 
+  3 
+> musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle, start = list(th = 1), 
++     algorithm = "plinear")
+> summary(musc.1)
+
+Formula: Length ~ cbind(1, exp(-Conc/th))
+
+Parameters:
+         Estimate  Std. Error  t value   Pr(>|t|)    
+th      0.6081721   0.1145552  5.30899 1.8857e-06 ***
+.lin1  28.9632992   1.2297715 23.55177 < 2.22e-16 ***
+.lin2 -34.2274057   3.7925872 -9.02482 1.4064e-12 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.666216 on 57 degrees of freedom
+
+Number of iterations to convergence: 5 
+Achieved convergence tolerance: 9.325107e-07
+
+> b <- coef(musc.1)
+> musc.2 <- nls(Length ~ a[Strip] + b[Strip] * exp(-Conc/th), MASS::muscle, 
++     start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
+> summary(musc.2)
+
+Formula: Length ~ a[Strip] + b[Strip] * exp(-Conc/th)
+
+Parameters:
+       Estimate  Std. Error   t value   Pr(>|t|)    
+a1   23.4540819   0.7962295  29.45643 4.9571e-16 ***
+a2   28.3020428   0.7927066  35.70305 < 2.22e-16 ***
+a3   30.8007136   1.7156438  17.95286 1.7342e-12 ***
+a4   25.9211324   3.0158261   8.59504 1.3559e-07 ***
+a5   23.2007531   2.8912032   8.02460 3.5004e-07 ***
+a6   20.1200085   2.4354351   8.26136 2.3496e-07 ***
+a7   33.5953318   1.6815460  19.97884 3.0449e-13 ***
+a8   39.0526857   3.7532604  10.40500 8.6252e-09 ***
+a9   32.1369316   3.3175349   9.68699 2.4626e-08 ***
+a10  40.0052056   3.3358051  11.99267 1.0157e-09 ***
+a11  36.1904289   3.1094719  11.63877 1.6038e-09 ***
+a12  36.9108971   1.8390047  20.07113 2.8240e-13 ***
+a13  30.6346316   1.7004083  18.01604 1.6383e-12 ***
+a14  34.3118442   3.4951420   9.81701 2.0282e-08 ***
+a15  38.3952358   3.3749309  11.37660 2.2657e-09 ***
+a16  31.2258023   0.8856740  35.25654 < 2.22e-16 ***
+a17  31.2302543   0.8214462  38.01862 < 2.22e-16 ***
+a18  19.9976663   1.0108248  19.78351 3.5750e-13 ***
+a19  37.0953309   1.0705800  34.64975 < 2.22e-16 ***
+a20  32.5941641   1.1212451  29.06961 6.1805e-16 ***
+a21  30.3756809   1.0569695  28.73846 7.4819e-16 ***
+b1  -27.3003576   6.8732042  -3.97200 0.00098521 ***
+b2  -26.2701729   6.7536703  -3.88976 0.00117756 ** 
+b3  -30.9010573   2.2700237 -13.61266 1.4292e-10 ***
+b4  -32.2383592   3.8100406  -8.46142 1.6870e-07 ***
+b5  -29.9405723   3.7727989  -7.93590 4.0717e-07 ***
+b6  -20.6218720   3.6472872  -5.65403 2.8577e-05 ***
+b7  -19.6245932   8.0847806  -2.42735 0.02661027 *  
+b8  -45.7798846   4.1131227 -11.13020 3.1530e-09 ***
+b9  -31.3446373   6.3522186  -4.93444 0.00012572 ***
+b10 -38.5987262   3.9554993  -9.75824 2.2137e-08 ***
+b11 -33.9210726   3.8388091  -8.83635 9.1889e-08 ***
+b12 -38.2679567   8.9920328  -4.25576 0.00053345 ***
+b13 -22.5682821   8.1943001  -2.75414 0.01354976 *  
+b14 -36.1668892   6.3576225  -5.68874 2.6648e-05 ***
+b15 -32.9520546   6.3539349  -5.18609 7.4378e-05 ***
+b16 -47.2068076   9.5402921  -4.94815 0.00012215 ***
+b17 -33.8745812   7.6883885  -4.40594 0.00038623 ***
+b18 -15.8962440   6.2222342  -2.55475 0.02050841 *  
+b19 -28.9689853   7.2352657  -4.00386 0.00091949 ***
+b20 -36.9171071   8.0325135  -4.59596 0.00025726 ***
+b21 -26.5075439   7.0124922  -3.78005 0.00149420 ** 
+th    0.7969074   0.1265653   6.29641 8.0431e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 1.114868 on 17 degrees of freedom
+
+Number of iterations to convergence: 8 
+Achieved convergence tolerance: 2.185728e-06
+
+> ## IGNORE_RDIFF_END
+> ## Don't show: 
+> options(od)
+> ## End(Don't show)
+> 
+> 
+> 
+> cleanEx()
+> nameEx("numericDeriv")
+> ### * numericDeriv
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: numericDeriv
+> ### Title: Evaluate Derivatives Numerically
+> ### Aliases: numericDeriv
+> ### Keywords: models
+> 
+> ### ** Examples
+> 
+> myenv <- new.env()
+> myenv$mean <- 0.
+> myenv$sd   <- 1.
+> myenv$x    <- seq(-3., 3., length.out = 31)
+> nD <- numericDeriv(quote(pnorm(x, mean, sd)), c("mean", "sd"), myenv)
+par:0  1  
+ [1] 0.001349898 0.002555130 0.004661188 0.008197536 0.013903448 0.022750132
+ [7] 0.035930319 0.054799292 0.080756659 0.115069670 0.158655254 0.211855399
+[13] 0.274253118 0.344578258 0.420740291 0.500000000 0.579259709 0.655421742
+[19] 0.725746882 0.788144601 0.841344746 0.884930330 0.919243341 0.945200708
+[25] 0.964069681 0.977249868 0.986096552 0.991802464 0.995338812 0.997444870
+[31] 0.998650102
+attr(,"gradient")
+              [,1]        [,2]
+ [1,] -0.004431848  0.01329555
+ [2,] -0.007915451  0.02216327
+ [3,] -0.013582969  0.03531572
+ [4,] -0.022394530  0.05374687
+ [5,] -0.035474592  0.07804411
+ [6,] -0.053990966  0.10798193
+ [7,] -0.078950157  0.14211029
+ [8,] -0.110920834  0.17747334
+ [9,] -0.149727462  0.20961845
+[10,] -0.194186055  0.23302327
+[11,] -0.241970723  0.24197072
+[12,] -0.289691547  0.23175324
+[13,] -0.333224609  0.19993476
+[14,] -0.368270140  0.14730805
+[15,] -0.391042691  0.07820854
+[16,] -0.398942281  0.00000000
+[17,] -0.391042694 -0.07820854
+[18,] -0.368270144 -0.14730805
+[19,] -0.333224609 -0.19993476
+[20,] -0.289691553 -0.23175324
+[21,] -0.241970725 -0.24197072
+[22,] -0.194186062 -0.23302326
+[23,] -0.149727471 -0.20961846
+[24,] -0.110920839 -0.17747334
+[25,] -0.078950159 -0.14211029
+[26,] -0.053990968 -0.10798194
+[27,] -0.035474591 -0.07804411
+[28,] -0.022394530 -0.05374687
+[29,] -0.013582967 -0.03531572
+[30,] -0.007915445 -0.02216326
+[31,] -0.004431851 -0.01329555
+> str(nD)
+ num [1:31] 0.00135 0.00256 0.00466 0.0082 0.0139 ...
+ - attr(*, "gradient")= num [1:31, 1:2] -0.00443 -0.00792 -0.01358 -0.02239 -0.03547 ...
+> 
+> ## Visualize :
+> require(graphics)
+> matplot(myenv$x, cbind(c(nD), attr(nD, "gradient")), type="l")
+> abline(h=0, lty=3)
+> ## "gradient" is close to the true derivatives, you don't see any diff.:
+> curve( - dnorm(x), col=2, lty=3, lwd=2, add=TRUE)
+> curve(-x*dnorm(x), col=3, lty=3, lwd=2, add=TRUE)
+> ##
+> ## IGNORE_RDIFF_BEGIN
+> # shows 1.609e-8 on most platforms
+> all.equal(attr(nD,"gradient"),
++           with(myenv, cbind(-dnorm(x), -x*dnorm(x))))
+[1] "Mean relative difference: 1.609569e-08"
+> ## IGNORE_RDIFF_END
+> 
+> 
+> 
+> cleanEx()
+> nameEx("setNames")
+> ### * setNames
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: setNames
+> ### Title: Set the Names in an Object
+> ### Aliases: setNames
+> ### Keywords: list
+> 
+> ### ** Examples
+> 
+> setNames( 1:3, c("foo", "bar", "baz") )
+foo bar baz 
+  1   2   3 
+> # this is just a short form of
+> tmp <- 1:3
+> names(tmp) <-  c("foo", "bar", "baz")
+> tmp
+foo bar baz 
+  1   2   3 
+> 
+> ## special case of character vector, using default
+> setNames(nm = c("First", "2nd"))
+  First     2nd 
+"First"   "2nd" 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("sortedXyData")
+> ### * sortedXyData
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: sortedXyData
+> ### Title: Create a 'sortedXyData' Object
+> ### Aliases: sortedXyData sortedXyData.default
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> DNase.2 <- DNase[ DNase$Run == "2", ]
+> sortedXyData( expression(log(conc)), expression(density), DNase.2 )
+           x      y
+1 -3.0194489 0.0475
+2 -1.6331544 0.1300
+3 -0.9400073 0.2160
+4 -0.2468601 0.3920
+5  0.4462871 0.6765
+6  1.1394343 1.0970
+7  1.8325815 1.5400
+8  2.5257286 1.9230
+> 
+> 
+> 
+> ### * <FOOTER>
+> ###
+> cleanEx()
+> options(digits = 7L)
+> base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  0.579 0.168 0.507 0 0 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

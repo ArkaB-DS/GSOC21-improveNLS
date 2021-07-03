@@ -1,0 +1,10 @@
+getInitial	getInitial
+getInitial.default	getInitial
+getInitial.formula	getInitial
+nls	nlsj
+nlsj.control	nlsj.control
+nlsModel	nlsjModel
+numericDeriv	numericDeriv
+setNames	setNames
+sortedXyData	sortedXyData
+sortedXyData.default	sortedXyData

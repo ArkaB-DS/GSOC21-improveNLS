@@ -1,0 +1,15 @@
+Package: nlsj
+Type: Package
+Title: JN radical alternative to port of stats::nls()
+Version: 0.1.0
+Author: John C Nash <Nashjc@uottawa.ca>, Arkajyoti Bhattacharjee <arkajyoti20@iitk.ac.in>
+Maintainer: John C Nash <Nashjc@uottawa.ca>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-2 | GPL-3
+Encoding: UTF-8
+Suggests: MASS
+Imports: graphics, stats
+NeedsCompilation: no
+Packaged: 2021-07-03 02:13:24 UTC; john
+Built: R 4.1.0; ; 2021-07-03 02:13:27 UTC; unix
