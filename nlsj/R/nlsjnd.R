@@ -42,6 +42,7 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
     if( ! ((length(dir) == length(theta) ) & (is.numeric(dir) ) ) )
               {stop("'dir' is not a numeric vector of the correct length") }
     if(is.na(central)) { stop("'central' is NA, but must be TRUE or FALSE") }
+    ##?? should check if we have the residuals already!
     res0 <- eval(expr, rho) # the base residuals. ?? C has a check for REAL ANS=res0
     if (any(is.infinite(res0)) ) {stop("residuals cannot be evaluated at base point")}
     ##  CHECK_FN_VAL(res, ans);  ?? how to do this. Is it necessary?

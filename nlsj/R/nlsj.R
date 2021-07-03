@@ -5,6 +5,17 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 # ?? at this stage ONLY treat "default", but will add bounds
 # ?? MAY add analytic derivatives
 
+if (is.null(algorithm)) algorithm<-"default"
+algchoice <- c("default", "port", "plinear", "marquardt")
+alg <- which(algorithm %in% algchoice)
+switch(alg,
+   "default" = cat("Continuing with default algorithm\n"),
+   # rest
+    { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
+     stop(msg) }
+)
+
+
 ## First process formula to get names of parameters -- differs from nlsr!!
     stopifnot(inherits(form, "formula"))
     if (length(form) == 2) {
@@ -109,28 +120,31 @@ npar <- length(pnames)
         print(pnames[maskidx])
     }
     bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
-    # ?? pnum <- start ?? is this needed
 
     m <- nlsjModel(formula, data, start, weights, upper=NULL, lower=NULL, control=ctrl)
+          # ?? can we return / use nlenv??
+    # ?? Are we ready to solve?
+    njac <- 0 # number of jacobians so far
+    nres <- 1
+    ## ?? need current prm available, prm_old??
+    resbest <- m$resid() # ?? do we need to specify environment nlenv?
+       # ?? may or may not have attr "gradient"
+    ssmin <- m$deviance() # get the sum of squares
+    while (! m$conv() ) { # main loop
+       J <- m$jacobian() # this calls derivatives of different types
+       # Here we have to choose method based on controls
+       # Inner loop over either line search or Marquardt stabilization
+       # returns delta, break from "while" if prm unchanged by delta
+       # resid is recalculated, as is new deviance, but NOT jacobian
+       ##?? How to track if jacobian needs updating?
+       if (trace) cat("Here report progress\n")
+    }
 
 
+    ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
+    result <- list(m=m, convInfo=convInfo, control=ctrl)
 
-
-
-
-
-
-    resfb$formula <- formula # 190805 to add formula
-# ?? should there be any ... arguments
-    pnum <- as.vector(resfb$coefficients)
-    names(pnum) <- pnames # Make sure names re-attached. ??Is this needed??
-##    resfb$coefficients <- pnum ## commented 190821
-    result <- resfb
-##    attr(result, "pkgname") <- "nlsr"
-    class(result) <- "nlsr" ## CAUSES ERRORS ?? Does it?? 190821
+    class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821
     result
 }
 
-
-#===========================================================================================
- 

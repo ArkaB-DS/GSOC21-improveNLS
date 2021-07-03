@@ -17,7 +17,14 @@ nls(formula, data, start, control, algorithm,
 }
 \arguments{
   \item{formula}{a nonlinear model \link{formula} including variables and
-    parameters.  Will be coerced to a formula if necessary.}
+    parameters.  Will be coerced to a formula if necessary.
+    
+    NOTES 2021 JULY: We can restrict the formula to allow for easier
+    working with different problems. For "traditional" problems of
+    the form y~function(xx, zz, parameters), we want y to be a single
+    data variable. For other problems, use ~residuals() (1 sided formula)
+    Internally use resuduals = model - data, but return (data - model)
+    form. DOCUMENT ??}
   \item{data}{an optional data frame in which to evaluate the variables in
     \code{formula} and \code{weights}.  Can also be a list or an
     environment, but not a matrix.}

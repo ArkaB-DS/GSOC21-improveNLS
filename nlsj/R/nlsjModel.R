@@ -13,7 +13,7 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
 # (function)		residual function --> resid vector
 # (num vec)		resid
 # (function)		jacobian function (puts matrix J in attribute "gradient" of resid vector)
-# (num matrix)		J
+# (num matrix)		J -- ?? here or in nlsj()
 # (list)		controls: control 
 # (function)		convtest function --> returns a logical TRUE when we can TERMINATE,
 #			Do we want attributes e.g., message, other information?
@@ -34,14 +34,16 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
 #   "getEnv"   
 #  "getPars"   
 #  "gradient" 
-#  "incr" 
+#  "incr"  -- may not work because we no longer just use Gauss Newton ??
+##     to compute the delta (?? with or without fac)
 #  "lhs"  
 #   "predict"  
 #  "resid"   
 #   "Rmat"   
-#    "setPars"   
+#    "setPars"  -- ?? simpler setPars. If pars changed, null resid attr "gradient"
 #  "setVarying" 
 #  "trace"    
+##?? Note getRHS is NOT exposed, but is used
 
 # First segment of this function is to check the specification is valid 
 # beyond checks already done in nlsj before call to nlsjModel()
@@ -64,118 +66,55 @@ nlsjModel <- function(form, data, start, wts, upper=NULL, lower=NULL, control)
     nlenv$mres <- mres
     if (is.null(wts)) wts <- rep(1, mres) # ?? more complicated if subsetting
     nlenv$wts <- wts # 
+    swts<-sqrt(wts)
+    nlenv$swts <- swts ## ?? can we save a line or two
 
 # By the time we get here, we assume nlsj has checked data and parameter names.
 # If nlsjModel called otherwise, be it on head of caller!
 
-# ?? Can we simplify this -- it seems to set up the param
+# ?? Can we simplify this -- it seems to set up the parameters
     getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
     # oneSidedFormula ?? Should we be more explicit?
     if (length(form) == 2) {
-        residexpr <- form[[2]]
+        residexpr <- form[[2]] ##?? Need to make sure this works -- may need to be call
         lhs <- NULL
-        rhs <- eval(form[[3L]], envir = nlenv)
+        rhs <- eval(form[[2L]], envir = nlenv)
     } else if (length(form) == 3) {
-        residexpr <- call("-", form[[3]], form[[2]])
-        lhs <- eval(form[[2L]], envir = nlenv)
-        # set the "promise" for the lhs of the model
-        rhs <- eval(form[[3L]], envir = nlenv)
-    } else stop("Unrecognized formula")
+           residexpr <- call("-", form[[3]], form[[2]])
+           lhs <- eval(form[[2L]], envir = nlenv)
+           # set the "promise" for the lhs of the model
+           rhs <- eval(form[[3L]], envir = nlenv)
+           lnames<-all.vars(lhs) # Check that lhs is a single variable from data
+           ldname <- which(lnames %in% dnames)
+           if (length(ldname) != 1L) {
+              cat("lhs has names:")
+              print(ldname)
+              stop("lhs has either no named variable or more than one")
+           }
+       } 
+       else stop("Unrecognized formula")
 
+    residu <- (lhs - rhs) # this should be fine for returning unweighted resids
+    resid <- swts * residu
+    dev <- sum(resid^2) 
 
-    if(!is.null(upper)) upper <- rep_len(upper, parLength)
-    # Expand upper and lower to full vectors
-    useParams <- rep_len(TRUE, parLength)
-    # JN Seems to be a logical vector to indicate free parameters.
-    lhs <- eval(form[[2L]], envir = nlenv)
-    # set the "promise" for the lhs of the model
-## ?? check if model not in standard form -- don't want parameters on lhs. 
-## Do we want lhs to be JUST one variable from the dnames set?
-    lnames<-all.vars(lhs)
-    if (any(lnames %in% pnames)) stop("lhs has parameters -- reformulate!") ##?? fix?
-    rhs <- eval(form[[3L]], envir = nlenv)
-    # similarly for the rhs
-    #?? WHY THE DOT -- does this not hide the weights??
-    ## non-zero is TRUE; note that missing() is a VERY special function 
-
-    swts <- if(!missing(wts) && length(wts))
-        sqrt(wts) else rep_len(1, length(rhs))
-    ##JN: the weights, which are put into the nlenv
-    nlenv$swts<-swts
-
-    resid <- swts * (lhs - rhs)
-# ?? Do we want a "residdef" control +1 for usual, -1 for Gauss/Nash
-#    cat("resid:")
-#    print(resid)
-
-    dev <- sum(resid^2)
-    cat("dev=",dev,"\n")
-    if(is.null(attr(rhs, "gradient"))) {
-        getRHS.noVarying <- function() {
-            if(is.null(upper)) # always for "default"
-                numericDeriv(form[[3L]], names(ind), nlenv, central = nDcentral)
-            else # possibly with "port"
-                numericDeriv(form[[3L]], names(ind), nlenv,
-                             dir = ## ifelse(internalPars < upper, 1, -1)
-                                 -1 + 2*(internalPars < upper), central = nDcentral)
+    addjac <- function(){# ?? assume resjac in nlenv
+        if(is.null(resjac)) resjac<-residu()
+        if(is.null(attr(resjac, "gradient"))) { # if not defined, get it
+           #?? for the moment, just numericDeriv()
+           resjac <- numericDeriv(residexpr, pnames, rho = nlenv) # unweighted
         }
-## ?? above changes from forward to backward diff if on upper bound. 
-## assumes that we step away from lower bound
-        getRHS <- getRHS.noVarying
-        rhs <- getRHS()
-        cat("when no gradient, rhs:")
-        print(rhs)
-    } else {
-        getRHS.noVarying <- function() eval(form[[3L]], envir = nlenv)
-        getRHS <- getRHS.noVarying
-        cat("Have gradient, getRHS:")
-        print(getRHS)
+        resjac
     }
-    dimGrad <- dim(attr(rhs, "gradient"))
-    marg <- length(dimGrad)
-    cat("dimGrad, marg:",dimGrad,marg,"\n")
-    ##JN marg is number of dimensions of "gradient" matrix. Should be 2??
-    if(marg > 0L) {
-        gradSetArgs <- vector("list", marg + 1L)
-        for(i in 2L:marg)
-            gradSetArgs[[i]] <- rep_len(TRUE, dimGrad[i-1L])
-        useParams <- rep_len(TRUE, dimGrad[marg])
-    } else {
-        gradSetArgs <- vector("list", 2L)
-        useParams <- rep_len(TRUE, length(attr(rhs, "gradient")))
+    jacobian <- function() { 
+        if (is.null(attr(resjac,"gradient") { resjac <- addjac()}
+        JJ <- attr(resjac,"gradient")
+        JJ
     }
-    cat("gradSetArgs:")
-    print(gradSetArgs)
-    # JN: What is purpose of gradSetArgs??
+    JJ <- jacobian() # ?? would like to save this in nlenv for later use
+    # ?? for now use QR -- may have other methods later, e.g., svd
+    QR <- qr(swts * JJ) # ensure we get the jacobian JJ
 
-    npar <- length(useParams)
-    cat("npar=",npar,"\n")
-    gradSetArgs[[1L]] <- (~attr(ans, "gradient"))[[2L]]
-    #JN: Note that this assigns a FORMULA object
-    #JN??: we need to be VERY careful to get the right pieces of the model!
-    cat("new gradSetArgs[[1L]]:")
-    print(gradSetArgs[[1L]])
-    #JN: This appears to be the EXPRESSION for the jacobian matrix.
-
-    gradCall <-
-        switch(length(gradSetArgs) - 1L,
-               call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], drop = FALSE),
-               call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
-                    drop = FALSE),
-               call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
-                    gradSetArgs[[3L]], drop = FALSE),
-               call("[", gradSetArgs[[1L]], gradSetArgs[[2L]], gradSetArgs[[2L]],
-                    gradSetArgs[[3L]], gradSetArgs[[4L]], drop = FALSE))
-    getRHS.varying <- function()
-    {
-        ans <- getRHS.noVarying()
-        attr(ans, "gradient") <- eval(gradCall)
-        ans
-    }
-    #JN??: next line seems to be working with 1 dimensional model.
-    if(length(gr <- attr(rhs, "gradient")) == 1L)
-		    attr(rhs, "gradient") <- gr <- as.vector(gr)
-    QR <- qr(.swts * gr)
     qrDim <- min(dim(QR$qr))
     if(QR$rank < qrDim)
         stop("singular gradient matrix at initial parameter estimates")
