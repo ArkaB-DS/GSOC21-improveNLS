@@ -42,6 +42,14 @@ Should agree approximate timeline for finishing items.
   [Aug 31]
 
 - AB: continue "testing" review document TestsDoc [July 16]
+  [Added July 4:] JN realizing that building tests for different
+  aspects of nls() (and, by natural extension, nlsr, minpack.lm etc.)
+  is a good way for AB to learn about nonlinear modeling. But the 
+  current tests largely are "just there", so it would be useful to
+  add comments that tell what the test aims to check. For example,
+  we could be checking simple bounds, or a formula that includes
+  a special function (this will defeat analytic derivatives in nlsr
+  and future nls()).
 
 - AB: review DerivsNLS, VarietyinNonlinearLeastSquaresCodes
   MachineSummary and PkgFromRbase documents and report any
