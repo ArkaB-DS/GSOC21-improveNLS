@@ -133,7 +133,8 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
        eq
     } # return eq -- may want to know if parameters changed
 
-    if(scaleOffset) scaleOffset <- (length(resid)-npar) * scaleOffset^2
+    scoff <- control$scaleOffset
+    if(scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
     conv <- function(njac=0, nres=1) { # defaults
         cval <- FALSE # Initially NOT converged
         cmsg <- "Termination msg: "
@@ -172,9 +173,9 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 	     incr = function() qr.coef(QR, resid),
 	     getPars = function() getPars(),
 	     getEnv = function() nlenv,
-             parset = function() parset,
+       parset = function() parset,
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), nlenv),
+                 eval(form[[3L]], as.list(newdata), nlenv)
 	     )
     class(m) <- "nlsModel"
 #    cat("Contents of 'nlenv':")
