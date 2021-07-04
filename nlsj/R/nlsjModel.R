@@ -30,7 +30,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # "njac"  
 # "npar"  
 # "nres"  
-# "p1"    "p2"    
+# ?? DO NOT WANT THESE IN THIS FORM "p1"    "p2"    
 # "prm"   
 # "swts"  "wts"   
 # "xdata" "ydata"
@@ -62,8 +62,13 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     pnames<-names(start)
     resjac <- NULL # to start with
     nlenv <- new.env(hash = TRUE, parent = environment(form))
+    cat("nlenv created. ls(nlenv):")
+    ls(nlenv)
     dnames<-colnames(data) # Possibly could pull in from nlsj ?? what if data an environment?
+    cat("dnames:"); print(dnames)
     nlnames <- deparse(substitute(nlenv)) 
+    cat("nlnames:"); print(nlnames)
+    
     for (v in dnames){
        if (v %in% nlnames) warning(sprintf("Variable %s already in nlenv!", v))
        nlenv[[v]] = data[[v]]

@@ -29,7 +29,7 @@ summary(fit)
 ## Try numericDeriv() function
 Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
 Ccall<-call("-",Cform[[3]], Cform[[2]])
-Cstart=list(p1=p1,p2=p2)
+Cstart<-list(p1=1,p2=0.2)
 Cdata<-data.frame(xdata, ydata)
 Ctheta<-c("p1","p2")
 mdata<-length(xdata)

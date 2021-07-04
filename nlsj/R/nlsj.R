@@ -4,6 +4,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 # ?? left out -- FIXME??    subset,  na.action, model = FALSE, (masked from nlxb)
 # ?? at this stage ONLY treat "default", but will add bounds
 # ?? MAY add analytic derivatives
+# ?? subset?
+# ?? data in .GlobalEnv
 
 
 if (is.null(algorithm)) algorithm<-"default"
@@ -123,16 +125,16 @@ npar <- length(pnames)
        print(delta)
        prm <- m$getPars()
        fac <- 1.0
-       while ((m$deviance() >= ssmin)  && (fac > control$minFactor)) {
+       ssnew<-ssmin
+       while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
            newp <- prm + fac * delta
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-           ssnew <- NA
            eq <- m$parset(newp)
-           cat("newprm:")
-           print(m$getPars())
-            if (! eq) {
+           cat("newprm:"); print(m$getPars())
+           if (! eq) {
               # ?? trying to get NEW values here. Does not want to re-evaluate when running!
-              ssnew <- eval(m$deviance, m$getEnv())()
+              # ?? Is it using p1 and p2 rather than prm??
+              ssnew <- m$deviance()
               if (trace) cat("fac=",fac,"   ss=",ssnew,"\n")
               if ( ssnew < ssmin) break
            }
@@ -140,12 +142,12 @@ npar <- length(pnames)
               cat("Parameters unchanged\n")
               break
            }
-       }
-       cat("after while loop over fac, ssnew=",ssnew,"\n")
+       } # end inner while
+       cat("after while loop over fac, ssnew=",ssnew," fac=",fac,"\n")
        if (is.na(ssnew)) stop("failed to find lower ss -- parameters unchanged") #?? fix
        tmp <- readline("next")
 #       if (trace) cat("Here report progress\n")
-    }
+    } # end outer while
 
 
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
