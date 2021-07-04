@@ -16,6 +16,8 @@ print(NLSstAsymptotic(sortedXyData(expression(age),
                                    expression(height),
                                    Lob.329)), digits = 3)
 
+# The next case is a self-starting asymptotic model ....???
+# This tests the nonlinear estimation code for ...
 SSasymp( Lob.329$age, 100, -8.5, -3.2 )   # response only
 local({
   Asym <- 100 ; resp0 <- -8.5 ; lrc <- -3.2
@@ -25,6 +27,8 @@ getInitial(height ~ SSasymp( age, Asym, resp0, lrc), data = Lob.329)
 ## Initial values are in fact the converged values
 fm1 <- nls(height ~ SSasymp( age, Asym, resp0, lrc), data = Lob.329)
 summary(fm1)
+
+# Could try nlsr and minpack.lm here??
 
 ## Visualize the SSasymp()  model  parametrization :
 

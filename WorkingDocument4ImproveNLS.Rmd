@@ -55,7 +55,7 @@ Should agree approximate timeline for finishing items.
   MachineSummary and PkgFromRbase documents and report any
   unfinished / erroneous / clumsy parts [July 16]
 
-- JN: review TestsDoc [July 12]
+- JN: review TestsDoc [July 21]
 
 - Both: List tests for nls() and its substitutes with explanation
   of why they are included. [Aug 1]
@@ -73,6 +73,8 @@ Should agree approximate timeline for finishing items.
   fully finished]
   
 - Clean up repo, removing incomplete or unhelpful elements
+  AB: Look into how Google wants things put away.
+  https://github.com/rstats-gsoc/gsoc2020/wiki/table-of-proposed-coding-projects
   [Aug 15??]
 
 The following is from an email to Patrice Kiener, a co-mentor on the Google Summer

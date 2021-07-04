@@ -25,6 +25,16 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # (environment)         nlenv -- do we need this or not?? If so, we need it better documented.
 
 
+# Example of nlenv for Croucher:
+# "mres"  
+# "njac"  
+# "npar"  
+# "nres"  
+# "p1"    "p2"    
+# "prm"   
+# "swts"  "wts"   
+# "xdata" "ydata"
+
 # nlsModel() gives m as follows. XX means we have it (or XX Name for replacement):
 #  "conv" 
 #  "deviance"  
@@ -61,6 +71,8 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     nlenv$prm <- start # start MUST be defined at this point
     npar <- length(start)
     nlenv$npar <- npar
+    nlenv$njac <- 0 # Count of jacobian evaluations
+    nlenv$nres <- 0 # Count of residual evaluations
 # ?? number of residuals altered by "subset" which is NOT yet functional
 # ?? Do we want to copy the data to a working array, or subset on the fly?
     mres <- dim(data)[1] # Get the number of residuals (no subset)
@@ -75,6 +87,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 
 # ?? Can we simplify this -- it seems to set up the parameters
     getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
+
     # oneSidedFormula ?? Should we be more explicit?
     if (length(form) == 2) {
         residexpr <- form[[2]] ##?? Need to make sure this works -- may need to be call
@@ -99,7 +112,10 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
        } 
        else stop("Unrecognized formula")
 
-    residu <- function() (lhs - rhs) # this should be fine for returning unweighted resids
+    residu <- function() {
+        nlenv$nres <- nlenv$nres+1
+        (lhs - rhs) # this should be fine for returning unweighted resids
+    }
     resid <- swts * residu()
     dev <- sum(resid^2)
     
@@ -109,12 +125,14 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
            #?? for the moment, just numericDeriv()
            resjac <- numericDeriv(residexpr, pnames, rho = nlenv) # unweighted
         }
-        resjac
+        nlenv$njac <- nlenv$njac+1
+        resjac # invisible to avoid double display in calling space
     }
     jacobian <- function() { 
+        ## cat("In jacobian, resjac null?:", is.null(attr(resjac,"gradient")),"\n")
         if (is.null(attr(resjac,"gradient"))) { resjac <- addjac()}
         JJ <- attr(resjac,"gradient")
-        JJ
+        JJ # invisible to avoid double display in calling space
     }
     JJ <- jacobian() # ?? would like to save this in nlenv for later use
     # ?? for now use QR -- may have other methods later, e.g., svd
@@ -125,17 +143,19 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         stop("singular jacobian matrix at initial parameter estimates")
 
     parset <- function(newPars){ # nlsj new function
-       eq <- all.equal(newPars, prm) # prm in environment
+       if (! all.equal(names(newPars), pnames)) stop("newPars has wrong names!")
+       newPars<-as.numeric(newPars)
+       oprm<-as.numeric(nlenv$prm)
+       eq <- all( (oprm+control$offset) == (newPars+control$offset) )
+       names(newPars)<-pnames # as.numeric strips names
        if (! eq) {
-          prm <- newPars
-          names(prm) <- pnames # ?? do we need to ensure preserved names
+          nlenv$prm <- newPars
        }
+       attr(eq,"prm")<-newPars # ?? do we want this
        eq
-    } # return eq -- may want to know if parameters changed
+    } # return eq -- Are parameters the same?
 
-    scoff <- control$scaleOffset
-    if(scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
-    conv <- function(njac=0, nres=1) { # defaults
+    convCrit <- function() { # defaults
         cval <- FALSE # Initially NOT converged
         cmsg <- "Termination msg: "
         if(npar == 0) {
@@ -145,37 +165,48 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         }
         else {
           rr <- qr.qty(QR, c(resid)) # rotated residual vector
-          ctol <- sqrt( sum(rr[1L:npar]^2) / (scaleOffset + sum(rr[-(1L:npar)]^2)))
-          cval <- (ctol <= ctrl$tol) # compare relative offset criterion
-          if (ctrl$scaleOffset > 0.0) 
-              cmsg <- paste("Satisfying relative offset criterion, scaleOffset = ",scaleOffset)
+          scoff <- control$scaleOffset
+          if(scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
+          ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
+          cval <- (ctol <= control$tol) # compare relative offset criterion
+          if (scoff > 0.0) 
+               cmsg <- paste("Satisfying relative offset criterion, scaleOffset = ",scoff)
           else cmsg <- "Satisfying relative offset criterion"
           cmsg<-paste(cmsg,"\n",cmsg)
-          if (njac > ctrl$maxiter) cmsg<-paste(cmsg,"\n",cmsg)
+          if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n",cmsg)
 	}
         attr(cval, "cmsg") <- cmsg
         attr(cval, "ctol") <- ctol
-    } # end conv()
+        cval
+    } # end convCrit()
+
+    ctest <- convCrit()
+    cat("ctest:")
+    print(ctest)
 
 #--->
 #?? needed?
 ##    on.exit(remove(i, data, parLength, start, temp, m, gr,
 ##                   marg, dimGrad, qrDim, gradSetArgs))
 ## must use weighted resid for use with "port" algorithm.
+
+##?? Those functions not yet working marked with #?? Others seem OK
     m <-
-	list(resid = function() resid,
-	     fitted = function() rhs,
-	     formula = function() form,
-	     deviance = function() dev,
-	     lhs = function() lhs,
-	     jacobian = function() jacobian,
-	     conv = function() conv,
-	     incr = function() qr.coef(QR, resid),
-	     getPars = function() getPars(),
-	     getEnv = function() nlenv,
-       parset = function() parset,
+	list(resid = function() resid, # OK
+             residu = function() residu(), # ??
+	     fitted = function() rhs, # OK
+	     formula = function() form, #OK
+	     deviance = function() dev, #OK
+	     lhs = function() lhs, #OK
+             addjac = function() addjac(), #OK with "invisible"??
+	     jacobian = function() jacobian(), #??
+	     conv = function() convCrit(), # possibly OK
+	     incr = function() qr.coef(QR, resid),  #OK
+	     getPars = function() getPars(), #OK
+	     getEnv = function() nlenv, #OK
+             parset = function(newPars) parset(newPars), #??
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), nlenv)
+                 eval(form[[3L]], as.list(newdata), nlenv) #OK
 	     )
     class(m) <- "nlsModel"
 #    cat("Contents of 'nlenv':")

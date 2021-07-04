@@ -26,7 +26,7 @@ numericDeriv <- function(expr, theta, rho = parent.frame(), dir = 1,
                  eps = .Machine$double.eps ^ (1/if(central) 3 else 2), central = FALSE)
 ## Note: this expr must be set up as a call to work properly according to JN??
 ## ?? we set eps conditional on central. But central set AFTER eps. Is this OK.
-{   ndtrace<-TRUE
+{   ndtrace<-FALSE
 #    if(ndtrace) cat("numericDeriv-Alt\n")
     dir <- rep_len(dir, length(theta))
     stopifnot(is.finite(eps), eps > 0)
