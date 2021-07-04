@@ -52,7 +52,7 @@ summary(fit)
 library(nlsj)
 
 modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
-str(modj)
+# str(modj)
 
 # cat("test the model functions:\n")
 # modj$resid()
@@ -95,7 +95,7 @@ fitj
 
 
 # try new all-R form
-fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+# fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
 
 # library(nlsr)
 # library(minpack.lm)

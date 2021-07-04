@@ -111,14 +111,40 @@ npar <- length(pnames)
     resbest <- m$resid() # ?? do we need to specify environment nlenv?
        # ?? may or may not have attr "gradient"
     ssmin <- m$deviance() # get the sum of squares
-    while (! m$conv() ) { # main loop
-       J <- m$jacobian() # this calls derivatives of different types
+    while (! (confInfo <- m$conv())  ) { # main loop
        # Here we have to choose method based on controls
        # Inner loop over either line search or Marquardt stabilization
        # returns delta, break from "while" if prm unchanged by delta
        # resid is recalculated, as is new deviance, but NOT jacobian
        ##?? How to track if jacobian needs updating?
-       if (trace) cat("Here report progress\n")
+
+       J <- m$jacobian() # this calls derivatives of different types
+       delta <- m$incr()
+       print(delta)
+       prm <- m$getPars()
+       fac <- 1.0
+       while ((m$deviance() >= ssmin)  && (fac > control$minFactor)) {
+           newp <- prm + fac * delta
+           fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
+           ssnew <- NA
+           eq <- m$parset(newp)
+           cat("newprm:")
+           print(m$getPars())
+            if (! eq) {
+              # ?? trying to get NEW values here. Does not want to re-evaluate when running!
+              ssnew <- eval(m$deviance, m$getEnv())()
+              if (trace) cat("fac=",fac,"   ss=",ssnew,"\n")
+              if ( ssnew < ssmin) break
+           }
+           else {
+              cat("Parameters unchanged\n")
+              break
+           }
+       }
+       cat("after while loop over fac, ssnew=",ssnew,"\n")
+       if (is.na(ssnew)) stop("failed to find lower ss -- parameters unchanged") #?? fix
+       tmp <- readline("next")
+#       if (trace) cat("Here report progress\n")
     }
 
 

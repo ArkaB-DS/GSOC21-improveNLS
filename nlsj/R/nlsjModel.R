@@ -170,19 +170,20 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
           ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
           cval <- (ctol <= control$tol) # compare relative offset criterion
           if (scoff > 0.0) 
-               cmsg <- paste("Satisfying relative offset criterion, scaleOffset = ",scoff)
-          else cmsg <- "Satisfying relative offset criterion"
-          cmsg<-paste(cmsg,"\n",cmsg)
-          if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n",cmsg)
+               cmsg <- paste("Check relative offset criterion, scaleOffset = ",scoff)
+          else cmsg <- "Check relative offset criterion - default"
+          if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n","Too many jacobians")
 	}
         attr(cval, "cmsg") <- cmsg
         attr(cval, "ctol") <- ctol
+        attr(cval, "nres") <- nlenv$nres
+        attr(cval, "njac") <- nlenv$njac
         cval
     } # end convCrit()
 
-    ctest <- convCrit()
-    cat("ctest:")
-    print(ctest)
+#    ctest <- convCrit()
+#    cat("ctest:")
+#    print(ctest)
 
 #--->
 #?? needed?
