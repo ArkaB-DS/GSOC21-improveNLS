@@ -72,6 +72,10 @@ with_env <- function(f, e=parent.frame()) {
   wrap-subset. Part of the difficulty in subsetting is that users and programmers
   can get confused. wrap-subset would be useful if the active problem is much
   smaller than the original data.
+  
+- nls has generic "residuals" function for nls() objects. 
+     residuals(myfit). Note that myfit$m$resid() returns WEIGHTED residuals
+     (weighted by square roots of the weights)
 
 ### [2021-7-1] to [2021-7-4] nlsj and tentative program for rest of formal project
 

@@ -60,17 +60,23 @@ rj
 # print(all.equal(ndorig0, ndalt0))
 
 ## retest nls
-# fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, weights=Cwts, trace=TRUE)
+ fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, weights=Cwts, trace=TRUE)
 
 ## summarise
 
-# summary(fit)
+ summary(fit)
 
+library(nlsralt)
+rj <- model2rjfun(Cform, Cstart)
+modelexpr(rj)
 
-library(nlsj)
+jexpr <- deriv(Cform, names(Cstart))
+jexpr
 
-modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
-str(modj)
+# library(nlsj)
+# 
+# modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
+# str(modj)
 
 # cat("test the model functions:\n")
 # modj$resid()

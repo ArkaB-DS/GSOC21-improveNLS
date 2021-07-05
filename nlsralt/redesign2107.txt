@@ -1,0 +1,33 @@
+redesign2107.txt
+
+1) set up resfun and rjfun in model2resfun and model2rjfun. Can we do both in one routine?
+
+2) Look to see if we can set up "m" object after the fact. 
+   Need to add a bunch of functions. 
+
+3) subset in nlfb, not before.
+
+and/or
+
+4) set up a subsetnls() function to output new problem object with 
+   data subsetted.
+
+5) we create rjfun by get rjexpr <- deriv(residexpr, names(pvec)),
+   then evaluating. However, we should be able to test rjexpr.
+
+> tform <- yy ~ runif(1, a, b)
+> nn <- c("a","b")
+> tg <- deriv(tform, nn)
+Error in deriv.formula(tform, nn) : 
+  Function 'runif' is not in the derivatives table
+> try(tg <- deriv(tform, nn))
+Error in deriv.formula(tform, nn) : 
+  Function 'runif' is not in the derivatives table
+> str(try(tg <- deriv(tform, nn)))
+Error in deriv.formula(tform, nn) : 
+  Function 'runif' is not in the derivatives table
+ 'try-error' chr "Error in deriv.formula(tform, nn) : \n  Function 'runif' is not in the derivatives table\n"
+ - attr(*, "condition")=List of 2
+  ..$ message: chr "Function 'runif' is not in the derivatives table"
+  ..$ call   : language deriv.formula(tform, nn)
+  ..- attr(*, "class")= chr [1:3] "simpleError" "error" "condition"
