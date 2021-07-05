@@ -129,13 +129,21 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
        } 
        else stop("Unrecognized formula")
 
-    residu <- function() {
-        nlenv$nres <- nlenv$nres+1
-        (lhs - rhs) # this should be fine for returning unweighted resids
+    rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
+
+    resfun <- function(prm) {
+        if (is.null(names(prm))) 
+	    names(prm) <- names(start)
+	  localdata <- list2env(as.list(prm), parent = data)
+	  eval(residexpr, envir = localdata) 
     }
-    resid <- swts * residu()
-    dev <- sum(resid^2)
-    
+    rjfun <- function(prm) {
+        if (is.null(names(prm))) 
+	    names(prm) <- names(start)
+	  localdata <- list2env(as.list(prm), parent = data)
+	  eval(rjexpr, envir = localdata) 
+    }
+
     addjac <- function(){# ?? assume resjac in nlenv
         if(is.null(resjac)) resjac<-residu()
         if(is.null(attr(resjac, "gradient"))) { # if not defined, get it
@@ -145,6 +153,14 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         nlenv$njac <- nlenv$njac+1
         resjac # invisible to avoid double display in calling space
     }
+
+    residu <- function() { # ?? no subset here yet
+        nlenv$nres <- nlenv$nres+1
+        (lhs - rhs) # this should be fine for returning unweighted resids
+    }
+    resid <- swts * residu()
+    dev <- sum(resid^2)
+    
     jacobian <- function() { 
         ## cat("In jacobian, resjac null?:", is.null(attr(resjac,"gradient")),"\n")
         if (is.null(attr(resjac,"gradient"))) { resjac <- addjac()}
