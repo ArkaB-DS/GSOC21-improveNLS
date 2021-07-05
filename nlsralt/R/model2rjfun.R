@@ -6,6 +6,8 @@ model2rjfun <- function(modelformula, pvec, data = NULL, jacobian = TRUE,
 ##    print(modelformula)
 ##    print(class(modelformula))
 
+#?? Do we use dotargs at all?? Can we?
+
     stopifnot(inherits(modelformula, "formula"))
 
     if (length(modelformula) == 2) {
