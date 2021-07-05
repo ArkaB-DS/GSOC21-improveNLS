@@ -147,15 +147,18 @@ if (trace) {
 # cat("Starting pnum=")
 # print(pnum)  ?? add with trace??
 
-#??    if (! is.missing(subset)){
-#       ??  how to handle -- where is it in nls()
-#      }
-
     if ( is.null(weights) ) {resbest<-resfn(pnum, ...) }
     else {resbest <- resfn(pnum, ...) * sqrt(weights) }
+    mres <- length(resbest) # get the number of residuals
+    if (! missing(subset)){
+        nsub <- length(subset)
+        if ((nsub < 1) || (nsub > mres)) stop("Subset error")
+    }
+
+#??    resbest <- resbest[subset] # LATER!
 #    cat("resbest:")
 #    print(resbest)
-    ssbest<-as.numeric(crossprod(resbest))
+    ssbest<-as.numeric(crossprod(resbest[subset]))
     ssminval <- ssbest*epstol^4
     if (watch) cat("ssminval =",ssminval,"\n")
     feval<-1
@@ -290,7 +293,8 @@ if (trace) {
               feval<-feval+1 # count evaluations
               resid <- resfn(pnum, ...)
               if (! is.null(weights)) {resid <- resid * sqrt(weights)}
-              ssquares<-as.numeric(crossprod(resid))
+              resid <- resid
+              ssquares<-as.numeric(crossprod(resid[subset]))
               if (is.na(ssquares)) ssquares<-.Machine$double.xmax
               if (ssquares>=ssbest) {
                 if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
@@ -319,7 +323,7 @@ if (trace) {
      } # end main while loop 
     pnum<-as.vector(pnum)
     names(pnum) <- pnames
-    result <- list(resid = resbest, jacobian = Jac, feval = feval, 
+    result <- list(resid = resbest[subset], jacobian = Jac[subset,], feval = feval, 
         jeval = jeval, coefficients = pnum, ssquares = ssbest, lower=lower, upper=upper, 
         maskidx=maskidx, weights=weights, formula=NULL) # chg 190805
 ##    attr(result, "pkgname") <- "nlsr"

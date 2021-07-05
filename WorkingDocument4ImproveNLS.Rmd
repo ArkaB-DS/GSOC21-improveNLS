@@ -59,6 +59,9 @@ with_env <- function(f, e=parent.frame()) {
   rows. Trying to use similar call to nlsralt did NOT work -- subset was 
   ignored even when put in the calling args. Difficult to see how nls() manages
   this feature.
+
+- BELIEVE(??) that the subsetting is done via model.frame using match.call() in
+  nls() (nlspkg::nls.R#497), but mechanism does not seem clear.
   
 - Note that `subset` does NOT seems to be explicit in the code of `nlspkg` nor
   in the R-devel source tarball in a way that seems obvious. Where is it??

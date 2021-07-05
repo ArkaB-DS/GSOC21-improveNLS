@@ -112,20 +112,30 @@ modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.c
 # print(nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
 # print(nlsLM(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
 
-fitj <- nlsj(formula=Cform, start=Cstart, data=Cdata, trace=TRUE)
-fitj
+# fitj <- nlsj(formula=Cform, start=Cstart, data=Cdata, trace=TRUE)
+# fitj
 
 library(nlspkg)
 
 fitsub = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, subset=1:8, 
-               weights=Cwts, trace=TRUE)
+               trace=TRUE)
 
 # summarise
 
 summary(fitsub)
 summary(fit)
 
+callm <- function(subset, form, data, start, wts){ nlsModel(form, data, start, wts)}
+m2 <- callm(subset=1:8, Cform, Cdata, Cstart, Cwts)
+
 library(nlsralt)
 fitsubx = nlxbx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, subset=1:8, 
-             weights=Cwts, trace=TRUE)
+             trace=TRUE)
 summary(fitsubx)
+fitsubx$resid # shows subset now registered
+# NOT quite same -- may be analytic derivs etc. -- seems that fitsub is BETTER. WHY?
+fitsubx$coefficients
+fitsub$m$getPars()
+ls(fitsubx)
+fitsubx$jacobian
+fitsub$m$resid()

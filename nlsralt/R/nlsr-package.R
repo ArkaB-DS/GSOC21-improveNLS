@@ -72,6 +72,8 @@ summary.nlsr <- function(object, ...) {
 ##    cat("CHECK XtXinv:")
 ##    print(XtXinv)
     dimnames(XtXinv) <- list(pnames, pnames)
+    print(JJ)
+    print(res)
     gr <- crossprod(JJ, res)
     if (any(is.na(SEs))) {
         tstat<-rep(NA, npar)
