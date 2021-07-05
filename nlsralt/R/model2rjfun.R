@@ -15,7 +15,8 @@ model2rjfun <- function(modelformula, pvec, data = NULL, jacobian = TRUE,
     } else if (length(modelformula) == 3) {
         residexpr <- call("-", modelformula[[3]], modelformula[[2]])
     } else stop("Unrecognized formula")
-    
+
+# If names are null, create p_(number) style names    
     if (is.null(names(pvec)))
 	  names(pvec) <- paste0("p_", seq_along(pvec))
     

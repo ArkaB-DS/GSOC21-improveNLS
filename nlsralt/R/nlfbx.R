@@ -1,6 +1,6 @@
 nlfbx <-function(start, resfn, jacfn = NULL, trace = FALSE, 
 		lower = -Inf, upper = Inf, maskidx = NULL, weights=NULL,
-		data=NULL, control=list(), ...){
+		data=NULL, subset, control=list(), ...){
 #
 #  A simplified and hopefully robust alternative to finding the 
 #  nonlinear least squares minimizer that causes 'formula' to 
@@ -62,6 +62,7 @@ if (length(lower)!=npar) stop("Wrong length: lower")
 if (length(upper)!=npar) stop("Wrong length: upper")
 if (any(start<lower) || any(start>upper)) stop("Infeasible start")
 if ((! is.null(weights) ) && any(is.na(weights)) ){ stop("Undefined weights") }
+
 if (trace) {
    cat("lower:")
    print(lower)
@@ -145,6 +146,10 @@ if (trace) {
     }
 # cat("Starting pnum=")
 # print(pnum)  ?? add with trace??
+
+#??    if (! is.missing(subset)){
+#       ??  how to handle -- where is it in nls()
+#      }
 
     if ( is.null(weights) ) {resbest<-resfn(pnum, ...) }
     else {resbest <- resfn(pnum, ...) * sqrt(weights) }

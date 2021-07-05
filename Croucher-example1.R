@@ -25,6 +25,14 @@ fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), 
 
 # summarise
 summary(fit)
+# do the fit
+
+# Note: following works OK
+# library(nlsr)
+# fitn = nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+# 
+# # summarise
+# summary(fitn)
 
 ## Try numericDeriv() function
 Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
@@ -34,8 +42,18 @@ Cdata<-data.frame(xdata, ydata)
 Ctheta<-c("p1","p2")
 mdata<-length(xdata)
 Cwts <- rep(0.25, mdata)
-ndorig0<-numericDeriv(Ccall, Ctheta)
-ndorig0
+# ndorig0<-numericDeriv(Ccall, Ctheta)
+# ndorig0
+
+
+# test deriv
+Ccalld <- deriv(Ccall, Ctheta)
+str(Ccall)
+str(Ccalld)
+ronly <- eval(Ccall)
+ronly
+rj <- eval(Ccalld)
+rj
 
 # library(nlsalt)
 # ndalt0<-numericDeriv(Ccall, Ctheta)
@@ -89,15 +107,25 @@ modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.c
 # modj$predict(newdata=c(xdata=1, ydata=2))
 # tmp <- readline("continue?")
 
-
-fitj <- nlsj(formula=Cform, start=Cstart, data=Cdata, trace=TRUE)
-fitj
-
-
-# try new all-R form
-# fit = nlsx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
-
 # library(nlsr)
 # library(minpack.lm)
 # print(nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
 # print(nlsLM(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE))
+
+fitj <- nlsj(formula=Cform, start=Cstart, data=Cdata, trace=TRUE)
+fitj
+
+library(nlspkg)
+
+fitsub = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, subset=1:8, 
+               weights=Cwts, trace=TRUE)
+
+# summarise
+
+summary(fitsub)
+summary(fit)
+
+library(nlsralt)
+fitsubx = nlxbx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, subset=1:8, 
+             weights=Cwts, trace=TRUE)
+summary(fitsubx)

@@ -11,8 +11,9 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # (named num vec)	??not yet -- bounds upper and lower
 # (named num vec)	starting parameters (or ...)
 # (function)		residual function --> resid vector
+# (function)		residual plus jacobian ("gradient) --> residj
 # (num vec)		resid
-# (function)		jacobian function (puts matrix J in attribute "gradient" of resid vector)
+#?? (function)		jacobian function (puts matrix J in attribute "gradient" of resid vector)
 # (num matrix)		J -- ?? here or in nlsj()
 # (list)		controls: control 
 # (function)		convtest function --> returns a logical TRUE when we can TERMINATE,
@@ -54,13 +55,24 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 #  "setVarying" 
 #  "trace"    
 ##?? Note getRHS is NOT exposed, but is used
+## ?? Don't yet handle variable in dot args. But no dot args here.
 
 # First segment of this function is to check the specification is valid 
 # beyond checks already done in nlsj before call to nlsjModel()
 
     stopifnot(inherits(form, "formula"))
+
+    if (is.null(data)) {
+	data <- environment(form) # this will handle variables in the parent frame
+    }
+    else if (is.list(data))
+	data <- list2env(data, parent = environment(form))
+    else if (!is.environment(data))
+        	stop("'data' must be a dataframe, list, or environment")
+
     pnames<-names(start)
     resjac <- NULL # to start with
+    resvec <- NULL 
     nlenv <- new.env(hash = TRUE, parent = environment(form))
     cat("nlenv created. ls(nlenv):")
     ls(nlenv)
