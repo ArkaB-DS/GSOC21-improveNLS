@@ -15,6 +15,11 @@ output:
 
 - Show how `dir` works in nlsalt::numericDeriv(); need some examples/tests
   Currently is used when approaching upper bounds.
+  
+- At some point, it will be important to know what forms of residual and
+  jacobian evaluation forms work best. That means measuring timing (which
+  we know how to do with microbenchmark) and memory, which is a little more
+  difficult because of R's "garbage collection" and other policies.
 
 ## Abstract
 
@@ -33,7 +38,12 @@ report, but a form of extended diary of activity, issues and results.
 
 * In reverse date order *
 
-### [2021-7-1] to [2021-7-?] nlsj
+### [2021-7-1] to [2021-7-4] nlsj and tentative program for rest of formal project
+
+July 4: discussed tentative steps. JN made some progress with nlsj, but still some
+issues with the m$functions not finding the correct inputs, particularly the residual
+function does NOT seem to use the correct parameters. Seems that parameters are in 
+both a vector `prm` and individual named variables, e.g., for Croucher `p1` and `p2`.
 
 Suggested directions for latter half of project.
 Should agree approximate timeline for finishing items.
