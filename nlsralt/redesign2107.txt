@@ -12,8 +12,12 @@ and/or
 4) set up a subsetnls() function to output new problem object with 
    data subsetted.
 
-5) we create rjfun by get rjexpr <- deriv(residexpr, names(pvec)),
-   then evaluating. However, we should be able to test rjexpr.
+5) we create rjfun by getting rjexpr <- deriv(residexpr, names(pvec)),
+   then evaluating. However, we should be able to test rjexpr so we
+   can switch numerical derivatives of different types.
+   Do we want to try deriv(residexpr, one_name) i.e., one at a time?
+   Probably will not be worth the effort, but could perhaps set up
+   a separate function for checking the derivatives.
 
 > tform <- yy ~ runif(1, a, b)
 > nn <- c("a","b")

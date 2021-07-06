@@ -20,6 +20,9 @@ output:
   jacobian evaluation forms work best. That means measuring timing (which
   we know how to do with microbenchmark) and memory, which is a little more
   difficult because of R's "garbage collection" and other policies.
+  
+- Does the presence of p1 and p2 objects in .GlobalEnv cause trouble for nls()
+  (it does seem to for nlsj)?
 
 ## Abstract
 
@@ -76,6 +79,8 @@ with_env <- function(f, e=parent.frame()) {
 - nls has generic "residuals" function for nls() objects. 
      residuals(myfit). Note that myfit$m$resid() returns WEIGHTED residuals
      (weighted by square roots of the weights)
+  Note that getAllPars() add the plinear parameters in nlsModel.plinear, but
+  otherwise is the same as getPars()
 
 ### [2021-7-1] to [2021-7-4] nlsj and tentative program for rest of formal project
 
