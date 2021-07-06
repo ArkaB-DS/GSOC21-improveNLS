@@ -16,6 +16,9 @@ output:
 - Show how `dir` works in nlsalt::numericDeriv(); need some examples/tests
   Currently is used when approaching upper bounds.
   
+- Can we find a way to use analytic derivatives where they are available?
+  nlsderivchk.R shows deriv() not terribly smart.
+  
 - At some point, it will be important to know what forms of residual and
   jacobian evaluation forms work best. That means measuring timing (which
   we know how to do with microbenchmark) and memory, which is a little more
@@ -43,6 +46,11 @@ report, but a form of extended diary of activity, issues and results.
 
 ### [2021-7-5]
 
+- redesign2107.txt is a set of notes on some redesign issues.
+
+- Note new function nlsderivchk.R  -- checks if derivs can be found
+  analytically. So far it seems we cannot do some partial derivatives analytically.
+
 - JN checked nlsr will work with data in current workspace
 
 - note 
@@ -64,7 +72,8 @@ with_env <- function(f, e=parent.frame()) {
   this feature.
 
 - BELIEVE(??) that the subsetting is done via model.frame using match.call() in
-  nls() (nlspkg::nls.R#497), but mechanism does not seem clear.
+  nls() (nlspkg::nls.R#497), but mechanism does not seem clear. However, we can
+  do a much simpler job by doing the subset within nlfb(x)
   
 - Note that `subset` does NOT seems to be explicit in the code of `nlspkg` nor
   in the R-devel source tarball in a way that seems obvious. Where is it??

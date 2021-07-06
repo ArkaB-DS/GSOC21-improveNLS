@@ -17,7 +17,7 @@ and/or
    can switch numerical derivatives of different types.
    Do we want to try deriv(residexpr, one_name) i.e., one at a time?
    Probably will not be worth the effort, but could perhaps set up
-   a separate function for checking the derivatives.
+   a separate function for checking the derivatives. DONE! 210705
 
 > tform <- yy ~ runif(1, a, b)
 > nn <- c("a","b")

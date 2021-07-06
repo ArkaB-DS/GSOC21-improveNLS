@@ -129,14 +129,15 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
        } 
        else stop("Unrecognized formula")
 
-    rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
-
-    resfun <- function(prm) {
+    resfun <- function(prm) { # only computes the residuals (unweighted)
+        #?? What about subsetting??
         if (is.null(names(prm))) 
 	    names(prm) <- names(start)
 	  localdata <- list2env(as.list(prm), parent = data)
 	  eval(residexpr, envir = localdata) 
     }
+    rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
+
     rjfun <- function(prm) {
         if (is.null(names(prm))) 
 	    names(prm) <- names(start)
