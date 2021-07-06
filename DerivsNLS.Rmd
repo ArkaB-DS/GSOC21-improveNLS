@@ -4,7 +4,10 @@ author:
   - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
   - John C. Nash, University of Ottawa, Canada
 date: "26/05/2021"
-output: pdf_document
+output: 
+    pdf_document:
+        keep_tex: false
+        toc: true
 bibliography: ImproveNLS.bib
 ---
 
@@ -29,6 +32,9 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 - Need to verify nlsalt:: version matches all cases of nlspkg:: version
 
+- Do we need to get a model frame? How? and How to use it?
+
+
 ## TODOS (mostly from nlsr vignette nlsr-devdoc.Rmd)
 
 - how to insert numerical derivatives when Deriv unable to get result
@@ -40,6 +46,9 @@ or to provide a logical control to `nlxb()` for this purpose.
 
 
 # Jacobians in nls()
+
+This document source is in file **DerivsNLS.Rmd**.
+
 
 `nls()` needs Jacobians calculated at the current set of trial nonlinear model
 parameters to set up the Gauss-Newton equations. Unfortunately, `nls()` calls
