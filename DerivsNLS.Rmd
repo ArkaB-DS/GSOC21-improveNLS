@@ -31,14 +31,12 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 ## TODOS (mostly from nlsr vignette nlsr-devdoc.Rmd)
 
-- explain JN approach to relative offset convergence criterion
 - how to insert numerical derivatives when Deriv unable to get result
 - approximations for jacfn beyond fwd approximation. How to specify??
 - how to force numerical approximations in nlfb() in a 
 manner consistent with that used in `optimx::optimr()`, that is, to
 surround the name of `jacfn` with quotes if it is a numerical approximation,
 or to provide a logical control to `nlxb()` for this purpose.
-
 
 
 # Jacobians in nls()
