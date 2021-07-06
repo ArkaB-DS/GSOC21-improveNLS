@@ -60,25 +60,17 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # First segment of this function is to check the specification is valid 
 # beyond checks already done in nlsj before call to nlsjModel()
 
+    if (is.null(control$derivmeth)) control$derivmeth="default" # for safety
+
     stopifnot(inherits(form, "formula"))
-    cat("at start:")
-    print(str(data))
     if (is.null(data)) {
-        cat("in is.null(data)\n")
 	data <- environment(form) # this will handle variables in the parent frame
     }
     else if (is.list(data)){
-            cat("in is.list(data)\n")
-            print(ls(data))
 	    data <- list2env(data, parent = environment(form))
-            cat("after list2env:"); print(ls(data))
         }
         else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
-
-    cat("str(data):")
-    print(str(data))
-    print(ls(data))
 
     pnames<-names(start)
     resjac <- NULL # to start with
@@ -86,10 +78,10 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     nlenv <- new.env(hash = TRUE, parent = environment(form))
     cat("nlenv created. ls(nlenv):")
     ls(nlenv)
-    dnames<-names(data) # Possibly could pull in from nlsj ?? what if data an environment?
-    cat("dnames:"); print(dnames)
+    dnames<-names(data) # Note NOT colnames, as we now have environment
+#    cat("dnames:"); print(dnames)
     nlnames <- deparse(substitute(nlenv)) 
-    cat("nlnames:"); print(nlnames)
+#    cat("nlnames:"); print(nlnames)
     
     for (v in dnames){
        if (v %in% nlnames) warning(sprintf("Variable %s already in nlenv!", v))
@@ -128,16 +120,16 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
            # set the "promise" for the lhs of the model
            rhs <- eval(form[[3L]], envir = nlenv)
            lnames<-all.vars(form[[2L]]) # Check that lhs is a single variable from data
-           print(lnames)
+#           print(lnames)
            ldname <- which(dnames %in% lnames)
-           str(ldname)
-           print(ldname)
-           if (length(lnames) != 1L) { # ?? why do we get to this bit -- 
-              cat("lhs has names:")
-              print(lnames)
-              stop("lhs has either no named variable or more than one")
+#           str(ldname)
+#           print(ldname)
+           if (length(lnames) != 1L) {
+#              cat("lhs has names:")
+#              print(lnames)
+              warning("lhs has either no named variable or more than one")
            }
-           else { cat("lhs has just the variable ",lnames,"\n")}
+           else { if (trace) cat("lhs has just the variable ",lnames,"\n")}
        } 
        else stop("Unrecognized formula")
 
@@ -154,47 +146,31 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     } 
     else rjexpr <- NULL
 
-    rjfun <- function(prm) {
+    if (is.null(rjexpr) && (control$derivmeth == "default")) 
+        control$derivmeth <- nlsjcontrol()$altderivmeth
+
+    rjfun <- function(prm) { # Computes residuals and jacobian
         localdata <- list2env(as.list(prm), parent = data)
         if (is.null(names(prm))) names(prm) <- names(start)
-        if (is.null(rjexpr)){ # use numerical derivatives
+        if (control$derivmeth == "numericDeriv"){ # use numerical derivatives
            val <- numericDeriv(residexpr, names(prm), rho=localdata)
         }
-        else
-	  val <- eval(rjexpr, envir = localdata) 
+        else if(control$derivmeth == "default"){ # use analytic
+	  val <- eval(rjexpr, envir = localdata)
+        } 
         val
     }
 
-    addjac <- function(){# ?? assume resjac in nlenv
-        if(is.null(resjac)) resjac<-residu()
-        if(is.null(attr(resjac, "gradient"))) { # if not defined, get it
-           #?? for the moment, just numericDeriv()
-           resjac <- numericDeriv(residexpr, pnames, rho = nlenv) # unweighted
-        }
-        nlenv$njac <- nlenv$njac+1
-        resjac # invisible to avoid double display in calling space
-    }
-
-    residu <- function() { # ?? no subset here yet
-        nlenv$nres <- nlenv$nres+1
-        (lhs - rhs) # this should be fine for returning unweighted resids
-    }
     resid <- swts * residu()
     dev <- sum(resid^2)
     
-    jacobian <- function() { 
-        ## cat("In jacobian, resjac null?:", is.null(attr(resjac,"gradient")),"\n")
-        if (is.null(attr(resjac,"gradient"))) { resjac <- addjac()}
-        JJ <- attr(resjac,"gradient")
-        JJ # invisible to avoid double display in calling space
-    }
-    JJ <- jacobian() # ?? would like to save this in nlenv for later use
+#    JJ <- attr(rjfun(start),"gradient")  # ?? would like to save this in nlenv for later use
     # ?? for now use QR -- may have other methods later, e.g., svd
-    QR <- qr(swts * JJ) # ensure we get the jacobian JJ
-    qrDim <- min(dim(QR$qr))
-    # ?? Does it make sense to do this here
-    if(QR$rank < qrDim)
-        stop("singular jacobian matrix at initial parameter estimates")
+#    QR <- qr(swts * JJ) # ensure we get the jacobian JJ
+#    qrDim <- min(dim(QR$qr))
+    # ?? Does it make sense to do this here -- probably NOT -- put in nlsj()
+#    if(QR$rank < qrDim)
+#        stop("singular jacobian matrix at initial parameter estimates")
 
     parset <- function(newPars){ # nlsj new function
        if (! all.equal(names(newPars), pnames)) stop("newPars has wrong names!")
@@ -235,10 +211,6 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         cval
     } # end convCrit()
 
-#    ctest <- convCrit()
-#    cat("ctest:")
-#    print(ctest)
-
 #--->
 #?? needed?
 ##    on.exit(remove(i, data, parLength, start, temp, m, gr,
@@ -247,16 +219,17 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 
 ##?? Those functions not yet working marked with #?? Others seem OK
     m <-
-	list(resid = function() resid, # OK
-             residu = function() residu(), # ??
+	list(resfun = function() resfun, # OK
+             resid = function() resid(), # ?? weighted
+             rjfun = function() rjfun, # ??
 	     fitted = function() rhs, # OK
 	     formula = function() form, #OK
-	     deviance = function() dev, #OK
+	     deviance = function() dev, #?? weighted
 	     lhs = function() lhs, #OK
-             addjac = function() addjac(), #OK with "invisible"??
-	     jacobian = function() jacobian(), #??
+	     jacobian = function() jacobian, #??
 	     conv = function() convCrit(), # possibly OK
-	     incr = function() qr.coef(QR, resid),  #OK
+##	     incr = function() qr.coef(QR, resid),  #?? 
+# ?? Need to modify this for different iteration approaches besides Gauss Newton
 	     getPars = function() getPars(), #OK
 	     getEnv = function() nlenv, #OK
              parset = function(newPars) parset(newPars), #??

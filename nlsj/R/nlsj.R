@@ -1,5 +1,5 @@
 nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(),
-            algorithm = "default", weights=NULL, trace = FALSE,
+            algorithm = "default", weights=NULL, subset, trace = FALSE,
             lower = -Inf, upper = Inf, ...) {
 # ?? left out -- FIXME??    subset,  na.action, model = FALSE, (masked from nlxb)
 # ?? at this stage ONLY treat "default", but will add bounds
@@ -17,6 +17,8 @@ switch(alg,
     { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
      stop(msg) }
 )
+
+if( (! is.null(weights) ) && any(weights < 0.0)) stop("weights must be non-negative")
 
 ## First process formula to get names of parameters -- differs from nlsr!!
     stopifnot(inherits(formula, "formula"))
@@ -152,6 +154,7 @@ npar <- length(pnames)
 
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
     result <- list(m=m, convInfo=convInfo, control=ctrl)
+    ##?? Add call -- need to set up properly somehow. Do we need model.frame?
 
     class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821
     result

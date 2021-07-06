@@ -30,7 +30,7 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 - ExDerivs.R file causes a number of failures in the ORIGINAL numericDeriv.
 
-- Need to verify nlsalt:: version matches all cases of nlspkg:: version
+- Need to verify nlsalt:: version of numericDeriv() matches all cases of nlspkg:: version
 
 - Do we need to get a model frame? How? and How to use it?
 
