@@ -61,14 +61,24 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # beyond checks already done in nlsj before call to nlsjModel()
 
     stopifnot(inherits(form, "formula"))
-
+    cat("at start:")
+    print(str(data))
     if (is.null(data)) {
+        cat("in is.null(data)\n")
 	data <- environment(form) # this will handle variables in the parent frame
     }
-    else if (is.list(data))
-	data <- list2env(data, parent = environment(form))
-    else if (!is.environment(data))
+    else if (is.list(data)){
+            cat("in is.list(data)\n")
+            print(ls(data))
+	    data <- list2env(data, parent = environment(form))
+            cat("after list2env:"); print(ls(data))
+        }
+        else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
+
+    cat("str(data):")
+    print(str(data))
+    print(ls(data))
 
     pnames<-names(start)
     resjac <- NULL # to start with
@@ -76,7 +86,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     nlenv <- new.env(hash = TRUE, parent = environment(form))
     cat("nlenv created. ls(nlenv):")
     ls(nlenv)
-    dnames<-colnames(data) # Possibly could pull in from nlsj ?? what if data an environment?
+    dnames<-names(data) # Possibly could pull in from nlsj ?? what if data an environment?
     cat("dnames:"); print(dnames)
     nlnames <- deparse(substitute(nlenv)) 
     cat("nlnames:"); print(nlnames)
@@ -90,9 +100,10 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     nlenv$npar <- npar
     nlenv$njac <- 0 # Count of jacobian evaluations
     nlenv$nres <- 0 # Count of residual evaluations
-# ?? number of residuals altered by "subset" which is NOT yet functional
+# ?? number of residuals altered by "subset" which is NOT yet functional !!
 # ?? Do we want to copy the data to a working array, or subset on the fly?
     mres <- dim(data)[1] # Get the number of residuals (no subset)
+    #?? maybe mres<-length(subset)
     nlenv$mres <- mres
     if (is.null(wts)) wts <- rep(1, mres) # ?? more complicated if subsetting
     nlenv$wts <- wts # 
@@ -105,6 +116,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # ?? Can we simplify this -- it seems to set up the parameters
     getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
 
+    nlenv <- list2env(start,nlenv) # make sure we add parameters
     # oneSidedFormula ?? Should we be more explicit?
     if (length(form) == 2) {
         residexpr <- form[[2]] ##?? Need to make sure this works -- may need to be call
@@ -136,13 +148,21 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 	  localdata <- list2env(as.list(prm), parent = data)
 	  eval(residexpr, envir = localdata) 
     }
-    rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
+
+    if (all(nlsderivchk(residexpr, names(start)))) { # all derivs can be computed
+       rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
+    } 
+    else rjexpr <- NULL
 
     rjfun <- function(prm) {
-        if (is.null(names(prm))) 
-	    names(prm) <- names(start)
-	  localdata <- list2env(as.list(prm), parent = data)
-	  eval(rjexpr, envir = localdata) 
+        localdata <- list2env(as.list(prm), parent = data)
+        if (is.null(names(prm))) names(prm) <- names(start)
+        if (is.null(rjexpr)){ # use numerical derivatives
+           val <- numericDeriv(residexpr, names(prm), rho=localdata)
+        }
+        else
+	  val <- eval(rjexpr, envir = localdata) 
+        val
     }
 
     addjac <- function(){# ?? assume resjac in nlenv

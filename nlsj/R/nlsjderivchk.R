@@ -23,26 +23,26 @@ form2expr <- function(modelformula){
     residexpr
 }
 
-cat("Croucher example\n")
-Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
-Ctheta<-c("p1","p2")
-Cexpr <- form2expr(Cform)
-tcrouch <- nlsderivchk(Cexpr, Ctheta)
-tcrouch
-
-cat("Tanh example\n")
-Tform <- ydata ~ a1 * tanh(a2*tdata - a3)
-Ttheta <- c("a1", "a2", "a3")
-Texpr <- form2expr(Tform)
-Ttanh <- nlsderivchk(Texpr, Ttheta)
-Ttanh
-
-# This one fails. And deriv w.r.t. p1 and p4 should be possible analytically.
-# ?? need to see why we can't do it.
-cat("TDist example\n")
-Dform<- ydata ~ p1*xx + p4 * dt((xx - p2), df=10, ncp=p3)
-Dtheta <- c("p1","p2", "p3", "p4")
-Dexpr <- form2expr(Dform)
-TD <- nlsderivchk(Dexpr, Dtheta)
-TD
-
+# cat("Croucher example\n")
+# Cform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
+# Ctheta<-c("p1","p2")
+# Cexpr <- form2expr(Cform)
+# tcrouch <- nlsderivchk(Cexpr, Ctheta)
+# tcrouch
+# 
+# cat("Tanh example\n")
+# Tform <- ydata ~ a1 * tanh(a2*tdata - a3)
+# Ttheta <- c("a1", "a2", "a3")
+# Texpr <- form2expr(Tform)
+# Ttanh <- nlsderivchk(Texpr, Ttheta)
+# Ttanh
+# 
+# # This one fails. And deriv w.r.t. p1 and p4 should be possible analytically.
+# # ?? need to see why we can't do it.
+# cat("TDist example\n")
+# Dform<- ydata ~ p1*xx + p4 * dt((xx - p2), df=10, ncp=p3)
+# Dtheta <- c("p1","p2", "p3", "p4")
+# Dexpr <- form2expr(Dform)
+# TD <- nlsderivchk(Dexpr, Dtheta)
+# TD
+# 

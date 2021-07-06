@@ -1,11 +1,11 @@
 rm(list=ls())
 
 # A function to evaluate f in environment e
-with_env <- function(f, e=parent.frame()) {
-  stopifnot(is.function(f))
-  environment(f) <- e
-  f
-}
+# with_env <- function(f, e=parent.frame()) {
+#   stopifnot(is.function(f))
+#   environment(f) <- e
+#   f
+# }
 
 
 # Croucher-example1.R -- https://walkingrandomly.com/?p=5254
@@ -17,19 +17,21 @@ ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0
 # plot(xdata,ydata)
 
 # some starting values
-p1 = 1
-p2 = 0.2
+# p1 = 1
+# p2 = 0.2
 
 # do the fit
-fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), trace=TRUE)
 
 # summarise
 summary(fit)
 # do the fit
 
 # Note: following works OK
-# library(nlsr)
-# fitn = nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), trace=TRUE)
+library(nlsr)
+fitn = nlxb(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), trace=TRUE)
+fitn
+tmp<-readline("after fitn")
 # 
 # # summarise
 # summary(fitn)
@@ -45,38 +47,39 @@ Cwts <- rep(0.25, mdata)
 # ndorig0<-numericDeriv(Ccall, Ctheta)
 # ndorig0
 
-
+tmod <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts)
+tmp<-readline("cont.")
 # test deriv
-Ccalld <- deriv(Ccall, Ctheta)
-str(Ccall)
-str(Ccalld)
-ronly <- eval(Ccall)
-ronly
-rj <- eval(Ccalld)
-rj
-
+# Ccalld <- deriv(Ccall, Ctheta)
+# str(Ccall)
+# str(Ccalld)
+# ronly <- eval(Ccall)
+# ronly
+# rj <- eval(Ccalld)
+# rj
+# 
 # library(nlsalt)
 # ndalt0<-numericDeriv(Ccall, Ctheta)
 # print(all.equal(ndorig0, ndalt0))
 
 ## retest nls
- fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, weights=Cwts, trace=TRUE)
+# fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2), data=Cdata, weights=Cwts, trace=TRUE)
 
 ## summarise
 
- summary(fit)
+ # summary(fit)
 
-library(nlsralt)
-rj <- model2rjfun(Cform, Cstart)
-modelexpr(rj)
-
-jexpr <- deriv(Cform, names(Cstart))
-jexpr
-
-# library(nlsj)
+# library(nlsralt)
+# rj <- model2rjfun(Cform, Cstart)
+# modelexpr(rj)
 # 
-# modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
-# str(modj)
+# jexpr <- deriv(Cform, names(Cstart))
+# jexpr
+# 
+library(nlsj)
+# 
+modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
+str(modj)
 
 # cat("test the model functions:\n")
 # modj$resid()
