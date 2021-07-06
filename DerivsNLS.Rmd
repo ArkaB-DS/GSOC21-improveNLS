@@ -29,6 +29,17 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 - Need to verify nlsalt:: version matches all cases of nlspkg:: version
 
+## TODOS (mostly from nlsr vignette nlsr-devdoc.Rmd)
+
+- explain JN approach to relative offset convergence criterion
+- how to insert numerical derivatives when Deriv unable to get result
+- approximations for jacfn beyond fwd approximation. How to specify??
+- how to force numerical approximations in nlfb() in a 
+manner consistent with that used in `optimx::optimr()`, that is, to
+surround the name of `jacfn` with quotes if it is a numerical approximation,
+or to provide a logical control to `nlxb()` for this purpose.
+
+
 
 # Jacobians in nls()
 
@@ -345,14 +356,14 @@ This code is in two files, nls.R and nls.c and is extracted here.
 ## From nls.R
 
 ```{r nlsR, comment=NA, echo=FALSE}
-   cat(readLines('./nlsND.R'), sep = '\n')
+   cat(readLines('./nls-numericDeriv.R'), sep = '\n')
 ```
 
 
 ## From nls.c
 
 ```{r nlsc, comment=NA, echo=FALSE}
-   cat(readLines('./nlsND.c'), sep = '\n')
+   cat(readLines('./nls-numericDeriv.c'), sep = '\n')
 ```
 
 # Appendix 2: numericDeriv() from nlsalt package (all in R)
