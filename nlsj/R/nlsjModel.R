@@ -53,7 +53,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 #   "Rmat"  -- ?? only makes sense with QR 
 #    "setPars"  -- ?? simpler setPars. If pars changed, null resid attr "gradient"
 #  "setVarying" 
-#  "trace"    
+#  "trace"  -- ?? this is a FUNCTION in nls(). Is it needed?
 ##?? Note getRHS is NOT exposed, but is used
 ## ?? Don't yet handle variable in dot args. But no dot args here.
 
@@ -101,6 +101,9 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     nlenv$wts <- wts # 
     swts<-sqrt(wts)
     nlenv$swts <- swts ## ?? can we save a line or two
+    nlenv$control<-control
+    nlenv <- list2env(start,nlenv) # make sure we add parameters
+    nlenv$prm <- start # ensure we have some parameters
 
 # By the time we get here, we assume nlsj has checked data and parameter names.
 # If nlsjModel called otherwise, be it on head of caller!
@@ -108,7 +111,6 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # ?? Can we simplify this -- it seems to set up the parameters
     getPars <- function() unlist(get("prm", nlenv)) # Is this sufficient?? Simplest form??
 
-    nlenv <- list2env(start,nlenv) # make sure we add parameters
     # oneSidedFormula ?? Should we be more explicit?
     if (length(form) == 2) {
         residexpr <- form[[2]] ##?? Need to make sure this works -- may need to be call
@@ -129,14 +131,13 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 #              print(lnames)
               warning("lhs has either no named variable or more than one")
            }
-           else { if (trace) cat("lhs has just the variable ",lnames,"\n")}
+           else { if (control$trace) cat("lhs has just the variable ",lnames,"\n")}
        } 
        else stop("Unrecognized formula")
 
     resfun <- function(prm) { # only computes the residuals (unweighted)
         #?? What about subsetting??
-        if (is.null(names(prm))) 
-	    names(prm) <- names(start)
+        if (is.null(names(prm))) names(prm) <- names(start)
 	  localdata <- list2env(as.list(prm), parent = data)
 	  eval(residexpr, envir = localdata) 
     }
@@ -150,8 +151,8 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         control$derivmeth <- nlsjcontrol()$altderivmeth
 
     rjfun <- function(prm) { # Computes residuals and jacobian
-        localdata <- list2env(as.list(prm), parent = data)
         if (is.null(names(prm))) names(prm) <- names(start)
+        localdata <- list2env(as.list(prm), parent = data)
         if (control$derivmeth == "numericDeriv"){ # use numerical derivatives
            val <- numericDeriv(residexpr, names(prm), rho=localdata)
         }
@@ -161,7 +162,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         val
     }
 
-    resid <- swts * residu()
+    resid <- swts * resfun(nlenv$prm) # ?? is this the best way to do this
     dev <- sum(resid^2)
     
 #    JJ <- attr(rjfun(start),"gradient")  # ?? would like to save this in nlenv for later use
@@ -193,11 +194,14 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
             cmsg <- paste(cmsg, "No parameters for this problem")
             ctol <- NA
         }
-        else {
-          rr <- qr.qty(QR, c(resid)) # rotated residual vector
+        else { # Do not have qr results available -- need to recompute!!
+          #?? Need to compute what we can -- may be tricky with different criteria
+          # e.g., small SS test.
+#??          rr <- qr.qty(QR, c(resid)) # rotated residual vector
           scoff <- control$scaleOffset
           if(scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
-          ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
+##          ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
+          ctol <- 1e-4 #?? temporary value to get function available for checking
           cval <- (ctol <= control$tol) # compare relative offset criterion
           if (scoff > 0.0) 
                cmsg <- paste("Check relative offset criterion, scaleOffset = ",scoff)
@@ -219,14 +223,14 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 
 ##?? Those functions not yet working marked with #?? Others seem OK
     m <-
-	list(resfun = function() resfun, # OK
-             resid = function() resid(), # ?? weighted
-             rjfun = function() rjfun, # ??
+	list(resfun = function(prm) resfun(prm), # ??
+             resid = function() resid, # ?? weighted
+             rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
 	     formula = function() form, #OK
-	     deviance = function() dev, #?? weighted
+	     deviance = function() dev, #OK weighted
 	     lhs = function() lhs, #OK
-	     jacobian = function() jacobian, #??
+##	     jacobian = function() jacobian, #??
 	     conv = function() convCrit(), # possibly OK
 ##	     incr = function() qr.coef(QR, resid),  #?? 
 # ?? Need to modify this for different iteration approaches besides Gauss Newton

@@ -17,7 +17,13 @@ output:
   Currently is used when approaching upper bounds.
   
 - Can we find a way to use analytic derivatives where they are available?
-  nlsderivchk.R shows deriv() not terribly smart.
+  nlsderivchk.R shows deriv() not terribly smart. 
+  [partly DONE]: the revision to rjfun now tries nlsdericchk() and then
+  uses numericDeriv() if analytic deriv() fails. Temporary changes to
+  nls.control() in nlsj.control(), but these choices need some rationalization,
+  cleanup and documentation
+  [unfinished]: have not added numDeriv choices (of which there are several);
+  nor has nlfb been upgraded to use such choices. 
   
 - At some point, it will be important to know what forms of residual and
   jacobian evaluation forms work best. That means measuring timing (which
@@ -44,7 +50,10 @@ report, but a form of extended diary of activity, issues and results.
 
 * In reverse date order *
 
-### [2021-7-5]
+### [2021-7-5] [2021-7-6]
+
+- some editing and extension of Variety document. ?? still needs some
+  tidying and rationalization.
 
 - redesign2107.txt is a set of notes on some redesign issues.
 

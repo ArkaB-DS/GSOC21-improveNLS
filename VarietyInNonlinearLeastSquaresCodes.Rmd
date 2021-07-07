@@ -1103,7 +1103,7 @@ And some bright programmers realized we could do our storage in a single array,
 so that a matrix of order $n$ could be stored in a vector of length $n (n+1)/2$.
 @Nash1987a uses this Cholesky decomposition structure in BASIC code.
 
-Similarly, a Gauss Jordan variance could be programmed using such a format for
+Similarly, a Gauss Jordan variant could be programmed using such a format for
 $A$ and with only a temporary storage of size $n$, matrix $A$ could be overwritten
 with its inverse. This is the code of @BauerReinsch71 which is Algorithm 9 of
 @jncnm79. 
@@ -1111,7 +1111,14 @@ with its inverse. This is the code of @BauerReinsch71 which is Algorithm 9 of
 Both these "single vector" storage programs are challenging to check and maintain.
 While I embraced them in the age when 16K of storage was the norm for personal
 computers, they are simply too finicky to follow easily, and highly prone to
-errors.
+coding and maintenance errors.
+
+
+# Implementation choices for an R package
+
+??2021 update to nlsr and ideas for the "Improvements to nls()" project.
+
+
 
 
 # References
