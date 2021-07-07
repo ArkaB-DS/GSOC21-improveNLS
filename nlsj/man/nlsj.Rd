@@ -3,12 +3,12 @@
 % Copyright 1995-2021 R Core Team
 % Distributed under GPL 2 or later
 
-\name{nls}
-\alias{nls}
+\name{nlsj}
+\alias{nlsj}
 \title{Nonlinear Least Squares}
 \description{
   Determine the nonlinear (weighted) least-squares estimates of the
-  parameters of a nonlinear model.
+  parameters of a nonlinear model. Variant nlsj 2021 July
 }
 \usage{
 nls(formula, data, start, control, algorithm,

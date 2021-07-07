@@ -24,56 +24,62 @@ library(nlsj)
 # 
 # print(nlsj.control())
 # tmp <- readline("continue?")
+# modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
+# ls(modj)
+# tmp <- readline("continue?")
 
-modj <- nlsjModel(form=Cform, data=Cdata, start=Cstart, wts=Cwts, control=nlsj.control())
+# do the fit 
+fitj = nlsj(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
+
+# summarise
+summary(fitj)
+
+
+
 # str(modj)
 # tmp <- readline("continue?")
 
-cat("test the model functions:\n")
-modj$resid()
-tmp <- readline("continue?")
-modj$resfun(Cstart)
-tmp <- readline("continue?")
-modj$rjfun(Cstart)
-tmp <- readline("continue?")
-
-modj$fitted()
-tmp <- readline("continue?")
-modj$formula()
-tmp <- readline("continue?")
-modj$deviance()
-tmp <- readline("continue?")
-modj$lhs()
-tmp <- readline("continue?")
-# modj$jacobian()
+# cat("test the model functions:\n")
+# modj$resid()
 # tmp <- readline("continue?")
-modj$conv()
-tmp <- readline("continue?")
-# modj$incr()
+# modj$resfun(Cstart)
 # tmp <- readline("continue?")
-modj$getPars()
-tmp <- readline("continue?")
-ls(modj$getEnv())
-tmp <- readline("continue?")
-teq <- modj$parset(newPars=c(p1=1, p2=.2))
-teq
-tmp <- readline("continue?")
-neq <- modj$parset(newPars=c(p1=4, p2=3))
-neq
-tmp <- readline("continue?")
-modj$predict(newdata=c(xdata=1, ydata=2))
-tmp <- readline("continue?")
+# modj$rjfun(Cstart)
+# tmp <- readline("continue?")
+# 
+# modj$fitted()
+# tmp <- readline("continue?")
+# modj$formula()
+# tmp <- readline("continue?")
+# modj$deviance()
+# tmp <- readline("continue?")
+# modj$lhs()
+# tmp <- readline("continue?")
+# # modj$jacobian()
+# # tmp <- readline("continue?")
+# modj$conv()
+# tmp <- readline("continue?")
+# # modj$incr()
+# # tmp <- readline("continue?")
+# modj$getPars()
+# tmp <- readline("continue?")
+# ls(modj$getEnv())
+# tmp <- readline("continue?")
+# teq <- modj$parset(newPars=c(p1=1, p2=.2))
+# teq
+# tmp <- readline("continue?")
+# neq <- modj$parset(newPars=c(p1=4, p2=3))
+# neq
+# tmp <- readline("continue?")
+# modj$predict(newdata=c(xdata=1, ydata=2))
+# tmp <- readline("continue?")
+# 
 
 
-
-# look at it
+# look at data
 # plot(xdata,ydata)
 
-# some starting values
-# p1 = 1
-# p2 = 0.2
-
-# do the fit
+# do the fit (in default R:: nls()
 # fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), trace=TRUE)
 
 # summarise

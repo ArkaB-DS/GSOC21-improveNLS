@@ -1,54 +1,52 @@
 nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(),
             algorithm = "default", weights=NULL, subset, trace = FALSE,
             lower = -Inf, upper = Inf, ...) {
-# ?? left out -- FIXME??    subset,  na.action, model = FALSE, (masked from nlxb)
+# ?? left out -- FIXME??    na.action, model = FALSE, (masked from nlxb)
 # ?? at this stage ONLY treat "default", but will add bounds
-# ?? MAY add analytic derivatives
-# ?? subset?
-# ?? data in .GlobalEnv
+# ?? data in .GlobalEnv -- should be OK
+##?? Should a lot of this material be in nlsjModel() to build tools for problem??
+
+   if (is.null(algorithm)) algorithm<-"default"
+   algchoice <- c("default", "port", "plinear", "marquardt")
+   alg <- which(algorithm %in% algchoice)
+   switch(alg,
+      "default" = if (trace) cat("nlsj: Using default algorithm\n"),
+      # rest
+      { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
+        stop(msg) }
+   ) # end switch choices
+
+   dnames <- all.vars(formula)[which(all.vars(formula) %in% ls(data))]
+   if (length(dnames) < 1) stop("No data found")
+   vnames <- all.vars(formula) # all names in the formula
+   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
+   npar <- length(pnames)
+   # cat("npar=",npar,"\n") # Proves this works (??put in nlsjModel()?)
+   mraw <- length(eval(as.name(dnames[1])))
+   # cat("mraw=",mraw,"\n") # Proves this works (raw length)
+   if(is.null(weights)) {
+       weights<-rep(1.0, mraw) # set all weights to 1.0
+   } 
+   else if (any(weights < 0.0)) stop("weights must be non-negative")
+
+   ## Process formula to get names of parameters -- differs from nlsr!!
+   stopifnot(inherits(formula, "formula") )
+   if (length(formula) == 2) {
+       residexpr <- formula[[2]]
+   } else if (length(formula) == 3) {
+       residexpr <- call("-", formula[[3]], formula[[2]])
+   } else stop("Unrecognized formula")
 
 
-if (is.null(algorithm)) algorithm<-"default"
-algchoice <- c("default", "port", "plinear", "marquardt")
-alg <- which(algorithm %in% algchoice)
-switch(alg,
-   "default" = cat("nlsj: Using default algorithm\n"),
-   # rest
-    { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
-     stop(msg) }
-)
-
-if( (! is.null(weights) ) && any(weights < 0.0)) stop("weights must be non-negative")
-
-## First process formula to get names of parameters -- differs from nlsr!!
-    stopifnot(inherits(formula, "formula"))
-    if (length(formula) == 2) {
-        residexpr <- formula[[2]]
-    } else if (length(formula) == 3) {
-        residexpr <- call("-", formula[[3]], formula[[2]])
-    } else stop("Unrecognized formula")
-
-    if (is.null(data)) {
-	data <- environment(formula) # this will handle variables in the parent frame
-        }
-    else if (is.list(data))
-	data <- list2env(data, parent = environment(formula))
-    else if (!is.environment(data))
-        	stop("'data' must be a dataframe, list, or environment")
-
-# Now check that data is of correct structure
-    if (is.null(data)) {
-	data <- environment(formula) # this will handle variables in the parent frame
-        }
-    else if (is.list(data))
-	data <- list2env(data, parent = environment(formula))
-    else if (!is.environment(data))
-        	stop("'data' must be a dataframe, list, or environment")
-
-dnames <- ls(data)
-vnames <- all.vars(formula) # all names in the formula
-pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
-npar <- length(pnames)
+   if( ! missing(subset) && ! is.null(subset) ){ 
+     # we need to subset, which we do via the weights
+     if (! all(is.integer(subset))) stop("subset must have integer entries")
+     if ( any(subset < 1) || any(subset > mraw) ) stop("subset entry out of range")
+     #?? need to test these possibilities
+     weights[- subset]<-0.0 # NOTE: the minus gets the values NOT in the dataset
+   }
+   cat("nlsj: weights:")
+   print(weights)  
 
 # from nls.R ?? 
 #    QR.rhs <- qr(.swts * rhs)
@@ -59,6 +57,7 @@ npar <- length(pnames)
     if (is.null(start)) { # start not specified
        warning("start vector not specified for nlsj")
        start<-0.9+seq(npar)*0.1 # WARNING: very crude??
+       names(start)<-pnames # and make sure these are named?? necessary??
        ## ??? put in ways to get at selfstart models 
     }
     else { # we have a start vector
@@ -66,56 +65,20 @@ npar <- length(pnames)
        if ((length(snames) != length(pnames)) || (! all.equal(snames, pnames))) {
            stop("Start names differ in number or name from formula parameter names")
        }
+       start <- as.numeric(start) # ensure we convert (e.g., if matrix)
+       names(start) <- snames ## as.numeric strips names, so this is needed ??
     }
 
-# ensure params in vector
-    start <- as.numeric(start) # ensure we convert (e.g., if matrix)
-    names(start) <- pnames ## as.numeric strips names, so this is needed??
-    # bounds
-    if (length(lower) == 1) 
-        lower <- rep(lower, npar) # expand to full dimension
-    if (length(upper) == 1) 
-        upper <- rep(upper, npar)
-# more tests on bounds
-    if (length(lower) != npar) 
-        stop("Wrong length: lower")
-    if (length(upper) != npar) 
-        stop("Wrong length: upper")
-    if (any(start < lower) || any(start > upper)) 
-        stop("Infeasible start")
-    if (trace) {
-        cat("formula: ")
-        print(formula)
-        cat("lower:")
-        print(lower)
-        cat("upper:")
-        print(upper)
-    }
+    #### Build the "model" object ####
+    m <- nlsjModel(formula, data, start, weights, lower=lower, upper=upper, control=control)
 
-    bdmsk <- rep(1, npar)  # set all params free for now
-    maskidx <- which(lower==upper)
-    if (length(maskidx) > 0 && trace) {
-        cat("The following parameters are masked:")
-        print(pnames[maskidx])
-    }
-    bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
-
-    if (is.null(dnames)) stop("No data") # ?? fixup for "no data" problems using resid length
-    else mres <- length(get(dnames[1], envir=data))
-    cat("mres=",mres,"\n") 
-
-    if (is.null(weights)) weights<-rep(1,mres)
-
-    m <- nlsjModel(formula, data, start, weights, upper=NULL, lower=NULL, control=control)
-          # ?? can we return / use nlenv??
     # ?? Are we ready to solve?
     njac <- 0 # number of jacobians so far
     nres <- 1
     ## ?? need current prm available, prm_old??
-    resbest <- m$resid() # ?? do we need to specify environment nlenv?
-       # ?? may or may not have attr "gradient"
-    ssmin <- m$deviance() # get the sum of squares
-    while (! (confInfo <- m$conv())  ) { # main loop
+    resraw <- m$rjfun(start) # 
+    ssmin <- m$deviance() # get the sum of squares (this is weighted)
+    while (! (confInfo <- m$conv()) ) { # main loop ##?? conv NOT correct for rel. offset
        # Here we have to choose method based on controls
        # Inner loop over either line search or Marquardt stabilization
        # returns delta, break from "while" if prm unchanged by delta

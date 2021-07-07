@@ -1,5 +1,8 @@
-nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, control)
+nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, control)
 {
+##?? Note that there is a lot of duplication with nlsj() if we are not VERY careful
+
+
 # This function is designed to set up the information needed to estimate the model
 # which it defines and for which it provides the tools
 # Needed:
@@ -26,7 +29,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
 # (environment)         nlenv -- do we need this or not?? If so, we need it better documented.
 
 
-# Example of nlenv for Croucher:
+# Example of nlenv for Croucher: ?? make sure to check doc
 # "mres"  
 # "njac"  
 # "npar"  
@@ -63,6 +66,7 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
     if (is.null(control$derivmeth)) control$derivmeth="default" # for safety
 
     stopifnot(inherits(form, "formula"))
+
     if (is.null(data)) {
 	data <- environment(form) # this will handle variables in the parent frame
     }
@@ -72,38 +76,70 @@ nlsjModel <- function(form, data, start, wts=NULL, upper=NULL, lower=NULL, contr
         else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
 
+    if (is.null(wts)) stop("Weights MUST be declared for nlsjModel")
+
+    cat("nlsjModel: ls(data) =")
+    print(ls(data))
+
     pnames<-names(start)
     resjac <- NULL # to start with
     resvec <- NULL 
     nlenv <- new.env(hash = TRUE, parent = environment(form))
     cat("nlenv created. ls(nlenv):")
     ls(nlenv)
-    dnames<-names(data) # Note NOT colnames, as we now have environment
-#    cat("dnames:"); print(dnames)
-    nlnames <- deparse(substitute(nlenv)) 
-#    cat("nlnames:"); print(nlnames)
-    
+    cat("\n")
+
+##?? Duplication from nlsj, but needed there for subset
+    dnames <- all.vars(form)[which(all.vars(form) %in% ls(data))]
+    if (length(dnames) < 1) stop("No data found")
+    vnames <- all.vars(form) # all names in the formula
+    pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
+    npar <- length(pnames)
+
+    nlnames <- ls(nlenv)
+    cat("nlnames:"); print(nlnames)
     for (v in dnames){
        if (v %in% nlnames) warning(sprintf("Variable %s already in nlenv!", v))
        nlenv[[v]] = data[[v]]
     }
+    cat("nlnames again:")
+    print(ls(nlenv))
+    nlenv <- list2env(as.list(start),nlenv) # make sure we add parameters. Note "as.list"
+    # Above line needed so formulas can be evaluated
     nlenv$prm <- start # start MUST be defined at this point
     npar <- length(start)
     nlenv$npar <- npar
-    nlenv$njac <- 0 # Count of jacobian evaluations
+    cat("nlnames again2:")
+    print(ls(nlenv))
+
+    # bounds
+    if (length(lower) == 1) lower <- rep(lower, npar) # expand to full dimension
+    if (length(upper) == 1) upper <- rep(upper, npar)
+    # more checks on bounds
+    if (length(lower) != npar) stop("Wrong length: lower")
+    if (length(upper) != npar) stop("Wrong length: upper")
+    if (any(start < lower) || any(start > upper)) 
+        stop("Infeasible start")
+
+    bdmsk <- rep(1, npar)  # set all params free for now
+    maskidx <- which(lower==upper)
+    if (length(maskidx) > 0 && trace) {
+        cat("The following parameters are masked:")
+        print(pnames[maskidx])
+    }
+    bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
+    nlenv$bdmsk <- bdmsk
+
+    nlenv$njac <- 0 # Count of jacobian evaluations ("iterations")
     nlenv$nres <- 0 # Count of residual evaluations
-# ?? number of residuals altered by "subset" which is NOT yet functional !!
-# ?? Do we want to copy the data to a working array, or subset on the fly?
-    mres <- dim(data)[1] # Get the number of residuals (no subset)
-    #?? maybe mres<-length(subset)
-    nlenv$mres <- mres
+
     if (is.null(wts)) wts <- rep(1, mres) # ?? more complicated if subsetting
+    mres<-length(wts[which(wts > 0.0)])
+    nlenv$mres <- mres
     nlenv$wts <- wts # 
     swts<-sqrt(wts)
-    nlenv$swts <- swts ## ?? can we save a line or two
+    nlenv$swts <- swts ## ?? can we save a line or two by only using swts
     nlenv$control<-control
-    nlenv <- list2env(start,nlenv) # make sure we add parameters
-    nlenv$prm <- start # ensure we have some parameters
 
 # By the time we get here, we assume nlsj has checked data and parameter names.
 # If nlsjModel called otherwise, be it on head of caller!
