@@ -129,9 +129,10 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
     }
     bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
     nlenv$bdmsk <- bdmsk
-
-    nlenv$njac <- 0 # Count of jacobian evaluations ("iterations")
-    nlenv$nres <- 0 # Count of residual evaluations
+    njac <- 0
+    nres <- 0
+    nlenv$njac <- njac # Count of jacobian evaluations ("iterations")
+    nlenv$nres <- nres # Count of residual evaluations
 
     if (is.null(wts)) wts <- rep(1, mres) # ?? more complicated if subsetting
     mres<-length(wts[which(wts > 0.0)])
@@ -173,6 +174,7 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
 
     resfun <- function(prm) { # only computes the residuals (unweighted)
         #?? What about subsetting??
+        nres <- nres + 1
         if (is.null(names(prm))) names(prm) <- names(start)
 	  localdata <- list2env(as.list(prm), parent = data)
 	  eval(residexpr, envir = localdata) 
@@ -189,12 +191,14 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
     rjfun <- function(prm) { # Computes residuals and jacobian
         if (is.null(names(prm))) names(prm) <- names(start)
         localdata <- list2env(as.list(prm), parent = data)
+        nres <- nres + 1
         if (control$derivmeth == "numericDeriv"){ # use numerical derivatives
            val <- numericDeriv(residexpr, names(prm), rho=localdata)
         }
         else if(control$derivmeth == "default"){ # use analytic
 	  val <- eval(rjexpr, envir = localdata)
         } 
+        njac <- njac + 1
         val
     }
 
@@ -223,6 +227,7 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
     } # return eq -- Are parameters the same?
 
     convCrit <- function() { # defaults
+        cat("convCrit: counts are ",nlenv$njac," ",nlenv$nres,"\n")
         cval <- FALSE # Initially NOT converged
         cmsg <- "Termination msg: "
         if(npar == 0) {

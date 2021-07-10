@@ -78,28 +78,42 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
     ## ?? need current prm available, prm_old??
     resraw <- m$rjfun(start) # 
     ssmin <- m$deviance() # get the sum of squares (this is weighted)
-    while (! (confInfo <- m$conv()) ) { # main loop ##?? conv NOT correct for rel. offset
+    cat("Before iteration, deviance=",ssmin,"\n")
+    swts <- m$getEnv()$swts
+    tconv <- FALSE ## ??(confInfo <- m$conv()) ) { # main loop ##?? conv NOT correct for rel. offset
+    prm <- m$getPars()
+    while (! tconv) { #?? temporary
        # Here we have to choose method based on controls
        # Inner loop over either line search or Marquardt stabilization
        # returns delta, break from "while" if prm unchanged by delta
        # resid is recalculated, as is new deviance, but NOT jacobian
        ##?? How to track if jacobian needs updating?
 
-       J <- m$jacobian() # this calls derivatives of different types
-       delta <- m$incr()
+       J <- swts * attr(resraw,"gradient") 
+       wres <- swts * resraw # get wts residuals
+       cat("wres:"); print(wres)
+       QR <- qr(J)
+       print(str(QR))
+       qrDim <- min(dim(QR$qr))
+       if (QR$rank < qrDim) stop("Singular jacobian") # for now don't continue
+
+       delta <- qr.coef(QR, -wres) # LS solve of J delta ~= -wres
+       cat("delta:")
        print(delta)
-       prm <- m$getPars()
        fac <- 1.0
        ssnew<-ssmin
        while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
            newp <- prm + fac * delta
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-           eq <- m$parset(newp)
-           cat("newprm:"); print(m$getPars())
-           if (! eq) {
+#           eq <- m$parset(newp) #?? Not updating prm!!
+##??wrong!!           cat("newprm:"); print(m$getPars())
+           cat("newp:"); print(as.numeric(newp))
+           eq <- all( (prm+control$offset) == (newp+control$offset) )
+           if (! eq ) {
               # ?? trying to get NEW values here. Does not want to re-evaluate when running!
               # ?? Is it using p1 and p2 rather than prm??
-              ssnew <- m$deviance()
+              newwres <- swts*m$resfun(newp)
+              ssnew <- as.numeric(crossprod(newwres))
               if (trace) cat("fac=",fac,"   ss=",ssnew,"\n")
               if ( ssnew < ssmin) break
            }
@@ -108,9 +122,15 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
               break
            }
        } # end inner while
-       cat("after while loop over fac, ssnew=",ssnew," fac=",fac,"\n")
-       if (is.na(ssnew)) stop("failed to find lower ss -- parameters unchanged") #?? fix
-       tmp <- readline("next")
+       cat("after inner while loop over fac, ssnew=",ssnew," fac=",fac,"\n")
+       if (is.na(ssnew)) stop("NA ss -- parameters unchanged") #?? fix
+       if (ssnew < ssmin) {
+	 prm <- newp
+       	 ssmin <- ssnew
+         resraw <- m$rjfun(prm) # ?? new res and gradient -- does extra res??
+         tmp <- readline("next")
+        }
+        else tconv <- TRUE
 #       if (trace) cat("Here report progress\n")
     } # end outer while
 

@@ -327,7 +327,7 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
 	list(resid = function() resid,
 	     fitted = function() rhs,
 	     formula = function() form,
-	     deviance = function() dev,
+	     deviance = function() dev, ##?? PROBLEM -- does not get updated
 	     lhs = function() lhs,
 	     gradient = function() .swts * attr(rhs, "gradient"),
 	     conv = function() convCrit(),

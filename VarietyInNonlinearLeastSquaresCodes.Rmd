@@ -82,7 +82,10 @@ equations (cancelling the factor 2)
 
 $$ (J^t J)  \delta  =  - J^t r $$
 
-We can use this in an iteration similar to the Newton iteration.
+We can use this in an iteration similar to the Newton iteration. Note that these
+equations are equivalent to the linear least squares problem that can be written
+
+$$  J \delta  \approx - r $$
 
 ## Hartley's method
 
@@ -157,6 +160,16 @@ steepest-descents direction. This approach was actually first suggested by
 very likely never tested them in practice. Before computers were commonly
 available, this was not unusual, and many papers were written with computational
 ideas that were not tested or were given only cursory trial. 
+
+Note that we can define a matrix $K$ which is $J$ augmented below by a suitable diagonal
+matrix that is the square root of $\lambda$ times the unit matrix $1_n$. Then the
+Levenberg-Marquardt equations are equivalent to 
+
+$$  K \delta \approx - r_{augmented} $$
+
+where we have added $n$ zeros to $r$ to make $r_{augmented}$. Similar adjustments
+are used for scaled Marquardt methods mentioned below.
+
 
 Practical Marquardt methods require us to specify an initial $\lambda$ and ways
 to adjust its value. For example, if $$SS(x) = r^t r = f(x)$$ is the function to 
