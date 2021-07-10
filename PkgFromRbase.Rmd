@@ -163,7 +163,7 @@ code needs to be commented out or deleted from the C file(s) and headers
 to avoid errors when building and checking the alternative.
 
 To prepare the `nlsalt` package a directory of that name was created and
-the contents of the `nlsalt` directory copied over. The DESCRIPTION file
+the contents of the `nlspkg` directory copied over. The DESCRIPTION file
 was edited to provide the `nlsalt` name and the result checked with 
 build and CHECK. 
 
