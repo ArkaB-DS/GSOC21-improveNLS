@@ -80,6 +80,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
     cat("Before iteration, deviance=",ssmin,"\n")
     swts <- nlenv$swts
     prm <- m$getPars()
+    #?? At this stage, have res and J
+    # Do we want to have a QR or SVD available to compute conv. 
     while (! m$conv() ) { #?? conv() consolidates several options (as available) 
        # Here we have to choose method based on controls
        # Inner loop over either line search or Marquardt stabilization
@@ -103,8 +105,6 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
            newp <- prm + fac * delta
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-#           eq <- m$parset(newp) #?? Not updating prm!!
-##??wrong!!           cat("newprm:"); print(m$getPars())
            cat("newp:"); print(as.numeric(newp))
            eq <- all( (prm+control$offset) == (newp+control$offset) )
            if (! eq ) {
@@ -131,8 +131,6 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         else tconv <- TRUE
 #       if (trace) cat("Here report progress\n")
     } # end outer while
-
-
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
     result <- list(m=m, convInfo=convInfo, control=ctrl)
     ##?? Add call -- need to set up properly somehow. Do we need model.frame?
@@ -140,4 +138,3 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
     class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821
     result
 }
-

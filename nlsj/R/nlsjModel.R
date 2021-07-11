@@ -204,7 +204,7 @@ print(control)
     }
 
     resid <- swts * resfun(nlenv$prm) # ?? is this the best way to do this
-    dev <- sum(resid^2)
+    nlenv$dev <- sum(resid^2)
     
 #    JJ <- attr(rjfun(start),"gradient")  # ?? would like to save this in nlenv for later use
     # ?? for now use QR -- may have other methods later, e.g., svd
@@ -227,28 +227,36 @@ print(control)
        eq
     } # return eq -- Are parameters the same?
 
+# All the following are defined at START of problem
+    cjmsg <- paste("Max. jacobian evaluations (",control$maxiter,") exceeded")
+    crmsg <- paste("Max. residual evaluations (",control$maxres,") exceeded")
+    csmsg <- paste("Small wtd sumsquares (deviance) <= ",nlenv$epstol4)
+    # above could depend on the problem
+    comsg <- paste("Relative offset less than ",control$tol)
+    cnmsg <- "No parameters for this problem"
+    cxmsg <- "Not yet defined"
+    cvmsg <- c(cjmsg, crmsg, csmsg, comsg, cnmsg, cxmsg)
+
     convCrit <- function() { # defaults
-        cat("convCrit: counts are ",nlenv$njac," ",nlenv$nres,"\n")
+##?? can put trace in here
+        if (control$trace) {
+           cat("convCrit: counts are ",nlenv$njac," ",nlenv$nres,"\n")
+           #?? other stuff
+        }
         cval <- FALSE # Initially NOT converged
-        cmsg <- "Termination msg: "
         # max jacs
-        cj <- (nlenv$njac > nlenv$maxiter)
-        cjmsg <- paste("Max. jacobian evaluations (",nlenv$maxiter,") exceeded")
+        cj <- (nlenv$njac > control$maxiter)
         # max fns
-        cr <- (nlenv$nres > nlenv$resmax)
-        crmsg <- paste("Max. residual evaluations (",nlenv$maxres,") exceeded")
+        cr <- (nlenv$nres > control$resmax)
         # small ss
+        cat("nlenv$dev is ",nlenv$dev,"\n")
         cs <- (control$smallsstest && (nlenv$dev <= nlenv$epstol4))
-        csmsg <- paste("Weighted sum of squares (deviance) <= ",nlenv$epstol4)
         # roffset < tolerance for relative offset test
-        cr <- FALSE # ?? for the moment
-        crmsg <- paste("Relative offset less than ",control$tol)
+        co <- FALSE # ?? for the moment
         # other things??
         cn <- (npar < 1) # no parameters
-        cnmsg <- "No parameters for this problem"
         cx <- FALSE # Anything else to be added
-	cxmsg <- "Not yet defined"
-        if(npar == 0) {
+        if(npar == 0) { # define to avoid exceptions
             cval <- TRUE
             ctol <- NA
         }
@@ -266,6 +274,12 @@ print(control)
             else cmsg <- "Check relative offset criterion - default"
             if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n","Too many jacobians")
 	}
+        cvec <- c(cj, cr, cs, co, cn, cx)
+        cat("cvec:",cvec,"\n")
+        cmsg <- "Termination msg: "
+        for (i in 1:length(cvec)){
+            if (cvec[i]) cmsg <- paste(cmsg,cvmsg[i],"&&")
+        }
         attr(cval, "cmsg") <- cmsg
         attr(cval, "ctol") <- ctol
         attr(cval, "nres") <- nlenv$nres
@@ -286,7 +300,7 @@ print(control)
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
 	     formula = function() form, #OK
-	     deviance = function() dev, #OK weighted
+	     deviance = function() nlenv$dev, #OK weighted
 	     lhs = function() lhs, #OK
 ##	     jacobian = function() jacobian, #??
 	     conv = function() convCrit(), # possibly OK
