@@ -50,6 +50,51 @@ report, but a form of extended diary of activity, issues and results.
 
 * In reverse date order *
 
+### [2021-7-10]
+
+- AB noted error in PkgFromRbase document that was fixed.
+
+- JN working on `nlsj` and issues raised, along with some documentation of ideas
+  in the "Variety" article. 
+  
+- Serious issues of concern in the STRUCTURE of the `nlsj` package are mostly
+  related to the placement of functions and features. For example, if we put 
+  functions in the nlsjModel() function and return them to nlsj() by the model
+  object `m`, then there are some awkward communication issues of the convergence
+  criterion information, then updated parameters, etc. 
+  
+  Consider, for example, if we were to change from the nls() step-halving method
+  of seeking a "better" set of parameters. The original method at each iteration
+  has a set of parameters $x_0$ and forms $x = x_0 + s * \delta$ where $s$ is
+  stored in the variable `fac`. We start with this at 1.0 and halve it until
+  the sum of squared weighted residuals is reduced in size. Then we double
+  `fac` for the next major iteration (i.e., with $x_0$ replacing $x$ and a
+  newly computed $\delta$. 
+  
+  However, if we use a parabolic inverse interpolation, we need to store 3
+  sets of parameters and their deviances e.g., $x_0$, $x$ and $x_{half}$,
+  where we use a step of `0.5*fac` for the step $s$. These have to be 
+  shared with the objects and environment that nlsjModel() can access.
+  
+  ?? Arkajyoti: Give these issues some thought. I don't think there's a true
+  "answer", just some good and some not-so-good choices. I'll do some trials
+  to see what seems to work and how easy to understand and use.
+  
+  By creating a small function that builds m <- nlsjModel(....) and trying
+  out some ideas, it appears the easiest way to work is to run the nlsjModel()
+  then ee <- m$getEnv() to get the environment and put items in it. This is
+  NOT necessarily how R gurus would do it, but likely will be safer (and maybe
+  faster -- need to check.)
+  
+
+
+### [2021-7-7] - [2021-7-9]
+
+- JN had computer troubles (failed machine and disks)
+
+- AB participating in UseR!
+
+
 ### [2021-7-5] [2021-7-6]
 
 - some editing and extension of Variety document. ?? still needs some

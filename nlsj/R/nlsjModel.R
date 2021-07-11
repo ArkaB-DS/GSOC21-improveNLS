@@ -59,7 +59,7 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
 #  "trace"  -- ?? this is a FUNCTION in nls(). Is it needed?
 ##?? Note getRHS is NOT exposed, but is used
 ## ?? Don't yet handle variable in dot args. But no dot args here.
-
+print(control)
 # First segment of this function is to check the specification is valid 
 # beyond checks already done in nlsj before call to nlsjModel()
 
@@ -106,6 +106,7 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
     print(ls(nlenv))
     nlenv <- list2env(as.list(start),nlenv) # make sure we add parameters. Note "as.list"
     # Above line needed so formulas can be evaluated
+    nlenv$epstol4 <- (.Machine$double.eps * control$offset)^4 # used for smallsstest
     nlenv$prm <- start # start MUST be defined at this point
     npar <- length(start)
     nlenv$npar <- npar
@@ -230,24 +231,40 @@ nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, contro
         cat("convCrit: counts are ",nlenv$njac," ",nlenv$nres,"\n")
         cval <- FALSE # Initially NOT converged
         cmsg <- "Termination msg: "
+        # max jacs
+        cj <- (nlenv$njac > nlenv$maxiter)
+        cjmsg <- paste("Max. jacobian evaluations (",nlenv$maxiter,") exceeded")
+        # max fns
+        cr <- (nlenv$nres > nlenv$resmax)
+        crmsg <- paste("Max. residual evaluations (",nlenv$maxres,") exceeded")
+        # small ss
+        cs <- (control$smallsstest && (nlenv$dev <= nlenv$epstol4))
+        csmsg <- paste("Weighted sum of squares (deviance) <= ",nlenv$epstol4)
+        # roffset < tolerance for relative offset test
+        cr <- FALSE # ?? for the moment
+        crmsg <- paste("Relative offset less than ",control$tol)
+        # other things??
+        cn <- (npar < 1) # no parameters
+        cnmsg <- "No parameters for this problem"
+        cx <- FALSE # Anything else to be added
+	cxmsg <- "Not yet defined"
         if(npar == 0) {
             cval <- TRUE
-            cmsg <- paste(cmsg, "No parameters for this problem")
             ctol <- NA
         }
-        else { # Do not have qr results available -- need to recompute!!
-          #?? Need to compute what we can -- may be tricky with different criteria
-          # e.g., small SS test.
-#??          rr <- qr.qty(QR, c(resid)) # rotated residual vector
-          scoff <- control$scaleOffset
-          if(scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
+        else { # Do not necessarily have qr results available -- need to recompute!!
+            #?? Need to compute what we can -- may be tricky with different criteria
+            # e.g., small SS test.
+            #??  rr <- qr.qty(QR, c(resid)) # rotated residual vector
+            scoff <- control$scaleOffset
+            if (scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
 ##          ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
-          ctol <- 1e-4 #?? temporary value to get function available for checking
-          cval <- (ctol <= control$tol) # compare relative offset criterion
-          if (scoff > 0.0) 
-               cmsg <- paste("Check relative offset criterion, scaleOffset = ",scoff)
-          else cmsg <- "Check relative offset criterion - default"
-          if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n","Too many jacobians")
+            ctol <- 1e-4 #?? temporary value to get function available for checking
+            cval <- (ctol <= control$tol) # compare relative offset criterion
+            if (scoff > 0.0) 
+                cmsg <- paste("Check relative offset criterion, scaleOffset = ",scoff)
+            else cmsg <- "Check relative offset criterion - default"
+            if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n","Too many jacobians")
 	}
         attr(cval, "cmsg") <- cmsg
         attr(cval, "ctol") <- ctol

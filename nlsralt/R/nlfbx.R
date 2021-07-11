@@ -30,7 +30,7 @@ nlfbx <-function(start, resfn, jacfn = NULL, trace = FALSE,
 #  products t(J)%*%J 
 # 
 # Function to display SS and point
-showprms<-function(SS, pnum){
+  showprms<-function(SS, pnum){
     pnames<-names(pnum)
     npar<-length(pnum)
     cat("lamda:",lamda," SS=",SS," at")
@@ -39,7 +39,7 @@ showprms<-function(SS, pnum){
     }
     cat(" ",feval,"/",jeval)
     cat("\n")
-} # end showprms
+  } # end showprms
 
 if (trace) {
    if (is.null(weights)) {

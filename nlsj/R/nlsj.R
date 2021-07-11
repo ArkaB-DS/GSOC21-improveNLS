@@ -71,18 +71,16 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 
     #### Build the "model" object ####
     m <- nlsjModel(formula, data, start, weights, lower=lower, upper=upper, control=control)
-
+    nlenv <- m$getEnv() # we can now store things in nlenv
     # ?? Are we ready to solve?
-    njac <- 0 # number of jacobians so far
-    nres <- 1
-    ## ?? need current prm available, prm_old??
-    resraw <- m$rjfun(start) # 
+    nlenv$njac <- 0 # number of jacobians so far
+    nlenv$nres <- 1
+    resraw <- m$rjfun(start) # includes Jacobian
     ssmin <- m$deviance() # get the sum of squares (this is weighted)
     cat("Before iteration, deviance=",ssmin,"\n")
-    swts <- m$getEnv()$swts
-    tconv <- FALSE ## ??(confInfo <- m$conv()) ) { # main loop ##?? conv NOT correct for rel. offset
+    swts <- nlenv$swts
     prm <- m$getPars()
-    while (! tconv) { #?? temporary
+    while (! m$conv() ) { #?? conv() consolidates several options (as available) 
        # Here we have to choose method based on controls
        # Inner loop over either line search or Marquardt stabilization
        # returns delta, break from "while" if prm unchanged by delta
