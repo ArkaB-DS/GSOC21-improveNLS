@@ -50,6 +50,32 @@ report, but a form of extended diary of activity, issues and results.
 
 * In reverse date order *
 
+### [2021-7-12]
+
+- JN working on nlsj package in last couple of days. Refactored into new
+  file nlsjx.R with NO nlsjModel() function. Got this "running" on 
+  Croucher example (which is changed slightly to reflect new name.)
+  Notes:
+  
+  - It seems nls() counts "iterations" whereas JN prefers jacobians and
+    residuals. As structured, the algorithm computes residuals an extra
+    time, since the internal backtracking does NOT compute jacobian. 
+    Possibly we should. Timing will be needed to see what is most
+    efficient, though we will need a number of different sizes and types
+    of problem. Can possibly think of ways to short-circuit the computation.
+    
+  - The particular choice of strategy for the backtracking always uses 
+    fac=0.5 on first iteration (as far as JN can determine.) This may or
+    may not be a good choice, but for the moment it gives the same results
+    as nls().
+    
+  - The "m" object is NOT built until we finish nlsj(). And some of the 
+    functions are missing / wrong. We need to fix what we do need and 
+    eliminate those that are not needed.
+    
+  - note that by using zero weights, the `subset` argument is handled OK.
+
+
 ### [2021-7-10]
 
 - AB noted error in PkgFromRbase document that was fixed.
