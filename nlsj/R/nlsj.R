@@ -69,16 +69,23 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        names(start) <- snames ## as.numeric strips names, so this is needed ??
     }
 
+    cat("nlsj env:"); print(ls())
+
     #### Build the "model" object ####
     m <- nlsjModel(formula, data, start, weights, lower=lower, upper=upper, control=control)
+    cat("nlsj env after m:"); print(ls())
     nlenv <- m$getEnv() # we can now store things in nlenv
+    cat("contents of nlenv:"); print(ls(nlenv))
+    tmp <- readline("cont.")
     # ?? Are we ready to solve?
     nlenv$njac <- 0 # number of jacobians so far
     nlenv$nres <- 1
+    swts <- nlenv$swts # ?? do we need to do this sort of assignment (i.e, can we aling envs?)
     resraw <- m$rjfun(start) # includes Jacobian
+    J <- swts * attr(resraw,"gradient") 
+    nlenv$QRJ <-qr(J)
     ssmin <- m$deviance() # get the sum of squares (this is weighted)
     cat("Before iteration, deviance=",ssmin,"\n")
-    swts <- nlenv$swts
     prm <- m$getPars()
     #?? At this stage, have res and J
     # Do we want to have a QR or SVD available to compute conv. 
@@ -92,12 +99,12 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        J <- swts * attr(resraw,"gradient") 
        wres <- swts * resraw # get wts residuals
        cat("wres:"); print(wres)
-       QR <- qr(J)
-       print(str(QR))
-       qrDim <- min(dim(QR$qr))
-       if (QR$rank < qrDim) stop("Singular jacobian") # for now don't continue
+       nlenv$QRJ <- qr(J)
+       cat("QRJ:"); print(str(nlenv$QRJ))
+       qrDim <- min(dim(nlenv$QRJ$qr))
+       if (nlenv$QRJ$rank < qrDim) stop("Singular jacobian") # for now don't continue
 
-       delta <- qr.coef(QR, -wres) # LS solve of J delta ~= -wres
+       delta <- qr.coef(nlenv$QRJ, -wres) # LS solve of J delta ~= -wres
        cat("delta:")
        print(delta)
        fac <- 1.0

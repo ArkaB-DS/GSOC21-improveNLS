@@ -1,7 +1,7 @@
 nlsjModel <- function(form, data, start, wts=NULL, lower=-Inf, upper=Inf, control)
 {
 ##?? Note that there is a lot of duplication with nlsj() if we are not VERY careful
-
+##?? Many items put in nlenv$... Can possibly simplify.
 
 # This function is designed to set up the information needed to estimate the model
 # which it defines and for which it provides the tools
@@ -110,6 +110,7 @@ print(control)
     nlenv$prm <- start # start MUST be defined at this point
     npar <- length(start)
     nlenv$npar <- npar
+    nlenv$QRJ <- NA # set NA so we can test
     cat("nlnames again2:")
     print(ls(nlenv))
 
@@ -203,8 +204,8 @@ print(control)
         val
     }
 
-    resid <- swts * resfun(nlenv$prm) # ?? is this the best way to do this
-    nlenv$dev <- sum(resid^2)
+    nlenv$resid <- swts * resfun(nlenv$prm) # ?? is this the best way to do this
+    nlenv$dev <- sum(nlenv$resid^2)
     
 #    JJ <- attr(rjfun(start),"gradient")  # ?? would like to save this in nlenv for later use
     # ?? for now use QR -- may have other methods later, e.g., svd
@@ -238,6 +239,7 @@ print(control)
     cvmsg <- c(cjmsg, crmsg, csmsg, comsg, cnmsg, cxmsg)
 
     convCrit <- function() { # defaults
+#        cat("convCrit: scaleOffset=",control$scaleOffset,"\n")
 ##?? can put trace in here
         if (control$trace) {
            cat("convCrit: counts are ",nlenv$njac," ",nlenv$nres,"\n")
@@ -253,6 +255,23 @@ print(control)
         cs <- (control$smallsstest && (nlenv$dev <= nlenv$epstol4))
         # roffset < tolerance for relative offset test
         co <- FALSE # ?? for the moment
+        ctol <- NA
+#        if (! is.na(nlenv$QRJ)) { # QR available for relative offset test
+         ## Make it always available via nlsj()
+            scoff <- control$scaleOffset
+#            cat("scoff now1=",scoff,"\n")
+            if (scoff) scoff <- (mres - npar) * scoff^2 # adjust for problem 
+#            cat("scoff now2=",scoff,"\n")
+	    rr <- qr.qty(nlenv$QRJ, c(nlenv$resid))
+            cat("rr:"); print(rr)
+            print(rr[1L:npar])
+            print(rr[-(1L:npar)])
+            ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
+            cat("ctol =",ctol,"\n")
+            ##            projected resids ss             deviance
+            co <- (ctol <= control$tol) # compare relative offset criterion
+#        } else cat("No QRJ\n")
+        tmp <- readline("continue")
         # other things??
         cn <- (npar < 1) # no parameters
         cx <- FALSE # Anything else to be added
@@ -260,20 +279,6 @@ print(control)
             cval <- TRUE
             ctol <- NA
         }
-        else { # Do not necessarily have qr results available -- need to recompute!!
-            #?? Need to compute what we can -- may be tricky with different criteria
-            # e.g., small SS test.
-            #??  rr <- qr.qty(QR, c(resid)) # rotated residual vector
-            scoff <- control$scaleOffset
-            if (scoff) scoff <- (length(resid) - npar) * scoff^2 # adjust for problem 
-##          ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
-            ctol <- 1e-4 #?? temporary value to get function available for checking
-            cval <- (ctol <= control$tol) # compare relative offset criterion
-            if (scoff > 0.0) 
-                cmsg <- paste("Check relative offset criterion, scaleOffset = ",scoff)
-            else cmsg <- "Check relative offset criterion - default"
-            if (nlenv$njac > control$maxiter) cmsg<-paste(cmsg,"\n","Too many jacobians")
-	}
         cvec <- c(cj, cr, cs, co, cn, cx)
         cat("cvec:",cvec,"\n")
         cmsg <- "Termination msg: "
