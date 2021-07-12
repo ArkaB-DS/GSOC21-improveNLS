@@ -74,6 +74,11 @@ report, but a form of extended diary of activity, issues and results.
     eliminate those that are not needed.
     
   - note that by using zero weights, the `subset` argument is handled OK.
+  
+  - Some functions for print and summary needed changes to allow them to run,
+    since they try to use the functions from nlsModel. 
+    
+  - Output is currently untidy. Need to fixup.
 
 
 ### [2021-7-10]
