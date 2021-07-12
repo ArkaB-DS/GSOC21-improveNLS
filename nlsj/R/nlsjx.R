@@ -8,7 +8,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
 # DOES NOT CALL nlsjModel, but does everything here
 
 # Controls
-   cat("control:"); print(control)
+#   cat("control:"); print(control)
    if (is.null(control$derivmeth)) control$derivmeth="default" # for safety
    epstol <- (.Machine$double.eps * control$offset) 
    epstol4 <- epstol^4 # used for smallsstest
@@ -56,13 +56,11 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
       start <- as.numeric(start) # ensure we convert (e.g., if matrix)
       names(start) <- snames ## as.numeric strips names, so this is needed ??
    }
-   # cat("npar=",npar,"\n") # Proves this works (??put in nlsjModel()?)
    prm <- start # start MUST be defined at this point
    localdata <- list2env(as.list(prm), parent = data)
 
 # Weights
    mraw <- length(eval(as.name(dnames[1])))
-   # cat("mraw=",mraw,"\n") # Proves this works (raw length)
    if(is.null(weights)) {
        weights<-rep(1.0, mraw) # set all weights to 1.0
    } 
@@ -77,8 +75,6 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
      weights[- subset] <- 0.0 # NOTE: the minus gets the values NOT in the dataset
    }
    mres<-length(weights[which(weights > 0.0)]) # number of residuals (observations)
-   cat("nlsj: weights:"); print(weights)  
-   tmp <- readline("cont.")
    swts<-sqrt(weights)
 
 # Bounds and masks (fixed parameters)
@@ -130,11 +126,8 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
         control$derivmeth <- nlsjcontrol()$altderivmeth
    }
 
-
-   tmp <- readline("cont.")
 # Define functions
    resfun <- function(prm) { # only computes the residuals (unweighted)
-      nres <- nres + 1
       if (is.null(names(prm))) names(prm) <- names(start)
       localdata <- list2env(as.list(prm), parent = data)
       eval(residexpr, envir = localdata) # ?? needed? or is eval(residexpr) enough?
@@ -143,14 +136,12 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
    rjfun <- function(prm) { # Computes residuals and jacobian
        if (is.null(names(prm))) names(prm) <- names(start)
        localdata <- list2env(as.list(prm), parent = data)
-       nres <- nres + 1
        if (control$derivmeth == "numericDeriv"){ # use numerical derivatives
           val <- numericDeriv(residexpr, names(prm), rho=localdata)
        }
        else if(control$derivmeth == "default"){ # use analytic
           val <- eval(rjexpr, envir = localdata)
        } 
-       njac <- njac + 1; nres <- nres + 1 # Both residual and jacobian are evaluated
        val
    }
 
@@ -170,39 +161,27 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
    cvmsg <- c(cjmsg, crmsg, csmsg, comsg, cnmsg, cxmsg)
 
    convCrit <- function() { # returns TRUE if should terminate algorithm
-#        cat("convCrit: scaleOffset=",control$scaleOffset,"\n")
-##?? can put trace in here
-        if (trace) {
-           cat("convCrit: counts are ",njac," ",nres,"\n")
-           #?? other stuff
-        }
+        # put the trace function here and don't include in m
         cval <- FALSE # Initially NOT converged
         # max jacs
         cj <- (njac > control$maxiter)
         # max fns
         cr <- (nres > control$resmax)
         # small ss
-        cat("ssmin is ",ssmin,"\n")
         cs <- (control$smallsstest && (ssmin <= epstol4))
         # roffset < tolerance for relative offset test
         co <- FALSE # ?? for the moment
         ctol <- NA
         ## Make it always available via nlsj()
         scoff <- control$scaleOffset
-#            cat("scoff now1=",scoff,"\n")
         if (scoff) scoff <- (mres - npar) * scoff^2 # adjust for problem 
-#            cat("scoff now2=",scoff,"\n")
         ## at this point, QRJ and wres should be defined
         rr <- qr.qty(QRJ, wres)
-        cat("rr:"); print(rr)
         print(rr[1L:npar])
         print(rr[-(1L:npar)])
         ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
-        cat("ctol =",ctol,"\n")
         ##            projected resids ss             deviance
         co <- (ctol <= control$tol) # compare relative offset criterion
-#        } else cat("No QRJ\n")
-        tmp <- readline("continue")
         # other things??
         cn <- (npar < 1) # no parameters
         cx <- FALSE # Anything else to be added
@@ -210,8 +189,12 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
             cval <- TRUE
             ctol <- NA
         }
+        if (trace) {
+	  cat(ssmin, "(", ctol,")  (jac/res):(",njac,"/",nres,") ")
+          print(prm)
+           #?? other stuff
+        }
         cvec <- c(cj, cr, cs, co, cn, cx)
-        cat("cvec:",cvec,"\n")
         cmsg <- "Termination msg: "
         for (i in 1:length(cvec)){
             if (cvec[i]) cmsg <- paste(cmsg,cvmsg[i],"&&")
@@ -226,8 +209,8 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
 
 
 # Initialization
-   njac <- 0 # number of jacobians so far
-   nres <- 0
+   njac <- 1 # number of jacobians so far
+   nres <- 1
    resraw <- rjfun(start) # includes Jacobian
    wres <- swts * resraw 
    J <- swts * attr(resraw,"gradient")  # multiplication for wres does NOT chg attribute
@@ -236,21 +219,21 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
    if (QRJ$rank < qrDim) stop("Singular initial jacobian") # for now don't continue
    ssmin <- as.numeric(crossprod(wres)) # get the sum of squares (this is weighted)
    cat("Before iteration, deviance=",ssmin,"\n")
-   while (! convCrit() ) { # Top main loop
+   while (! (convInfo <- convCrit()) ) { # Top main loop -- save convInfo at same time
        delta <- qr.coef(QRJ, -wres) # LS solve of J delta ~= -wres
-       cat("delta:"); print(delta)
-       tmp <- readline("cont.")
+ #      cat("delta:"); print(delta)
        fac <- 1.0
        ssnew<-ssmin # initialize so we do one loop at least
        while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
            newp <- prm + fac * delta
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-           cat("newp:"); print(as.numeric(newp))
+#           cat("newp:"); print(as.numeric(newp))
            eq <- all( (prm+control$offset) == (newp+control$offset) )
            if (! eq ) {
               # ?? trying to get NEW values here. Does not want to re-evaluate when running!
               # ?? Is it using p1 and p2 rather than prm??
               newwres <- swts*resfun(newp)
+              nres <- nres + 1 # Only residual evaluated
               ssnew <- as.numeric(crossprod(newwres))
               if (trace) cat("fac=",fac,"   ssnew=",ssnew,"\n")
               if ( ssnew < ssmin) break
@@ -266,6 +249,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
 	 prm <- newp
        	 ssmin <- ssnew
          resraw <- rjfun(prm) # ?? new res and gradient -- does extra res??
+         njac <- njac + 1; nres <- nres + 1 # Both residual and jacobian are evaluated
          wres <- swts * resraw 
          J <- swts * attr(resraw,"gradient")  # multiplication for wres does NOT chg attribute
          QRJ <-qr(J)
@@ -280,24 +264,25 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
     m <-
 	list(resfun = function(prm) resfun(prm), # ??
-             resid = function() resid, # ?? weighted
+             resid = function() wres, # ?? weighted
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
-	     formula = function() form, #OK
-	     deviance = function() dev, #OK weighted
+	     formula = function() formula, #OK
+	     deviance = function() ssmin,
 	     lhs = function() lhs, #OK
-##	     jacobian = function() jacobian, #??
 	     conv = function() convCrit(), # possibly OK
 ##	     incr = function() qr.coef(QR, resid),  #?? 
 # ?? Need to modify this for different iteration approaches besides Gauss Newton
-	     getPars = function() getPars(), #OK
-	     getEnv = function() nlenv, #OK
-             parset = function(newPars) parset(newPars), #??
+	     getPars = function() {prm},
+#	     getEnv = function() nlenv, #OK
+#             parset = function(newPars) parset(newPars), #??
+	     Rmat = function() qr.R(QRJ),
+
 	     predict = function(newdata = list(), qr = FALSE)
                  eval(form[[3L]], as.list(newdata), nlenv) #OK
 	     )
     class(m) <- "nlsModel"
-    result <- list(m=m, convInfo=convInfo, control=ctrl)
+    result <- list(m=m, convInfo=convInfo, control=control)
     ##?? Add call -- need to set up properly somehow. Do we need model.frame?
 
     class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821

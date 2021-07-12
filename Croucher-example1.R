@@ -36,6 +36,7 @@ fitj = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2)
 # summarise
 summary(fitj)
 
+tmp <- readline("more?")
 fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
 summary(fit)
 

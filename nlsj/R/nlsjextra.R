@@ -1,4 +1,4 @@
-coef.nlsj <- function(object, ...) object$m$getAllPars()
+coef.nlsj <- function(object, ...) object$m$getPars() # not getAllPars since no plinear yet
 
 summary.nlsj <-
     function (object, correlation = FALSE, symbolic.cor = FALSE, ...)
@@ -45,7 +45,8 @@ print.nlsj <- function(x, digits = max(3L, getOption("digits") - 3L), ...)
     cat(" ", if(!is.null(x$weights) && diff(range(x$weights))) "weighted ",
 	"residual sum-of-squares: ", format(x$m$deviance(), digits = digits),
 	"\n", sep = "")
-    .p.nlsj.convInfo(x, digits = digits)
+#    .p.nlsj.convInfo(x, digits = digits)
+    print(x$convInfo)
     invisible(x)
 }
 
@@ -80,7 +81,8 @@ print.summary.nlsj <-
         }
     }
 
-    .p.nlsj.convInfo(x, digits = digits)
+#    .p.nlsj.convInfo(x, digits = digits)
+    print(x$convInfo)
 
     if(nzchar(mess <- naprint(x$na.action))) cat("  (", mess, ")\n", sep = "")
     cat("\n")
