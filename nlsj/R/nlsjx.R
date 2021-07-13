@@ -238,7 +238,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
               # ?? Is it using p1 and p2 rather than prm??
               newwres <- swts*resfun(newp)
               nres <- nres + 1 # Only residual evaluated
-              ssnew <- as.numeric(crossprod(newwres))
+              ssnew <- as.numeric(crossprod(newwres)) ## ?? sum(newres^2) or sum(newres*newres)
               if (trace) cat("fac=",fac,"   ssnew=",ssnew,"\n")
               if ( ssnew < ssmin) break
            }
@@ -267,7 +267,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
     } # end outer while
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
     m <-
-	list(resfun = function(prm) resfun(prm), # ??
+       list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wres}, # ?? weighted. NOTE SIGN??
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
