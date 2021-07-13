@@ -112,6 +112,10 @@ or can the call cause elements to be added or not produced?)
 This function computes the residuals in the current environment. (?? Is this .GlobalEnv? Can
 that environment be changed i.e., is it an argument to resid()?)
 
+Note that these are WEIGHTED residuals. As at 2021-7-13, nlsj::nlsj() returns zero valued
+elements for those data points excluded via argument `subset`, but the Jacobian is full
+sized. Do we want to apply zero weights to reduce the dimensions to make things "the same"??
+
 ```{r tresid}
 cat("Display Croucher residuals from nmodc1 as currently set:\n")
 print(nmodc1$resid())

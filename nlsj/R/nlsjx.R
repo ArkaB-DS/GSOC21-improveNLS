@@ -13,6 +13,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
    epstol <- (.Machine$double.eps * control$offset) 
    epstol4 <- epstol^4 # used for smallsstest
    ##?? may want these in nlsj.control
+   if (control$derivmeth == "numericDeriv") warning("Forcing numericDeriv")
 
 # Algorithm
    if (is.null(algorithm)) algorithm<-"default"
@@ -104,6 +105,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
         lhs <- NULL
         rhs <- eval(formula[[2L]], envir=localdata)
    } else if (length(formula) == 3) {
+         ##?? WARNING: seems to disagree with nls()
              residexpr <- call("-", formula[[3]], formula[[2]])
              lhs <- eval(formula[[2L]], envir=localdata)
              # set the "promise" for the lhs of the model
@@ -116,11 +118,13 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
              else { if (control$trace) cat("lhs has just the variable ",lnames,"\n")}
            } 
            else stop("Unrecognized formula")
-
-   if (all(nlsderivchk(residexpr, names(start)))) { # all derivs can be computed
-      rjexpr <- deriv(residexpr, names(start)) ##?? will fail on some functions
-   } 
-   else rjexpr <- NULL
+   if (control$derivmeth == "numericDeriv") {
+         rjexpr <- residexpr # unchanged -- numeric deriv put into rjfun
+   } else
+        if (all(nlsderivchk(residexpr, names(start)))) { # all derivs can be computed
+           rjexpr <- deriv(residexpr, names(start)) ##?? could fail on some functions
+        } 
+        else  rjexpr <- NULL
    if (is.null(rjexpr) && (control$derivmeth == "default")) {
         warning("Changing to alternative derivative method")
         control$derivmeth <- nlsjcontrol()$altderivmeth
@@ -145,7 +149,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
        val
    }
 
-#??   resid <- function(prm) {swts * rjfun(prm)} # used to return in m
+#??   resid <- function(prm) {- swts * rjfun(prm)} # used to return in m ?? NOTE SIGN
 
    deviance <- function(prm) { as.numeric(crossprod(resid(prm))) }
    # ?? nls doesn't have prm
@@ -264,7 +268,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
     m <-
 	list(resfun = function(prm) resfun(prm), # ??
-             resid = function() wres, # ?? weighted
+             resid = function() {- wres}, # ?? weighted. NOTE SIGN??
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
 	     formula = function() formula, #OK

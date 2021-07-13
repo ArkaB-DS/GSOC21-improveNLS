@@ -30,8 +30,8 @@ library(nlsj)
 
 # tj = tmod(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
 
-# do the fit 
-fitj = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
+# do the fit -- this is using ANALYTIC derivs??
+fitj = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE, control=nlsj.control(derivmeth="default"))
 
 # summarise
 summary(fitj)
@@ -39,6 +39,54 @@ summary(fitj)
 tmp <- readline("more?")
 fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
 summary(fit)
+
+# NOTE: nlsj() zeros subsetted residual items, but includes them in the outut of resid()
+r1<-fitj$m$resid() # ?? wrong sign in resid part
+r2<-fit$m$resid()
+
+
+subres <- function(robj, subset) {## Subset a resid() object using subset argument
+    J <- attr(robj, "gradient")  
+    sres <- robj[subset]
+    sJ <- J[subset, ]
+    attr(sres, "gradient") <- sJ
+    sres  
+}
+
+rescomp <- function(r1, r2){ # Compare two residual objects for nls() class outputs
+   rdiff <- r1 -r2
+   jdiff <- attr(r1,"gradient") - attr(r2,"gradient")
+   mr <- max(abs(rdiff))
+   mj <- max(abs(jdiff))
+   cat("Maximum absolute differences in residual =",mr," in jacobian=",mj,"\n")
+   rdiff
+}
+
+r1<-subres(r1,Csubset)
+rescomp(r1,r2)
+as.numeric(r1)
+as.numeric(r2)
+j1 <-attr(r1,"gradient")
+j2 <-attr(r2,"gradient")
+j1
+j2
+
+fitjn = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, control=nlsj.control(derivmeth="numericDeriv"), trace=TRUE)
+
+# summarise
+summary(fitjn)
+r1n<-fitjn$m$resid() # ?? wrong sign in resid part
+
+r1n<-subres(r1n,Csubset)
+rescomp(r1n,r2)
+as.numeric(r1n)
+as.numeric(r2)
+j1n <-attr(r1n,"gradient")
+j2 <-attr(r2,"gradient")
+j1n
+j2
+
+
 
 # str(modj)
 # tmp <- readline("continue?")
