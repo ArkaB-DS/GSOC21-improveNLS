@@ -46,6 +46,55 @@ report, but a form of extended diary of activity, issues and results.
 
 \url{https://gitlab.com/nashjc/improvenls}
 
+## ----------- MAIN OUTCOMES ------------
+
+Here is an annotated listing of product of the project.
+
+- DerivsNLS.Rmd: a document to explain different ways in which Jacobian information
+  is supplied to nonlinear least squares computation in R. File `ExDerivs.R` is
+  intended to provide examples.?? needs documentation??
+
+- ImproveNLS.bib: a consolidated BibTex bibliography for all documents in this
+  project, possibly with wider application to nonlinear least squares in general
+
+
+- MachineSummary.Rmd: an informal investigation of ways to report the characteristics
+  and identity of machines running tests. `MachID.R` offers a concise summary function
+  ?? should revisit??
+
+- nlsalt: attempt to mirror nls() behaviour in R. UNFINISHED?? The effort showed that
+  the structure of the programs was difficult to follow, undocumented, and unsuited
+  to adding improvements like Marquardt. Possible that we will abandon this.
+  `nls-flowchart.txt` is a partial documentation of the structure.
+
+` nls-changes-for-small-residuals-in-nls-R-4.0.2.zip: collected material for the 
+  JN fix to the relative offset convergence criterion failure when there are small 
+  residuals in problems sent to nls(). 
+  
+- nlsj: A refactoring of the nls() functionality. `redesign2107.txt` gives some notes.
+
+` nlsModelDoc.Rmd
+
+` nlspkg: a packaged version of the nls() code from R-base. Thanks to Duncan Murdoch
+
+` nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
+  discovered as a result of this project
+
+` PkgFromRbase.Rmd: an explanation of the construction of the `nlspkg` from the
+  code in R-base. 
+
+` TestsDoc.Rmd: a survey of testing tools in R. ?? need to incorporate MachID and
+  the many tests. 
+
+` VarietyInNonlinearLeastSquaresCodes.Rmd: a review of the different algorithms and
+  the many choices in their implementation for nonlinear least squares. ??unfinished
+  but getting there.
+
+- WorkingDocument4ImproveNLS.Rmd: this document
+
+
+
+
 ## ----------- DIARY PORTION ------------
 
 * In reverse date order *
