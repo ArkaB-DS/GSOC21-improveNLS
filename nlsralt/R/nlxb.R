@@ -1,4 +1,4 @@
-nlxb <- function(formula, start, trace = FALSE, data=NULL, lower = -Inf,
+nlxb <- function(formula, start, trace = FALSE, data=NULL, subset=NULL, lower = -Inf,
                  upper = Inf, masked = NULL, weights=NULL, control=list()) {
     # A simplified and hopefully robust alternative to finding
     # the nonlinear least squares minimizer that causes
@@ -25,7 +25,7 @@ nlxb <- function(formula, start, trace = FALSE, data=NULL, lower = -Inf,
     # This variant uses a qr solution without forming the sum
     # of squares and cross products t(J)%*%J
     # 
-# ?? and put in the weights
+# ?? and put in the weights and subset
 #    ######### get data from data frame if exists
 #    ######### print(str(data))
 #    if (!is.null(data)) {

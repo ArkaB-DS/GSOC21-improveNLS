@@ -1,5 +1,9 @@
 
 TODO:
+         o    add subset 
+
+         o    ensure numerical derivatives working
+
          o    does not use dotargs
 
          o    Should we use model.frame() anywhere?

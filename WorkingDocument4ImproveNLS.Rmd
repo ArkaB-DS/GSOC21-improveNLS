@@ -14,7 +14,8 @@ output:
 ## TODOS
 
 - Show how `dir` works in nlsalt::numericDeriv(); need some examples/tests
-  Currently is used when approaching upper bounds.
+  Currently is used when approaching upper bounds. ?? Need to put this in
+  other codes and document with examples.
   
 - Can we find a way to use analytic derivatives where they are available?
   nlsderivchk.R shows deriv() not terribly smart. 
@@ -29,9 +30,17 @@ output:
   jacobian evaluation forms work best. That means measuring timing (which
   we know how to do with microbenchmark) and memory, which is a little more
   difficult because of R's "garbage collection" and other policies.
+  ?? Not even begun, but eventually performance will become important.
   
 - Does the presence of p1 and p2 objects in .GlobalEnv cause trouble for nls()
-  (it does seem to for nlsj)?
+  (it does seem to for nlsj)??
+  
+- Testing structure to enable us to compare different routines on all the 
+  different tests.
+  
+- nlsModel needs better attention to WHICH routines from the `m` object are
+  used EXTERNALLY to nls(). `nlsj` with NOT have all of these. And `m` is now
+  (2021-7-12) built at the end of the computation rather than the beginning.
 
 ## Abstract
 
@@ -78,7 +87,8 @@ Here is an annotated listing of product of the project.
 ` nlspkg: a packaged version of the nls() code from R-base. Thanks to Duncan Murdoch
 
 ` nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
-  discovered as a result of this project
+  discovered as a result of this project. Need to add subset correctly and document
+  changes e.g., to numerical derivatives. This is for JN rather than AB.
 
 ` PkgFromRbase.Rmd: an explanation of the construction of the `nlspkg` from the
   code in R-base. 
