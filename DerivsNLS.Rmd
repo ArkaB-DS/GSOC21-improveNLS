@@ -49,7 +49,6 @@ or to provide a logical control to `nlxb()` for this purpose.
 
 This document source is in file **DerivsNLS.Rmd**.
 
-
 `nls()` needs Jacobians calculated at the current set of trial nonlinear model
 parameters to set up the Gauss-Newton equations. Unfortunately, `nls()` calls
 the Jacobian the "gradient", and uses function `numericDerivs()` to compute them.

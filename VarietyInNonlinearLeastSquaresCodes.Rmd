@@ -53,11 +53,11 @@ $$ x \leftarrow x + \delta $$
 
 and we iterate until there is no change in $x$.
 
-There are some adjustments When our function $f(x)$ can be written as a sum of squares
+There are some adjustments when our function $f(x)$ can be written as a sum of squares
 
-$$  f(x) = \sum_{i-1}^n {r_i(x)^2} = r^t r $$
+$$  f(x) = \sum_{i=1}^n {r_i(x)^2} = r^t r $$
 
-where the final vector product form is the one I favour because it is the least fussy to write.
+The final vector product form is the one I favour because it is the least fussy to write and read.
 In particular, when we try to evaluate the Hessian of this sum of squares function, we see that it is
 
 $$ H_{j,k} = 2 \sum_{i-1}^n { { [ (\partial r_i/\partial{x_j} ) } ({\partial r_i/\partial{x_k} ) + r_i (\partial^2 r_i/{\partial{x_j} \partial{x_k} ) ]}}} $$
@@ -93,7 +93,7 @@ Conditions for convergence of the Newton iteration and the Gauss-Newton
 iteration are rather a nuisance
 to verify, and in any case we want a solution to the original problem
 rather than one that can be obtained because of special features of the
-problem that allow this default Gauss-Newton iteration
+problem that allow this default Gauss-Newton iteration.
 @Hartley61 proposed that rather than use an iteration
 
 $$ x \leftarrow x + \delta$$
@@ -152,7 +152,7 @@ $$  \lambda  \mathbf{1}_n \delta =  - g $$
 various values of $\lambda$ will produce steps along the **steepest descents**
 direction. Solutions of the Levenberg-Marquardt equations
 
-$$ (J^t J + \lambda 1_n)  \delta  = A \delta =  - J^t r $$
+$$ (J^t J + \lambda  \mathbf{1}_n)  \delta  = A \delta =  - J^t r $$
 
 can be thought of as yielding a step $\delta$ that merges the Gauss-Newton and 
 steepest-descents direction. This approach was actually first suggested by 
@@ -181,9 +181,9 @@ minimize to "fit" our nonlinear model:
 
 - **B** compute new set of parameters $$x_{new} = x + \delta $$ 
 
-- if $x_{new} != x$, compute $SS(x_{new})$, else quit (**termination**)
+- if $x_{new} \ne x$, compute $SS(x_{new})$, else quit (**termination**)
 
-- if $$SS(x_{new}) < SS(x)$, replace $x$ with $x_{new}$, replace $\lambda$
+- if $SS(x_{new}) < SS(x)$, replace $x$ with $x_{new}$, replace $\lambda$
 with $0.4*\lambda$, then retry from **A**
 
 - ELSE increase $\lambda$ to $10*\lambda$ and retry from **B** ($J$ and $g$ do
@@ -203,21 +203,23 @@ An example of choices to deal with these details:
   (Otherwise do not worry if it is tiny, as long as the sum of squares still gets
    reduced.)
    
-- when comparing $x_{new}$ and $x5, we can use a modest number, e.g, 100.0 which
-  we will call OFFSET. In the arithmetic of the system at hand, if the floating-point
-  numbers $x_{new} + OFFSET} matches bit for bit $x + OFFSET$, then they are equal.
+- when comparing $x_{new}$ and $x$, we can use a modest number, e.g, 100.0 which
+  we will call $OFFSET$. In the arithmetic of the system at hand, if the floating-point
+  number $(x_{new} + OFFSET)$ matches bit for bit $(x + OFFSET)$, then we take the
+  unmodified numbers as equal.
 
 Many practitioners dislike using IF statements (comparisons) of floating point
 numbers and I have had a number of exchanges with other workers over the years. 
-However, I have never seen any issues. When $x$ is tiny, we compare OFFSET to 
-itself and declare equality. When $x$ is very large, OFFSET does not change it and
+However, I have never seen any cases where this approach caused difficulties. 
+When $x$ is tiny, we compare $OFFSET$ to 
+itself and declare equality. When $x$ is very large, $OFFSET$ does not change it and
 we compare $x$ with a value that is identical to it. Moreover, we use very little
 extra code.
 
 ### Automatic scaling
 
-In @Marquardt1963, it is shown that the use of the diagonal elements of $Jt J$
-instead of $1_n$ in the Marquardt stabilized Gauss-Newton equations is equivalent
+In @Marquardt1963, it is shown that the use of the diagonal elements of $J^t J$
+instead of $\mathbf{1}_n$ in the Marquardt stabilized Gauss-Newton equations is equivalent
 to having a similar scale for all the parameters. Call this diagonal matrix $D$.
 Generally this is the preferred
 approach to Levenberg-Marquardt stabilizations. However, in low-precision 
@@ -227,9 +229,9 @@ modify the equations to
 
 $$ (J^t J + \lambda (D + \phi 1_n)  \delta  =  - J^t r $$
 
-where phi is a modest number such as 1. 
+where $\phi$ is a modest number such as 1. 
 
-Note that we form JTJ in `nlfb()` to provide the scaled stabilization, 
+Note that we form $J^t J$ in `nlfb()` to provide the scaled stabilization, 
 which is quite a lot of computational work. The experimental package
 `nlsralt` has been built to add functions `nlxbx()` and `nlfbx()` that
 use ONLY the fixed element (i.e., unit matrix) stabilizations. A very
@@ -282,10 +284,10 @@ The sources of variety in implementation include:
 
 - Linking of data to the problem. In particular, R allows **subsetting**
   of data at quite a high level, but this capability is almost totally
-  hidden from the user or programmer, so that it could be dangerous to
+  hidden from the user or programmer, so that the feature could be dangerous to
   use. There appears, moreover, to be no example or test with `nls()` 
   to show how to use this facility, even though `subset` is an argument
-  to the `nls()` function.
+  to the `nls()` function. This is discussed further below.
 
 - programming language
 
@@ -315,7 +317,7 @@ residuals, jacobian, the search direction, and many other objects required for
 the nonlinear least squares solution as well as ancillary information used in
 the post-solution analysis and reporting.
 
-In the package `nslr` (@nlsr-manual), the function `nlxb()` calls `model2rjfun()`
+In the package `nlsr` (@nlsr-manual), the function `nlxb()` calls `model2rjfun()`
 to create functions `res()` and `jac()` that are used in `nlfb()` (the function
 `nls.lm()` in `minpack.lm` is very similar) to find a
 nonlinear least squares solution. However, post-solution information is built
@@ -354,18 +356,22 @@ to the rows of data, most easily thought of in terms of a data frame structure.
 
 ### Data subsets
 
-The `nls()` function has an argument `subset` and a test (??need to reference or
-include this??) showed this works fine. However, nowhere have we found a published
-example of the use of the `subset` argument. Worse, it clearly must be applied to
+The `nls()` function has an argument `subset` and a test included in the 
+`Croucher-example1.R` file of this project showed this works as expected. 
+However, nowhere have we found a published example of the use of the 
+`subset` argument with `nls()`. Worse, it clearly must be applied to
 many of the functions used by `nls()` but makes no explicit appearance. Thus it
 is VERY difficult to ensure subsetting is correctly applied when we wish to modify
 the code, for instance, to provide for newer features especially more reliable
 solvers.
 
-HYPOTHESIS: nls() has `subset` and this is automatically applied to the functions
-it calls. This includes `incr` and `setPars()` which contain functions to compute
-the Gauss-Newtong. However, this does not mesh well with the approach taken by
-`nlsr`. We note that `minpack.lm::nlsLM` also has a `subset` argument.
+Note that the `subset` ARGUMENT to `nls()` is not the same as the `subset()` function
+that is usable to restrict the scope of an R object.
+
+OUR HYPOTHESIS: `nls()` uses `subset` to automatically adjust the data to which all
+the relevant functions are applied. We note that `minpack.lm::nlsLM` also has a `subset` argument,
+but package `nlsr` does not at time of writing (2021-7-12), but will use the **weights** mechanism
+of the next subsection of this document at some future release.
 
 ### Other approaches to subsetting
 
@@ -385,13 +391,15 @@ are alternatives for implementation.
   
 PROPOSAL: use the "weights" approach if `nlsj` is called with `subset` active, 
 else recommend the preprocessing approach. The preprocessor could also do a lot
-of checking, which we might leave out of nlsj() in some cases.
+of checking, which we might leave out of `nlsj()` in some cases. As of 2021-7-12,
+the weights mechanism is working in a trial `nlsj()` and should be transferrable
+to package `nlsr` fairly easily.
 
 ## Operating environment
 
 Generally, for modern computers, the operating system and its localization do not
 have much influence on the way in which we set up nonlinear least squares computations,
-though the actualy performance of the computations may well be influenced by such factors.
+though the actual performance of the computations may well be influenced by such factors.
 I will comment below about some issues where speed and size of data storage may favour
 some approaches over others. However, such issues are less prominent today than in
 the past.
@@ -450,7 +458,8 @@ by using several matrix decomposition methods. Thus there are many possible proc
   in @Nash1987a, though it is debatable whether the saving in storage was not
   heavily outweighed by the complexity of the code and its documentation.
 
-- Eigendecompositions of the SSCP: the eigenvalues of real, symmetric matrices
+- Eigendecompositions of the sum of squares and cross-products (SSCP) 
+  matrix: the eigenvalues of real, symmetric matrices
   such as $A$ can be computed in many ways and the eigendecomposition used to 
   solve the Gauss-Newton equations. The computations are much more costly than
   simple solution of the equations, but the knowledge of the eigenvalues allows
@@ -467,11 +476,11 @@ with $m$ rows and $n$ columns)
 
 $$ K = Q R $$
 
-where $Q$ is $m x n$ orthogonal so 
+where $Q$ is $m$ by $n$ orthogonal so 
 
 $$ Q^t Q = I_n $$
 
-and $R$ is upper triangular and $n x n$. Some variants have $Q$ an $m x m$ orthogonal
+and $R$ is upper triangular and $n$ by $n$. Some variants have $Q$ an $m$ by $m$ orthogonal
 matrix and $R$ upper triangular with $m - n$ rows of zeros appended below. 
 
 There are many ways of computing such decompostions:
@@ -489,7 +498,7 @@ $$ K =  U S V^t$$
 where U and V have various orthogonality properties and S is a diagonal matrix
 with elements called the singular values (the square roots of the eigenvalues
 of $K^t K$ actually). There are many variations depending on whether $U$ is 
-a full $m x m$ matrix, limited to $m x n$ or even truncated to $m x r$ where 
+a full $m$ by $m$ matrix, limited to $m$ by $n$ or even truncated to $m$ by $r$ where 
 $r$ is the rank of $K$.
 
 A detail in choosing our approach is the mechanism of inclusion of the
@@ -596,11 +605,12 @@ One of the issues with creating the SSCP matrix $A$ is that we lose information 
 
 $$  J \delta = -r $$
 
-That is, we assume a generalized inverse of $J^t$ can be applied to both sides of the Gauss-Newton equations.
+That is, we assume a generalized inverse of $J$ can be applied to both sides of the Gauss-Newton equations.
 
 To move to the Marquardt variant of the Gauss-Newton, we need to augment $J$. Let us call this augmented matrix
 $K$. We will also need to augment $r$ by an appropriate number of zeros. For the traditional Marquardt method, we
-need to use the square roots of the diagonal elements of $J^t J$, that is, an $n$ by $n$ $Z1$ where 
+need to use the square roots of the diagonal elements of $J^t J$, that is, an $n$ by $n$ 
+diagonal matrix $Z1$ where 
 
 $$ Z1_{k,k}  = \sqrt(\lambda) \sqrt(J^t J)_{k,k}  $$
 
@@ -609,7 +619,7 @@ the $K$ matrix with another $n$ by $n$ block $Z2$ which is a diagonal matrix whe
 
 $$ Z2_{k,k}  = \sqrt(\lambda) \sqrt(\phi)  $$
 
-Unfortunately, there is a need for each major iteration to compute at least the diagonal elements of the
+Unfortunately, there is a need in each major iteration to compute at least the diagonal elements of the
 SSCP matrix. It may, in fact, be more efficient to omit the $Z1$ augmentation. Package `nlsralt`, as
 mentioned, does this with functions `nlxbx()` (for formula-specified models) and `nlfbx()` (for problems
 specified with `res()` and `jac()` functions). This gives the following preliminary example using the 
@@ -620,6 +630,8 @@ Hobbs weed problem.
 <!-- source("your-script.R", local = knitr::knit_global()) -->
 <!-- # or sys.source("your-script.R", envir = knitr::knit_global()) -->
 <!-- ``` -->
+
+??FIXME??
 
 ```{r hobbtime1}
 source("HobbsTiming.R", echo=TRUE)
@@ -663,18 +675,18 @@ is not much faster than the finite difference approximations, and generally fini
 difference methods iterate as quickly as the "exact" derivative methods to the 
 neighbourhood of a solution. It is in allowing good estimates of convergence 
 criteria that the analytic derivatives seem to show their advantage i.e., knowing
-we are at a solution rather than speed in getting there.
+we are at a solution rather than the speed in getting there.
 
 
-## Problem interfacing
+## Interfacing to problems
 
 R allows the nonlinear least squares problem to be presented via a formula
 for the model. This is generally very attractive to users, since they can
 specify their problem in ways that often accord with how they think about them.
 Many (most?) researchers do not write program code, so preparing residual and
-jacobian functions is foreign to them. 
+Jacobian functions is foreign to them. 
 
-From the point of view of package or system developers, specifications as
+From the point of view of package or system developers, however, specifications as
 formulas pose some particular issues:
 
 - translating a formula to a function for its actual evaluation may be tricky,
@@ -703,6 +715,8 @@ The obvious ways to reduce storage are:
   
 
 # Measuring performance
+
+Do we plan to use only timing? Or size of code and memory used? ??
 
 
 # Test problems
@@ -782,7 +796,7 @@ problem as
 
 $$  A x \tilde = b  $$
 
-In this case $A$ is an $m$ by $n$ matrix with $m >= n$ and $b$ a vector of lenght $m$.
+In this case $A$ is an $m$ by $n$ matrix with $m \ge n$ and $b$ a vector of lenght $m$.
 We write **residuals** as
 
 $$  r  =  A x - b  $$
@@ -1002,7 +1016,7 @@ There are a number of ways to compute a QR decomposition.
   build the Q matrix as a product of these transformation matrices as the initial
   rectangular matrix $A$ is rendered upper triangular, or $R$
   
-- Givens' transformations are **plane rotations** that zero one element at a time of
+- Givens transformations (@Bindel2002Givens) are **plane rotations** that zero one element at a time of
   the current working matrix that starts out as $A$. Once again, $Q$ is a product of
   the transformations and $R$ the result of zeroing out sub-diagonal elements. 
   
