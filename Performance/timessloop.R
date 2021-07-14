@@ -1,6 +1,15 @@
 # time ss loops
 # JN 2021-7-14
 rm(list=ls())
+fn <- readline("filename to record sumsquares times=")
+sink(fn, split=TRUE) # you will still see on screen, but saved in fn
+sy<-Sys.info()
+tsstr<- format(Sys.time(), "%Y%m%d%H%M")
+cpu<-benchmarkme::get_cpu()
+ram<-benchmarkme::get_ram()
+machid<-paste(sy["nodename"],":",sy["user"],"-",sy["sysname"],"-",sy["release"],
+              "|",cpu$model_name,"|",ram,"bytesRAM", sep='')
+cat(machid,"\n")
 nn <- c(10, 100, 1000, 10000)
 lnn<-length(nn)
 meth <- c("loopx2", "loopxx", "sumx2", "sumxx", "crossprod")
@@ -55,3 +64,4 @@ tmin
 colnames(tmax)<- meth
 rownames(tmax)<-as.character(nn)
 tmax
+sink()
