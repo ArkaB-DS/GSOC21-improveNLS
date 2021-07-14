@@ -109,7 +109,163 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+            ## mimic what model.frame.default does
+	    wts <- if (mWeights) rep_len(1, n)
+		   else eval(substitute(weights), data, environment(formula))
+
+
+### [2021-7-13]
+
+- JN some work on nlsj -- more or less running with both analytic and numeric 
+  derivs, but need to check sign of residuals and jacobian for equivalence,
+  and also for nlsr.
+  
+- AB edits on Variety paper incorporated by JN. (Excellent attention to detail
+  by AB.)
+  
+- HT, AB, JN meeting. Discussed directions. AB will focus on tests to check
+  equivalence of new codes with nls(). JN will concentrate on new code. Both
+  to work on checking each other. WIll meet more frequently to do code walks.
+  
+- JN posted on r-devel asking about "subset". Note some replies pointing to
+  "model.frame" as the structure through which subsetting is applied, along
+  with some other things. JN to dig!
+
+- HT suggestion in email led to notes on how we might structure test output.
+  This is included as follows.
+  
+```
+TestingIdeas.txt
+
+2021-7-13
+
+Following up Heather's email about the need to rigorously test to see if
+our "new" code gets equivalent output to nls(), I think we should discuss
+the "how" of testing and build it into the TestsDoc.
+
+1) To be able to check how we are doing, we need to have a set of tests and
+know what they do. You have been looking into this, but we should try to see
+how we can structure things so they can be run easily.
+
+Can we put each test in a separate file of R code, with a filename having 
+what we can call the testID in the name. Hence testID.R.nltst as a filename.
+
+As a check on whether this is feasible, let me try with Croucher, since it
+is small
+
+# TCroucher.R.nltst
+# Implements tests of nonlinear least squares code for the Croucher example
+# Reference: https://walkingrandomly.com/?p=5254
+
+xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
+ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
+Croucherdata<-data.frame(xdata, ydata)
+Croucherform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
+# ?? Do we want an array of starts? Some problems have > 1
+Croucherstart<-list(p1=1,p2=0.2)
+Crouchersubset<-1:8 # Possibly have subsets -- multiple tests.
+# ?? do we want separate files for each test. More storage, but then each test
+# has a separate ID and can be run independently
+## Example use 
+# library(nlsj)
+# fitj = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
+# summarise
+# summary(fitj)
+callstring<-"(Croucherform, start=Croucherstart, data=Croucherdata, subset=1:8)"
+#?? can we embed this in different calls e.g., 
+#  runline <- paste("result<-nlxb(",callstring,")")
+
+We can build a "database"  or else simply documentation files (?? .Rd format like 
+in R, or something similar and simple) to explain the origin and purpose of each
+test file. This collection will get large, but I think it will be best to keep things
+simple for now.
+
+2) My feeling is that EACH variant of a test gets its own file that builds the problem,
+so that our output is indexed on machineID, testID, programID, and relevant time/date
+and results information.
+
+While we could (and likely will eventually) use a database, for the moment I think a
+comma separated values (csv) file is more straightforward. As long as we agree the 
+structure in advance, we can simply concatenate such files and draw them into data
+frames or databases easily.
+
+3) Output fields from tests
+
+machineID: the ID of the machine running the tests. We may need to set up a list
+of these. For ourselves it won't be large, but if others join us we may need to 
+appoint a "naming authority". Just thinking ahead.
+
+userID: the ID of the person who ran the test. Again we may eventually need a 
+"naming authority". JN would be nashjc, for example.
+
+testID: the particular test and variation (subset, start, etc.) I suggest that we 
+think of test names and put a 2 or 3 digit suffix so we can expand over time.
+
+UTCtime: A date and timestamp at UTC (GMT) in form yyyymmddhhmmss (maybe could leave
+off seconds, but .... UTC so we don't get timezone confusion.
+
+programID: the program used. I suggest names like   nlsr::nlxb, nlspkg::nls, minpack.lm::nlsLM
+so we identify as completely as possible. These can be the names used with the "runline"
+above.
+
+tResult: a 1 character output. 0 = success, and anything else will need documenting.
+
+notes: a field allowing us to add extra information
+
+?? Can you think of anything else?
+
+Files like this will be plain text and can simply be concatenated. The structure
+is independent of the testing program(s) that we decide to use, but hopefully can
+be output by them.
+
+-------------------------------------------------------------
+It seems that given my experience in the nonlinear codes, I should probably continue
+with working on nlsj and the other packages, and you (Arkajyoti) should work on the
+tests. That way we won't overlap too much and tread on each other's toes. Are you OK
+with that.
+
+On the other hand, I think that we should probably schedule extra meetings to do 
+code walks where one of us explains each line of code in a program to the other. I've
+found that sort of exercise shows up loose ends and forces the code to be tightened.
+It's how I did the programming with Mary Walker-Smith in the mid-80s and we made a
+lot of progress quite quickly.
+
+Talk later, but I wanted to get some of these ideas down.
+
+Best, JN
+
+tryrunline.R test
+
+xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
+ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
+Croucherdata<-data.frame(xdata, ydata)
+Croucherform <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
+# ?? Do we want an array of starts? Some problems have > 1
+Croucherstart<-list(p1=1,p2=0.2)
+Crouchersubset<-1:8 # Possibly have subsets -- multiple tests.
+# ?? do we want separate files for each test. More storage, but then each test
+# has a separate ID and can be run independently
+## Example use 
+# library(nlsj)
+# fitj = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
+# summarise
+# summary(fitj)
+callstring<-"(Croucherform, start=Croucherstart, data=Croucherdata)"
+#?? can we embed this in different calls e.g., 
+runline <- paste("result<-nlsr::nlxb",callstring)
+runline
+eval(parse(text=runline))
+result
+
+
+Heather Turner12:00 -- in chat of meeting
+So we can produce something like this: https://cran.r-project.org/web/checks/check_results_gnm.html
+(Which is the CRAN package test results page for gnm.)
+```
+
 ### [2021-7-12]
+
+- JN and AB completed evaluations for GSoC.
 
 - JN working on nlsj package in last couple of days. Refactored into new
   file nlsjx.R with NO nlsjModel() function. Got this "running" on 
