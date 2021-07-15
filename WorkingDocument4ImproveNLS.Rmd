@@ -41,6 +41,9 @@ output:
 - nlsModel needs better attention to WHICH routines from the `m` object are
   used EXTERNALLY to nls(). `nlsj` with NOT have all of these. And `m` is now
   (2021-7-12) built at the end of the computation rather than the beginning.
+  
+- When we evaluate derivatives, should we ignore bounded/masked parameters to
+  avoid stepping into inadmissible area?
 
 ## Abstract
 

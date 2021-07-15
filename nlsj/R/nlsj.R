@@ -1,6 +1,6 @@
-nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control(),
+nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(),
             algorithm = "default", weights=NULL, subset, trace = FALSE,
-            lower = -Inf, upper = Inf, ...) {
+            na.action, model=FALSE, lower = -Inf, upper = Inf, ...) {
 # ?? left out -- FIXME??    na.action, model = FALSE, (masked from nlxb)
 # ?? at this stage ONLY treat "default", but will add bounds
 # ?? data in .GlobalEnv -- should be OK
@@ -127,7 +127,7 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
         else  rjexpr <- NULL
    if (is.null(rjexpr) && (control$derivmeth == "default")) {
         warning("Changing to alternative derivative method")
-        control$derivmeth <- nlsjcontrol()$altderivmeth
+        control$derivmeth <- nlsj.control()$altderivmeth
    }
 
 # Define functions
@@ -275,15 +275,11 @@ nlsjx <- function (formula, data = parent.frame(), start, control = nlsj.control
 	     deviance = function() ssmin,
 	     lhs = function() lhs, #OK
 	     conv = function() convCrit(), # possibly OK
-##	     incr = function() qr.coef(QR, resid),  #?? 
-# ?? Need to modify this for different iteration approaches besides Gauss Newton
 	     getPars = function() {prm},
-#	     getEnv = function() nlenv, #OK
-#             parset = function(newPars) parset(newPars), #??
 	     Rmat = function() qr.R(QRJ),
-
+# ?? we need environment 
 	     predict = function(newdata = list(), qr = FALSE)
-                 eval(form[[3L]], as.list(newdata), nlenv) #OK
+                 eval(formula[[3L]], as.list(newdata)) # ?? do we need to specify environment
 	     )
     class(m) <- "nlsModel"
     result <- list(m=m, convInfo=convInfo, control=control)

@@ -1,0 +1,3 @@
+nlsj                    Nonlinear Least Squares
+nlsj.control            Control the Iterations in nls
+numericDeriv            Evaluate Derivatives Numerically

@@ -23,7 +23,8 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 # nlsModel()
 
-- created script `tnlsModel.R` as first step to create and produce an "m" object
+<!-- - created script `tnlsModel.R` as first step to create and produce an "m" object -->
+<!--   (In Used-PossAbandon as of July 12) -->
 
 - Current understanding (JN): nlsModel (and nlsModel.plinear too probably) creates
   an R object that it labels as class "nlsModel". This object contains functions
@@ -58,10 +59,17 @@ str(ceunsc)
 weeddata1  <-  data.frame(y=ydat, tt=tdat)
 
 ## Now ready to try things out.
-library(nlsalt) # ?? needed because base R does not export nlsModel()
+library(nlspkg) # ?? needed because base R does not export nlsModel()
 nmod1<-nlsModel(form=eunsc, data=weeddata1, start=start1, wts=NULL, upper=NULL, scaleOffset = 0, nDcentral = FALSE)
 str(nmod1)
 ls.str(nmod1)
 print(nmod1)
 ```
+
+# How contents of the "m" object are used
+
+This section refers to `nls()` in baseR. Replacement functions will likely be different.
+
+# References
+
 

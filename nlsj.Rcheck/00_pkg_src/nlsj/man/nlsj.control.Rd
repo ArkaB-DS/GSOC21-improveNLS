@@ -3,17 +3,21 @@
 % Copyright 1995-2020 R Core Team
 % Distributed under GPL 2 or later
 
-\name{nls.control}
-\alias{nls.control}
+\name{nlsj.control}
+\alias{nlsj.control}
 \title{Control the Iterations in nls}
 \description{
   Allow the user to set some characteristics of the \code{\link{nls}}
   nonlinear least squares algorithm.
 }
 \usage{
-nls.control(maxiter = 50, tol = 1e-05, minFactor = 1/1024,
-            printEval = FALSE, warnOnly = FALSE, scaleOffset = 0,
-            nDcentral = FALSE)
+nlsj.control(maxiter = 500, tol = 0.00001, minFactor = 1/1024,
+	printEval = FALSE, warnOnly = FALSE, scaleOffset = 0,
+    nDcentral = FALSE, watch = FALSE, phi = 1, lamda = 0, 
+	offset = 100, laminc = 10, lamdec = 0.4, resmax = 10000, 
+	rofftest = TRUE, smallsstest = TRUE,
+	derivmeth="numericDeriv", altderivmeth="numericDeriv",
+	trace=FALSE)
 }
 \arguments{
   \item{maxiter}{A positive integer specifying the maximum number of
@@ -44,9 +48,36 @@ nls.control(maxiter = 50, tol = 1e-05, minFactor = 1/1024,
     \code{\link{logical}} indicating if \emph{central} differences
     should be employed, i.e., \code{\link{numericDeriv}(*, central=TRUE)}
     be used.}
+  \item{watch}{If TRUE, allows iterations to be interactive. Default = FALSE.
+     NOT currently active.}
+  \item{phi}{Number to use in a diagonal added to the augmented J' J Marquardt matrix
+    in the Nash-Marquardt stabilization of the Gauss-Newton algorithm. Default = 1}
+  \item{lamda}{Initial value for the lamda parameter used in Levenberg-Marquardt
+    stabilization (note false spelling of lambda as a historical artifact that 
+    often detects copying). When zero, the Gauss-Newton method is used. 
+    ?? May need to coordinate with algorithm parameter of nlsj()}
+  \item{offset}{Number to use in a tolerance-free comparison of two numbers. Default = 100.
+      Items a and b are taken as equal if (a + offset) == (b + offset).}
+  \item{laminc}{Factor to use to increase the Marquardt lamda parameter. Default = 10}
+  \item{lamdec}{Factor to use to decrease the Marquardt lamda parameter. Default = 0.4} 
+  \item{resmax}{Maximum number of residual evaluations allowed. Not used in nls(). Default 10000
+       suggested is likely too big for general use.}
+  \item{rofftest}{When TRUE (default), use the relative offset convergence criterion, 
+    modified if appropriate with scaleOffset to deal with small residuals.}
+  \item{smallsstest}{TRUE if we check for a very small sum of squares as an indicator
+     for terminating the iterations. nls() only uses the relative offset test, and then
+     only with scaleOffset=0.0. Nevertheless, suggest default of TRUE.}
+  \item{derivmeth}{The method to computer derivatives for the Jacobian. To mimic nls(),
+    this defaults to "numericDeriv".}
+    \item{altderivmeth}{An alternate derivative method if "derivmeth" is infeasible,
+      e.g., if derivmeth is "default" (analytic), then the alternative "numericDeriv"
+      would call that routine. In future, there may be other methods.??}
+  \item{trace}{When TRUE, allows progress information to be printed. ?? NEED
+     to coordinate with argument "trace". Default=FALSE)}
 }
 \value{
   A \code{\link{list}} with components
+  
   \item{maxiter}{}
   \item{tol}{}
   \item{minFactor}{}
@@ -54,6 +85,19 @@ nls.control(maxiter = 50, tol = 1e-05, minFactor = 1/1024,
   \item{warnOnly}{}
   \item{scaleOffset}{}
   \item{nDcentreal}{}
+  \item{watch}{}
+  \item{phi}{}
+  \item{lamda}{}
+  \item{offset}{}
+  \item{laminc}{}
+  \item{lamdec}{}
+  \item{resmax}{}
+  \item{rofftest}{}
+  \item{smallsstest}{}
+  \item{derivmeth}{}
+  \item{altderivmeth}{}
+  \item{trace}{}
+  
   with meanings as explained under \sQuote{Arguments}.
 }
 \references{
