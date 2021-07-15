@@ -116,6 +116,22 @@ Here is an annotated listing of product of the project.
 	    wts <- if (mWeights) rep_len(1, n)
 		   else eval(substitute(weights), data, environment(formula))
 
+### [2021-7-14] [2021-7-15]
+
+- some work on nlsj to purge errors raised by R CMD check. One WARNING was raised 
+  by generic functions e.g., fitted.nlsj being "undocumented". It turns out the 
+  same error is in `nlspkg`, and JN emailed Duncan Murdoch for advice.
+  
+- added asOneSidedFormula to nlsjextra.R but commented out. Not sure this is needed
+  or useful, but put in collection so it is available to us.
+  
+- JN created a `Performance` directory and `timessloop.R`. Found sum(x^2) by far
+  the fastest way to compute sum of squares.
+  
+- To check derivative computation in `nlsj`, JN created `testrj.R` (in `Performance`
+  though not about timing at this moment, but about values.)
+  
+- AB working on SelfStart functions and tests.
 
 ### [2021-7-13]
 
