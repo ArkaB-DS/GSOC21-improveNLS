@@ -224,3 +224,32 @@ anovalist.nlsj <- function (object, ..., test = NULL)
     structure(table, heading = c(title, topnote),
 	      class = c("anova", "data.frame")) # was "tabular"
 }
+
+# asOneSidedFormula <-
+#   ## Converts an expression or a name or a character string
+#   ## to a one-sided formula  ?? IS THIS NEEDED?
+#   function(object)
+# {
+#     if ((mode(object) == "call") && (object[[1L]] == "~")) {
+#         object <- eval(object)
+#     }
+#     if (inherits(object, "formula")) {
+#         if (length(object) != 2L) {
+#             stop(gettextf("formula '%s' must be of the form '~expr'",
+#                           deparse(as.vector(object))), domain = NA)
+#         }
+#         return(object)
+#     }
+#     do.call("~",
+#             list(switch(mode(object),
+#                         name = ,
+#                         numeric = ,
+#                         call = object,
+#                         character = as.name(object),
+#                         expression = object[[1L]],
+#                         stop(gettextf("'%s' cannot be of mode '%s'",
+#                                       substitute(object), mode(object)),
+#                              domain = NA)
+#                         ))
+#             )
+# }
