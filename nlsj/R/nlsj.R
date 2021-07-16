@@ -36,11 +36,17 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         }
         else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
-   dnames <- all.vars(formula)[which(all.vars(formula) %in% ls(data))]
-   if (length(dnames) < 1) stop("No data found")
+   cat("ls(data):"); print(ls(data))
    vnames <- all.vars(formula) # all names in the formula
+   dnames <- vnames[which(vnames %in% ls(data))]
+   if (length(dnames) < 1) stop("No data found")
+# ?? This fails when we have the parameters in variables as well. So we need
+# ?? to figure out which are the true "variables" of the problem and which are
+# ?? parameters.
    pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
    npar <- length(pnames)
+   cat("vnames:"); print(vnames)
+   cat("npar=",npar," pnames:"); print(pnames)
  
 # Start
    if (is.null(start)) { # start not specified
@@ -52,6 +58,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    else { # we have a start vector
       snames<-names(start) # names in the start vector
       if ((length(snames) != length(pnames)) || (! all.equal(snames, pnames))) {
+           cat("snames:"); print(snames)
+           cat("pnames:"); print(pnames)
            stop("Start names differ in number or name from formula parameter names")
       }
       start <- as.numeric(start) # ensure we convert (e.g., if matrix)

@@ -2,7 +2,8 @@
 
 export(
     nls,
-    numericDeriv
+    numericDeriv,
+    nls.control
 #   anova.nls,
 #   coef.nls,
 #   confint.nls,

@@ -1,4 +1,4 @@
-#  File src/library/stats/tests/nls.R
+#  File src/library/stats/tests/nlsj.R
 #  Part of the R package, https://www.R-project.org
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -14,19 +14,20 @@
 #  A copy of the GNU General Public License is available at
 #  https://www.R-project.org/Licenses/
 
-## tests of nls, especially of weighted fits
+## tests of nlsj, especially of weighted fits
+library(nlsj) # ??added 210716 JN
 
 library(stats)
 options(digits = 5) # to avoid trivial printed differences
 options(useFancyQuotes = FALSE) # avoid fancy quotes in o/p
-options(show.nls.convergence = FALSE) # avoid non-diffable output
+options(show.nlsj.convergence = FALSE) # avoid non-diffable output
 options(warn = 1)
 
 have_MASS <- requireNamespace('MASS', quietly = TRUE)
 
-pdf("nls-test.pdf")
+pdf("nlsj-test.pdf")
 
-## utility for comparing nls() results:  [TODO: use more often below]
+## utility for comparing nlsj() results:  [TODO: use more often below]
 .n <- function(r) r[names(r) != "call"]
 
 ## selfStart.default() w/ no parameters:
@@ -45,7 +46,7 @@ logistInit <- function(mCall, LHS, data) {
 logist <- selfStart(logist, initial = logistInit) ##-> Error in R 1.5.0
 str(logist)
 
-## lower and upper in algorithm="port"
+## lower and upper in algorithm="port" ?? Won't use port for now 210716, but put in bounds
 set.seed(123)
 x <- runif(200)
 a <- b <- 1; c <- -0.1
@@ -53,15 +54,16 @@ y <- a+b*x+c*x^2+rnorm(200, sd=0.05)
 plot(x,y)
 curve(a+b*x+c*x^2, add = TRUE)
 ## IGNORE_RDIFF_BEGIN
-nls(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1), algorithm = "port")
-(fm <- nls(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1),
-           algorithm = "port", lower = c(0, 0, 0)))
+## nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1), algorithm = "port")
+nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1))
+# ?? (fm <- nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1),
+# ??           algorithm = "port", lower = c(0, 0, 0)))
 ## IGNORE_RDIFF_END
-if(have_MASS) {
-    print(confint(fm))
-} else message("skipping tests requiring the MASS package")
+# ??if(have_MASS) {
+# ??    print(confint(fm))
+# ??} else message("skipping tests requiring the MASS package")
 
-## weighted nls fit
+## weighted nlsj fit
 set.seed(123)
 y <- x <- 1:10
 yeps <- y + rnorm(length(y), sd = 0.01)
@@ -70,7 +72,7 @@ fit0 <- lm(yeps ~ x, weights = wts)
 ## IGNORE_RDIFF_BEGIN
 summary(fit0, cor = TRUE)
 cf0 <- coef(summary(fit0))[, 1:2]
-fit <- nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
+fit <- nlsj(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
            weights = wts, trace = TRUE)
 summary(fit, cor = TRUE)
 ## IGNORE_RDIFF_END
@@ -80,7 +82,7 @@ stopifnot(df.residual(fit) == df.residual(fit0))
 stopifnot(all.equal(logLik(fit), logLik(fit0), tolerance = 1e-8))
 cf1 <- coef(summary(fit))[, 1:2]
 ## IGNORE_RDIFF_BEGIN
-fit2 <- nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
+fit2 <- nlsj(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
             weights = wts, trace = TRUE, algorithm = "port")
 summary(fit2, cor = TRUE)
 ## IGNORE_RDIFF_END
@@ -96,25 +98,25 @@ stopifnot(all.equal(logLik(fit2), logLik(fit0), tolerance = 1e-8))
 
 DNase1 <- subset(DNase, Run == 1)
 DNase1$wts <- rep(8:1, each = 2)
-fm1 <- nls(density ~ SSlogis(log(conc), Asym, xmid, scal),
+fm1 <- nlsj(density ~ SSlogis(log(conc), Asym, xmid, scal),
            data = DNase1, weights = wts)
 summary(fm1)
 
 ## directly
-fm2 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
+fm2 <- nlsj(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
            data = DNase1, weights = wts,
            start = list(Asym = 3, xmid = 0, scal = 1))
 summary(fm2)
 stopifnot(all.equal(coef(summary(fm2)), coef(summary(fm1)), tolerance = 1e-6))
 stopifnot(all.equal(residuals(fm2), residuals(fm1), tolerance = 1e-5))
 stopifnot(all.equal(fitted(fm2), fitted(fm1), tolerance = 1e-6))
-fm2a <- nls(density ~ Asym/(1 + exp((xmid - log(conc)))),
+fm2a <- nlsj(density ~ Asym/(1 + exp((xmid - log(conc)))),
             data = DNase1, weights = wts,
             start = list(Asym = 3, xmid = 0))
 anova(fm2a, fm2)
 
 ## and without using weights
-fm3 <- nls(~ sqrt(wts) * (density - Asym/(1 + exp((xmid - log(conc))/scal))),
+fm3 <- nlsj(~ sqrt(wts) * (density - Asym/(1 + exp((xmid - log(conc))/scal))),
            data = DNase1, start = list(Asym = 3, xmid = 0, scal = 1))
 summary(fm3)
 stopifnot(all.equal(coef(summary(fm3)), coef(summary(fm1)), tolerance = 1e-6))
@@ -123,12 +125,12 @@ stopifnot(all.equal(ft, fitted(fm1), tolerance = 1e-6))
 # sign of residuals is reversed
 r <- with(DNase1, -residuals(fm3)/sqrt(wts))
 all.equal(r, residuals(fm1), tolerance = 1e-5)
-fm3a <- nls(~ sqrt(wts) * (density - Asym/(1 + exp((xmid - log(conc))))),
+fm3a <- nlsj(~ sqrt(wts) * (density - Asym/(1 + exp((xmid - log(conc))))),
             data = DNase1, start = list(Asym = 3, xmid = 0))
 anova(fm3a, fm3)
 
 ## using conditional linearity
-fm4 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
+fm4 <- nlsj(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
            data = DNase1, weights = wts,
            start = list(xmid = 0, scal = 1), algorithm = "plinear")
 summary(fm4)
@@ -138,13 +140,13 @@ stopifnot(all.equal(cf, coef(summary(fm1)), tolerance = 1e-6,
                     check.attributes = FALSE))
 stopifnot(all.equal(residuals(fm4), residuals(fm1), tolerance = 1e-5))
 stopifnot(all.equal(fitted(fm4), fitted(fm1), tolerance = 1e-6))
-fm4a <- nls(density ~ 1/(1 + exp((xmid - log(conc)))),
+fm4a <- nlsj(density ~ 1/(1 + exp((xmid - log(conc)))),
             data = DNase1, weights = wts,
             start = list(xmid = 0), algorithm = "plinear")
 anova(fm4a, fm4)
 
 ## using 'port'
-fm5 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
+fm5 <- nlsj(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
            data = DNase1, weights = wts,
            start = list(Asym = 3, xmid = 0, scal = 1),
            algorithm = "port")
@@ -182,18 +184,18 @@ y4 <- a*(x^d+c)^b+rnorm(npts, sd=0.05)
 m1 <- c(y ~ x^b, y2 ~ a*x^b, y3 ~ a*(x+exp(logc))^b)
 s1 <- list(c(b=1), c(a=1,b=1), c(a=1,b=1,logc=0))
 for(p in 1:3) {
-    fm <- nls(m1[[p]], start = s1[[p]])
+    fm <- nlsj(m1[[p]], start = s1[[p]])
     print(fm)
     if(have_MASS) print(confint(fm))
-    fm <- nls(m1[[p]], start = s1[[p]], algorithm = "port")
+    fm <- nlsj(m1[[p]], start = s1[[p]], algorithm = "port")
     print(fm)
     if(have_MASS) print(confint(fm))
 }
 
 if(have_MASS) {
-    fm <- nls(y2~x^b, start=c(b=1), algorithm="plinear")
+    fm <- nlsj(y2~x^b, start=c(b=1), algorithm="plinear")
     print(confint(profile(fm)))
-    fm <- nls(y3 ~ (x+exp(logc))^b, start=c(b=1, logc=0), algorithm="plinear")
+    fm <- nlsj(y3 ~ (x+exp(logc))^b, start=c(b=1, logc=0), algorithm="plinear")
     print(confint(profile(fm)))
 }
 
@@ -210,7 +212,7 @@ gfun <- function(a,b,x) {
     if(a < 0 || b < 0) stop("bounds violated")
     a*x/(1+a*b*x)
 }
-m1 <- nls(y ~ gfun(a,b,x), algorithm = "port",
+m1 <- nlsj(y ~ gfun(a,b,x), algorithm = "port",
           lower = c(0,0), start = c(a=1, b=1))
 (pr1 <- profile(m1))
 if(have_MASS) print(confint(pr1))
@@ -219,7 +221,7 @@ gfun <- function(a,b,x) {
     if(a < 0 || b < 0 || a > 1.5 || b > 1) stop("bounds violated")
     a*x/(1+a*b*x)
 }
-m2 <- nls(y ~ gfun(a,b,x), algorithm = "port",
+m2 <- nlsj(y ~ gfun(a,b,x), algorithm = "port",
           lower = c(0, 0), upper=c(1.5, 1), start = c(a=1, b=1))
 profile(m2)
 if(have_MASS) print(confint(m2))
@@ -234,10 +236,10 @@ test <- function(trace=TRUE)
     xy <- data.frame(x=x,y=y)
     myf <- function(x,a,b,c) a*x^b+c
     list(with.start=
-         nls(y ~ myf(x,a,b,n), data=xy, start=c(a=1,b=1), trace=trace),
+         nlsj(y ~ myf(x,a,b,n), data=xy, start=c(a=1,b=1), trace=trace),
          no.start= ## cheap auto-init to 1
 	 suppressWarnings(
-	     nls(y ~ myf(x,A,B,n), data=xy)))
+	     nlsj(y ~ myf(x,A,B,n), data=xy)))
 }
 ## IGNORE_RDIFF_BEGIN
 t1 <- test()
@@ -270,11 +272,11 @@ expsumNoisy <- expsum + max(expsum) *.001 * rnorm(100)
 expsum.df <-data.frame(expsumNoisy)
 
 ## estimate decay rates, amplitudes with default Gauss-Newton
-summary (nls(expsumNoisy ~ getExpmat(k, 1:100) %*% sp, expsum.df,
+summary (nlsj(expsumNoisy ~ getExpmat(k, 1:100) %*% sp, expsum.df,
              start = list(k = c(.6,.02), sp = c(1,2))))
 
 ## didn't work with port in 2.4.1
-summary (nls(expsumNoisy ~ getExpmat(k, 1:100) %*% sp, expsum.df,
+summary (nlsj(expsumNoisy ~ getExpmat(k, 1:100) %*% sp, expsum.df,
              start = list(k = c(.6,.02), sp = c(1,2)),
              algorithm = "port"))
 
@@ -287,28 +289,28 @@ b1 <- 1
 fac <- as.factor(rep(c(0,1), each = 100))
 y <- b0 + b1*x + rnorm(200, sd=0.05)
 # next failed in 2.8.1
-fit <- nls(y~b0[fac] + b1*x, start = list(b0=c(1,1), b1=1),
+fit <- nlsj(y~b0[fac] + b1*x, start = list(b0=c(1,1), b1=1),
            algorithm ="port", upper = c(100, 100, 100))
 # next did not "fail" in proposed fix:
-fiB <- nls(y~b0[fac] + b1*x, start = list(b0=c(1,1), b1=101),
+fiB <- nlsj(y~b0[fac] + b1*x, start = list(b0=c(1,1), b1=101),
            algorithm ="port", upper = c(100, 100, 100),
            control = list(warnOnly=TRUE))# warning ..
 with(fiB$convInfo, ## start par. violates constraints
      stopifnot(isConv == FALSE, stopCode == 300))
 
 
-## PR#17367 -- nls() quoting non-syntactical variable names
+## PR#17367 -- nlsj() quoting non-syntactical variable names
 ##
 op <- options(warn = 2)# no warnings allowed from here
 ##
 dN <- data.frame('NO [µmol/l]' = c(1,3,8,17), t = 1:4, check.names=FALSE)
 fnN <- `NO [µmol/l]` ~ a + k* exp(t)
-## lm() works,  nls() should too
+## lm() works,  nlsj() should too
 lm.N  <- lm(`NO [µmol/l]` ~ exp(t) ,                          data = dN)
 summary(lm.N) -> slmN
-nm. <- nls(`NO [µmol/l]` ~ a + k*exp(t), start=list(a=0,k=1), data = dN)
+nm. <- nlsj(`NO [µmol/l]` ~ a + k*exp(t), start=list(a=0,k=1), data = dN)
 ## In R <= 3.4.x : Error in eval(predvars, data, env) : object 'NO' not found
-nmf <- nls(fnN,                          start=list(a=0,k=1), data = dN)
+nmf <- nlsj(fnN,                          start=list(a=0,k=1), data = dN)
 ## (ditto; gave identical error)
 noC  <- function(L) L[-match("call", names(L))]
 stopifnot(all.equal(noC (nm.), noC (nmf)))
@@ -316,14 +318,14 @@ stopifnot(all.equal(noC (nm.), noC (nmf)))
 ## with list for which  as.data.frame() does not work [-> different branch, not using model.frame!]
 ## list version (has been valid "forever", still doubtful, rather give error [FIXME] ?)
 lsN <- c(as.list(dN), list(foo="bar")); lsN[["t"]] <- 1:8
-nmL <- nls(`NO [µmol/l]` ~ a + k*exp(t), start=list(a=0,k=1), data = lsN)
+nmL <- nlsj(`NO [µmol/l]` ~ a + k*exp(t), start=list(a=0,k=1), data = lsN)
 stopifnot(all.equal(coef(nmL), c(a = 5.069866, k = 0.003699669), tol = 4e-7))# seen 4.2e-8
 
 ## trivial RHS -- should work even w/o 'start='
-fi1 <- nls(y ~ a, start = list(a=1))
+fi1 <- nlsj(y ~ a, start = list(a=1))
 ## -> 2 deprecation warnings "length 1 in vector-arithmetic" from nlsModel()  in R 3.4.x ..
 options(op) # warnings about missing 'start' ok:
-f.1 <- nls(y ~ a) # failed in R 3.4.x
+f.1 <- nlsj(y ~ a) # failed in R 3.4.x
 stopifnot(all.equal(noC(f.1), noC(fi1)),
 	  all.equal(coef(f.1), c(a = mean(y))))
 

@@ -1,4 +1,10 @@
-exportPattern("^[[:alpha:]]+")
+# exportPattern("^[[:alpha:]]+")
+
+export(
+   nlsj,
+   numericDeriv,
+   nlsj.control
+)
 
 S3method(anova, nlsj)
 S3method(coef, nlsj)
