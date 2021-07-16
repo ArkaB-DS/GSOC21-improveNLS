@@ -26,9 +26,12 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         stop(msg) }
    ) # end switch choices
 
+   
 # Data
     stopifnot(inherits(formula, "formula"))
-    if (is.null(data)) {
+##    if (is.null(data)) {
+    if (missing(data)) {
+        warning("Data is not declared explicitly. Caution!")
 	data <- environment(formula) # this will handle variables in the parent frame
     }
     else if (is.list(data)){
@@ -43,30 +46,58 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 # ?? This fails when we have the parameters in variables as well. So we need
 # ?? to figure out which are the true "variables" of the problem and which are
 # ?? parameters.
-   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
+#   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
+   ll <- vapply(vnames, function(xx) {length(eval(parse(text=xx)))}, numeric(1) )
+   pnames <- vnames[which(ll == 1)]
    npar <- length(pnames)
    cat("vnames:"); print(vnames)
    cat("npar=",npar," pnames:"); print(pnames)
- 
-# Start
-   if (is.null(start)) { # start not specified
-       warning("start vector not specified for nlsj")
-       start<-0.9+seq(npar)*0.1 # WARNING: very crude??
-       names(start)<-pnames # and make sure these are named?? necessary??
-       ## ??? put in ways to get at selfstart models 
-   }
-   else { # we have a start vector
-      snames<-names(start) # names in the start vector
-      if ((length(snames) != length(pnames)) || (! all.equal(snames, pnames))) {
-           cat("snames:"); print(snames)
-           cat("pnames:"); print(pnames)
-           stop("Start names differ in number or name from formula parameter names")
-      }
-      start <- as.numeric(start) # ensure we convert (e.g., if matrix)
-      names(start) <- snames ## as.numeric strips names, so this is needed ??
-   }
+
    prm <- start # start MUST be defined at this point
    localdata <- list2env(as.list(prm), parent = data)
+
+# Start
+   if (is.null(start)) { # start not specified
+     warning("start vector not specified for nlsj")
+     start<-0.9+seq(npar)*0.1 # WARNING: very crude??
+     names(start)<-pnames # and make sure these are named?? necessary??
+     ## ??? put in ways to get at selfstart models 
+   }
+   else { # we have a start vector
+     snames<-names(start) # names in the start vector
+#     if ((length(snames) != length(pnames)) || (! all.equal(snames, pnames))) {
+#       cat("snames:"); print(snames)
+#       cat("pnames:"); print(pnames)
+#       stop("Start names differ in number or name from formula parameter names")
+#     }
+     start <- as.numeric(start) # ensure we convert (e.g., if matrix)
+     names(start) <- snames ## as.numeric strips names, so this is needed ??
+   }
+   
+   # ?? How nls() gets pnames
+   ## get names of the parameters from the starting values or selfStart model
+   # pnames <-
+   #   if (missing(start)) {
+   #     if(!is.null(attr(data, "parameters"))) {
+   #       names(attr(data, "parameters"))
+   #     } else { ## try selfStart - like object
+   #       cll <- formula[[length(formula)]]
+   #       if(is.symbol(cll)) { ## replace  y ~ S   by   y ~ S + 0 :
+   #         ## formula[[length(formula)]] <-
+   #         cll <- substitute(S + 0, list(S = cll))
+   #       }
+   #       fn <- as.character(cll[[1L]])
+   #       if(is.null(func <- tryCatch(get(fn), error=function(e)NULL)))
+   #         func <- get(fn, envir=parent.frame()) ## trying "above"
+   #       if(!is.null(pn <- attr(func, "pnames")))
+   #         as.character(as.list(match.call(func, call = cll))[-1L][pn])
+   #     }
+   #   } else
+   #     names(start)
+   # 
+   
+
+
 
 # Weights
    mraw <- length(eval(as.name(dnames[1])))
