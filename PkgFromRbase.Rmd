@@ -142,6 +142,21 @@ useDynLib(nlspkg, .registration = TRUE, .fixes = "C_")
 
 where `nlspkg` in this line must be changed appropriately.
 
+We also noted that the `S3method()` entries are needed to link the generic
+functions to similar modeling functions in R. Thus `anova`, `coef`, etc.
+are declared as S3 methods. 
+
+As a convenience to get the package running, Duncan used the shortcut
+
+`exportPattern("^[[:alpha:]]+")`
+
+to ensure functions were made available to the user. This makes visible all 
+the internal C functions, named `C_(something)`. We have suppressed this blanket
+declaration and explicitly exported the `nls` and `numericDeric` functions. 
+One or two other routines may need to be exported to allow full functioning
+of the package.
+
+
 We note that name change is ALSO required in `src/init.c`
 in the line 
 

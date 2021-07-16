@@ -44,6 +44,11 @@ output:
   
 - When we evaluate derivatives, should we ignore bounded/masked parameters to
   avoid stepping into inadmissible area?
+  
+-   ## mimic what model.frame.default does
+	  wts <- if (mWeights) rep_len(1, n)
+	  else eval(substitute(weights), data, environment(formula))
+  
 
 ## Abstract
 
@@ -68,7 +73,6 @@ Here is an annotated listing of product of the project.
 
 - ImproveNLS.bib: a consolidated BibTex bibliography for all documents in this
   project, possibly with wider application to nonlinear least squares in general
-
 
 - MachineSummary.Rmd: an informal investigation of ways to report the characteristics
   and identity of machines running tests. `MachID.R` offers a concise summary function
@@ -112,9 +116,12 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
-            ## mimic what model.frame.default does
-	    wts <- if (mWeights) rep_len(1, n)
-		   else eval(substitute(weights), data, environment(formula))
+### [2021-7-15]
+
+- JN changed NAMESPACE of nlspkg to remove the exportPattern line and explicitly
+  export `nls` and `numericDeriv`. ?? More may be needed to be exported.
+  Now R CMD check clears OK, but "test" fails.
+
 
 ### [2021-7-14] [2021-7-15]
 

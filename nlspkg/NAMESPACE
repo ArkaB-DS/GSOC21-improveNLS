@@ -1,4 +1,19 @@
-exportPattern("^[[:alpha:]]+")
+## exportPattern("^[[:alpha:]]+")
+
+export(
+    nls,
+    numericDeriv
+#   anova.nls,
+#   coef.nls,
+#   confint.nls,
+#   deviance.nls,
+#   df.residual.nls,
+#   fitted.nls,
+#   formula.nls,
+#   predict.nls,
+#   print.nls,
+#   summary.nls
+)
 
 useDynLib(nlspkg, .registration = TRUE, .fixes = "C_")
 
