@@ -151,7 +151,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 
 #??   resid <- function(prm) {- swts * rjfun(prm)} # used to return in m ?? NOTE SIGN
 
-   deviance <- function(prm) { as.numeric(crossprod(resid(prm))) }
+   deviance <- function(prm) { sum(resid(prm)^2)}
    # ?? nls doesn't have prm
 
 # All the following are defined at START of problem
@@ -221,7 +221,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    QRJ <-qr(J)
    qrDim <- min(dim(QRJ$qr))
    if (QRJ$rank < qrDim) stop("Singular initial jacobian") # for now don't continue
-   ssmin <- as.numeric(crossprod(wres)) # get the sum of squares (this is weighted)
+   ssmin <- sum(wres^2) # get the sum of squares (this is weighted)
    cat("Before iteration, deviance=",ssmin,"\n")
    while (! (convInfo <- convCrit()) ) { # Top main loop -- save convInfo at same time
        delta <- qr.coef(QRJ, -wres) # LS solve of J delta ~= -wres
@@ -238,7 +238,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
               # ?? Is it using p1 and p2 rather than prm??
               newwres <- swts*resfun(newp)
               nres <- nres + 1 # Only residual evaluated
-              ssnew <- as.numeric(crossprod(newwres)) ## ?? sum(newres^2) or sum(newres*newres)
+              ssnew <- sum(newwres^2) 
               if (trace) cat("fac=",fac,"   ssnew=",ssnew,"\n")
               if ( ssnew < ssmin) break
            }
