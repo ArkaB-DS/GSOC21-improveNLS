@@ -14,7 +14,13 @@ Crouchersubset<-1:8 # Possibly have subsets -- multiple tests.
 # summary(fitj)
 callstring<-"(Croucherform, start=Croucherstart, data=Croucherdata)"
 #?? can we embed this in different calls e.g., 
-runline <- paste("result<-nlsr::nlxb",callstring)
-runline
-eval(parse(text=runline))
-result
+
+progs <- c("nlsr::nlxb", "nls", "minpack.lm::nlsLM")
+
+for (j in (1:length(progs))){
+  runline <- paste("result<-",progs[j],callstring)
+  cat("about to run:",runline,"\n")
+  eval(parse(text=runline))
+  print(result) #?? need to process!
+  tmp <- readline("next?")
+}
