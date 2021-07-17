@@ -16,6 +16,8 @@ callstring<-"(Croucherform, start=Croucherstart, data=Croucherdata)"
 #?? can we embed this in different calls e.g., 
 
 progs <- c("nlsr::nlxb", "nls", "minpack.lm::nlsLM")
+# ?? instead of vector, maybe read a text file, 1 line per program.
+# use similar idea for the test problems. 
 
 for (j in (1:length(progs))){
   runline <- paste("result<-",progs[j],callstring)

@@ -158,7 +158,7 @@ if (trace) {
 #??    resbest <- resbest[subset] # LATER!
 #    cat("resbest:")
 #    print(resbest)
-    ssbest<-as.numeric(crossprod(resbest[subset]))
+    ssbest<-sum(resbest[subset]^2)
     ssminval <- ssbest*epstol^4
     if (watch) cat("ssminval =",ssminval,"\n")
     feval<-1
@@ -294,7 +294,7 @@ if (trace) {
               resid <- resfn(pnum, ...)
               if (! is.null(weights)) {resid <- resid * sqrt(weights)}
               resid <- resid
-              ssquares<-as.numeric(crossprod(resid[subset]))
+              ssquares<-sum(resid[subset]^2)
               if (is.na(ssquares)) ssquares<-.Machine$double.xmax
               if (ssquares>=ssbest) {
                 if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps

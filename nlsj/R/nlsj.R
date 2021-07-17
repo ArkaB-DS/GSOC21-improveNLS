@@ -95,9 +95,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    #   } else
    #     names(start)
    # 
-   
-
-
+  
 
 # Weights
    mraw <- length(eval(as.name(dnames[1])))
