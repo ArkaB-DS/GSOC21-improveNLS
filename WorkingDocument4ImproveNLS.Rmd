@@ -120,7 +120,7 @@ Here is an annotated listing of product of the project.
 
 - JN working on trying to put bounds into nlsj.R, but very early days.
 
-- Started project report whith background and goals.
+- Started project report whith background and goals. RefactoringNLS.Rmd
 
 ### [2021-7-15]
 

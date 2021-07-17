@@ -292,6 +292,80 @@ could be much reduced by moving code entirely to R.
 
 The paucity of documentation is exacerbated by the mixed R/C/Fortran code base.
 
+Following is an email to Dr. Heather Turner from John Nash.
+
+```
+I'm afraid that I don't know the purpose of the recursive call either.  I know that I wrote the code to use a closure
+for the response, covariates, etc., but I don't recall anything like a recursive call being necessary.
+
+If the R sources were in a git repository I might try to use `git blame` to find out when and by whom that was written
+but they are in an SVN repository, I think, and I haven't used it for a long, long time.
+
+I don't think I will be of much help.  My R skills have atrophied to the point where I wouldn't even know how to start
+exploring what is happening in the first call as opposed to the recursive call.
+
+
+On Tue, Jun 29, 2021 at 11:50 AM John Nash <Nashjc@uottawa.ca <mailto:Nashjc@uottawa.ca>> wrote:
+
+    Thanks.
+
+    https://gitlab.com/nashjc/improvenls/-/blob/master/Croucher-expandednlsnoc.R
+    <https://gitlab.com/nashjc/improvenls/-/blob/master/Croucher-expandednlsnoc.R>
+
+    This has the test problem and the expanded code. Around line 367 is where we are
+    scratching our heads. The function code (from nlsModel()) is in the commented lines below
+    the call. This is
+
+          # > setPars
+          # function(newPars) {
+          #   setPars(newPars)
+          #   resid <<- .swts * (lhs - (rhs <<- getRHS())) # envir = thisEnv {2 x}
+          #   dev   <<- sum(resid^2) # envir = thisEnv
+          #   if(length(gr <- attr(rhs, "gradient")) == 1L) gr <- c(gr)
+          #   QR <<- qr(.swts * gr) # envir = thisEnv
+          #   (QR$rank < min(dim(QR$qr))) # to catch the singular gradient matrix
+          # }
+
+    I'm anticipating that we will be able to set up a (possibly inefficient) code
+    with documentation that will be easier to follow and test, then gradually figure
+    out how to make it more efficient.
+
+    The equivalent from minpack.lm is
+
+    setPars = function(newPars) {
+                setPars(newPars)
+                assign("resid", .swts * (lhs - assign("rhs", getRHS(),
+                    envir = thisEnv)), envir = thisEnv)
+                assign("dev", sum(resid^2), envir = thisEnv)
+                assign("QR", qr(.swts * attr(rhs, "gradient")), envir = thisEnv)
+                return(QR$rank < min(dim(QR$qr)))
+            }
+
+
+    In both there is the recursive call, which must have a purpose I don't understand.
+
+    Cheers, JN
+
+    On 2021-06-29 12:33 p.m., Douglas Bates wrote:
+    > *Attention : courriel externe | external email*
+    > Thanks for contacting me, John.  Can you point me to a file in the gitlab.com <http://gitlab.com>
+    <http://gitlab.com <http://gitlab.com>> repository that
+    > contains the definition of setPars?
+    >
+    > (By the way, it is probably best to use the email address dmbates@gmail.com <mailto:dmbates@gmail.com>
+    <mailto:dmbates@gmail.com <mailto:dmbates@gmail.com>> for me.  If email
+    > goes to bates@stat.wisc.edu <mailto:bates@stat.wisc.edu> <mailto:bates@stat.wisc.edu <mailto:bates@stat.wisc.edu>>
+    it should get forwarded to the gmail.com <http://gmail.com> <http://gmail.com <http://gmail.com>>
+    > address but sometimes gmail decides that such mail looks suspicious and puts it in the spam folder.  Not sure
+    why.  For
+    > a long time I used bates@stat.wisc.edu <mailto:bates@stat.wisc.edu> <mailto:bates@stat.wisc.edu
+    <mailto:bates@stat.wisc.edu>> as my "From:" address because it had been my address
+    > since the 80's but even gmail got suspicious of mail from that address that did not appear to originate in the
+    wisc.edu <http://wisc.edu>
+    > <http://wisc.edu <http://wisc.edu>> domain.)
+    >
+```
+
 
 # Goals of our effort
 
@@ -299,21 +373,41 @@ What we want to accomplish.
 
 ## Code rationalization and documentation
 
-- all in R
-- try to obtain cleaner structure
-- try to explain what we do, either in comments or separate maintainer documentation
+We want
+
+- to provide a packaged version of `nls()` (call it `nlsalt`) all in R that matches
+  the version in base R and what is packaged in `nlspkg` as described in the
+  "PkgFromRbase" document
+  
+- try to obtain cleaner structure for the overall `nls()` infrastructure. By this we
+  mean a re-factoring of the routines so they are better suited to maintenance of both
+  the existing `nls()` methods and features as well as the new features we would like
+  to add.
+
+- try to explain what we do, either in comments or separate maintainer documentation.
+  Since we are complaining about the lack of explanatory material for the current
+  code, we feel it incumbent on us to provide such material for our own work, and if
+  possible for the existing code.
 
 ## Provide tests
 
-- to ensure workalike properties
+- to ensure work-alike properties
 - to test individual functions to ensure they work across the range of calling 
   mechanisms
 - for "silly" inputs to try to see if exceptions are caught
+
+### A test runner program
+
+??? this is for the quick testing of sets of problems --- 
+documented in TestsDoc.
 
 # Output of the project
 
 ?? see Working Doc etc.
 
-
+- formal reports
+- informal reports
+- problem sets
+- code and documentation
 
 # References
