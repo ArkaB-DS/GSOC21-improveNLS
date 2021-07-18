@@ -41,7 +41,9 @@ print.nlsj <- function(x, digits = max(3L, getOption("digits") - 3L), ...)
     cat("Nonlinear regression model\n")
     cat("  model: ", deparse(formula(x)), "\n", sep = "")
     cat("   data: ", deparse(x$data), "\n", sep = "")
-    print(x$m$getAllPars(), digits = digits, ...)
+#    print(x$m$getAllPars(), digits = digits, ...)
+#?? getAllPars includes plinear ones??
+     print(x$m$getPars(), digits = digits, ...)
     cat(" ", if(!is.null(x$weights) && diff(range(x$weights))) "weighted ",
 	"residual sum-of-squares: ", format(x$m$deviance(), digits = digits),
 	"\n", sep = "")
@@ -225,9 +227,13 @@ anovalist.nlsj <- function (object, ..., test = NULL)
 	      class = c("anova", "data.frame")) # was "tabular"
 }
 
+###
+### asOneSidedFormula is extracted from the NLME-3.1 library for S
+###
+
 # asOneSidedFormula <-
 #   ## Converts an expression or a name or a character string
-#   ## to a one-sided formula  ?? IS THIS NEEDED?
+#   ## to a one-sided formula
 #   function(object)
 # {
 #     if ((mode(object) == "call") && (object[[1L]] == "~")) {
@@ -252,4 +258,14 @@ anovalist.nlsj <- function (object, ..., test = NULL)
 #                              domain = NA)
 #                         ))
 #             )
+# }
+# 
+# ## "FIXME": move to 'base' and make .Internal or even .Primitive
+# setNames <- function(object = nm, nm)
+# {
+#     names(object) <- nm
+#     object
+# }
+# nobs.nlsj <- function(object, ...){
+#     if (is.null(w <- object$weights)) length(object$m$resid()) else sum(w != 0)
 # }
