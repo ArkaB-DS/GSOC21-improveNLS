@@ -31,7 +31,8 @@ library(nlsj)
 # tj = tmod(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)
 
 # do the fit -- this is using ANALYTIC derivs??
-fitj = nlsj(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE, control=nlsj.control(derivmeth="default"))
+# fitj = nlsj(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE, control=nlsj.control(derivmeth="default"))
+fitj = nlsj(formula=Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(derivmeth="default"))
 
 # summarise
 summary(fitj)
