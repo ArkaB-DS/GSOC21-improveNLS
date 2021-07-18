@@ -95,7 +95,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    #   } else
    #     names(start)
    # 
-  
+   
+
+
 
 # Weights
    mraw <- length(eval(as.name(dnames[1])))
@@ -266,7 +268,13 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        fac <- 1.0
        ssnew<-ssmin # initialize so we do one loop at least
        while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
+# with bounds and masks will modify this
+
            newp <- prm + fac * delta
+
+
+
+
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
 #           cat("newp:"); print(as.numeric(newp))
            eq <- all( (prm+control$offset) == (newp+control$offset) )
