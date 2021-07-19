@@ -45,15 +45,12 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 # ?? This fails when we have the parameters in variables as well. So we need
 # ?? to figure out which are the true "variables" of the problem and which are
 # ?? parameters.
-#   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
-   ll <- vapply(vnames, function(xx) {length(eval(parse(text=xx)))}, numeric(1) )
-   pnames <- vnames[which(ll == 1)]
+   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
+#   ll <- vapply(vnames, function(xx) {length(eval(parse(text=xx)))}, numeric(1) )
+#   pnames <- vnames[which(ll == 1)] ?? doesn't seem to be working
    npar <- length(pnames)
    cat("vnames:"); print(vnames)
    cat("npar=",npar," pnames:"); print(pnames)
-
-   prm <- start # start MUST be defined at this point
-   localdata <- list2env(as.list(prm), parent = data)
 
 # Start vector
    if (is.null(start)) { # start not specified
@@ -72,6 +69,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
      start <- as.numeric(start) # ensure we convert (e.g., if matrix)
      names(start) <- snames ## as.numeric strips names, so this is needed ??
    }
+   prm <- start # start MUST be defined at this point
+   localdata <- list2env(as.list(prm), parent = data)
+
    
    # ?? How nls() gets pnames
    ## get names of the parameters from the starting values or selfStart model
@@ -195,11 +195,14 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    tracefn = function() {
       d <- getOption("digits")
   # Note that we assume convInfo is available
-      cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(control$scaleOffset > 0),
-# ??     formatC(dev, digits=d, flag="#"),
-      formatC(ssmin, digits=d, flag="#"),
-      convInfo$ctol,
-      paste(vapply(getPars(), format, ""), collapse=" ")))
+#      cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(control$scaleOffset > 0),
+# ??     format(dev, digits=d, flag="#"),
+#      format(ssmin, digits=d, flag="#"),
+#      convInfo$ctol,
+#      paste(vapply(getPars(), format, ""), collapse=" ")))
+    cat(ssmin,":(")
+    for (ii in 1:npar) cat(prm[ii]," ")
+    cat(")  rofftest=",attr(convInfo,"ctol"),"\n")
    } # end tracefn()
 
 
@@ -291,7 +294,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       if (trace) tracefn() # printout of tracking information
       # ?? "default" algorithm
       delta <- qr.coef(QRJ, -wres) # LS solve of J delta ~= -wres
-      cat("delta:"); print(delta)
+      cat("delta:"); print(as.numeric(delta))
       fac <- 1.0
       ssnew<-ssmin # initialize so we do one loop at least
       eq <- FALSE # In case it is needed below to check parameters changed

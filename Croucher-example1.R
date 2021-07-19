@@ -72,7 +72,7 @@ j2 <-attr(r2,"gradient")
 j1
 j2
 
-fitjn = nlsjx(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, control=nlsj.control(derivmeth="numericDeriv"), trace=TRUE)
+fitjn = nlsj(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, control=nlsj.control(derivmeth="numericDeriv"), trace=TRUE)
 
 # summarise
 summary(fitjn)
