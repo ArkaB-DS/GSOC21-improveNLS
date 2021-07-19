@@ -94,9 +94,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    #   } else
    #     names(start)
    # 
-   
-
-
+  
 
 # Weights
    mraw <- length(eval(as.name(dnames[1])))
@@ -125,15 +123,14 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    if (any(start < lower) || any(start > upper)) 
         stop("Infeasible start")
 
-   bdmsk <- rep(1, npar)  # set all params free for now
-   maskidx <- which(lower==upper)
+#   bdmsk <- rep(1, npar)  # set all params free for now -- done each iteration anyway
+   maskidx <- which(lower==upper) # ?? may want to put in tolerance??
    if (length(maskidx) > 0 && trace) {
        cat("The following parameters are masked:")
        print(pnames[maskidx])
    }
-   bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
-   bdmsk <- bdmsk
-
+##   bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
+  
 # Formula processing
    # oneSidedFormula ?? Should we be more explicit?
    if (length(formula) == 2) {
@@ -262,7 +259,6 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         cval
    } # end convCrit()
 
-<<<<<<< HEAD
 # Initialization of iteration
 # counts of evaluations
    xcmsg <- NULL
@@ -272,33 +268,83 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    nres <- 0 # Count of residual evaluations
    njac <- 0 # Count of jacobian evaluations ("iterations")
    while (keepgoing) { # Top main loop 
-      if (! haveJ) resraw <- rjfun(start) # includes Jacobian
-      njac <- njac + 1 
-      nres <- nres + 1 # ?? be nice to ONLY compute Jacobian
+      if (! haveJ) { # need to get new Jacobian and reset bounds constraints
+         resraw <- rjfun(start) # includes Jacobian
+         njac <- njac + 1 
+         nres <- nres + 1 # ?? be nice to ONLY compute Jacobian
+      } # Probably ALWAYS recompute J here??
       wres <- swts * resraw 
       J <- swts * attr(resraw,"gradient")  
       # NOTE: multiplication for wres does NOT chg attribute
       haveJ <- TRUE # to record whether a current Jacobian is available
+      bdmsk<-rep(1,npar)
+      bdmsk[maskidx]<-0 # masked
+      bdmsk[which(prm-lower<epstol*(abs(lower)+epstol))]<- -3 # at lower bounds
+      bdmsk[which(upper-prm<epstol*(abs(upper)+epstol))]<- -1 # at upper bounds
+      # Here we use a tolerance to see if we are close to bounds
       QRJ <-qr(J)
       haveQRJ <- TRUE # ?? may not need all these later, but for now ...
       qrDim <- min(dim(QRJ$qr))
       if ((algorithm == "default") && (QRJ$rank < qrDim)) stop("Singular jacobian") 
       # ?? for now don't continue with Gauss-Newton, since delta can't be computed
       ssnew <- sum(wres^2) # get the sum of squares (this is weighted)
-      if (nres == 1) { # Set the starting sumsquares. Do we want to keep this??
-         ssmin <- ssnew
+      if (nres == 1) { # Set the starting sumsquares on first iteration
+         ssmin <- ssnew # the best ss (prm are parameters)
          ssnew <- .Machine$double.xmax # To ensure we continue
       }
       convInfo <- convCrit() # This is essentially the convergence test
+      if (trace) tracefn() # printout of tracking information
       if (convInfo) {
          keepgoing <- FALSE
          break # to escape the main loop
       }
-      if (trace) tracefn() # printout of tracking information
-      # ?? "default" algorithm
-      delta <- qr.coef(QRJ, -wres) # LS solve of J delta ~= -wres
+      # "default" algorithm -- added "try"
+      delta <- try(qr.coef(QRJ, -wres)) # LS solve of J delta ~= -wres
+      if (inherits(delta,"try-error")) stop("Cannot solve Gauss-Newton equations")
       cat("delta:"); print(as.numeric(delta))
-      fac <- 1.0
+      # Do we need the gradient projection??
+      gjty <- t(J) %*% wres
+      for (i in 1:npar){ #?? Improve using subsets
+         bmi<-bdmsk[i]
+         if (bmi==0) {
+             gjty[i]<-0 # masked
+             J[,i]<-0
+          }
+# Following code works by using sign = 2+bdmsk = 1 for upper bd, -1 for lower bd
+# If gradient is negative (downhill) at LB, sign*gradient is > 0. OK if delta > 0
+# If gradient is positive (uphill) at UB, we can step backwards, 
+#    sign * gradient > 0, and we can proceed if delta < 0 
+          if (bmi<0) {
+             if((2+bmi)*gjty[i] > 0) { # free parameter
+                bdmsk[i]<-1
+                if (control$watch) cat("freeing parameter ",i," now at ",prm[i],"\n")
+             } else {
+                gjty[i]<-0 # active bound
+                J[,i]<-0
+                if (control$watch) cat("active bound ",i," at ",prm[i],"\n") 
+             }
+          } # bmi
+      } # end for loop on i
+      gproj <- crossprod(delta, gjty)
+      if (is.na(gproj) || (gproj >= 0) ) 
+         stop("Uphill step direction") # should NOT be possible
+      gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
+      gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
+      if (control$watch) cat("gradient projection = ",gproj,
+                      " g-delta-angle=",gangle,"\n")
+      step<-rep(1,npar)  # Check how far to bounds
+      for (i in 1:npar){
+          bd<-bdmsk[i]
+          da<-delta[i]
+          if (control$watch) cat(i," bdmsk=",bd,"  delta=",da,"\n")
+          if (bd==0 || ((bd==-3) && (da<0)) ||((bd==-1) && (da>0))) {
+             delta[i]<-0 # Cases where bounds or masks active
+          } else {
+             if (delta[i]>0) step[i]<-(upper[i]-prm[i])/da
+             if (delta[i]<0) step[i]<-(lower[i]-prm[i])/da # positive
+          }
+      } # end loop (?? can we make more efficient?
+      fac <- min(1.0, step[which(delta!=0)]) # stepsize control
       ssnew<-ssmin # initialize so we do one loop at least
       eq <- FALSE # In case it is needed below to check parameters changed
       while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
@@ -319,46 +365,6 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
              if ( ssnew < ssmin) break
          }
          else {
-=======
-
-# Initialization
-   njac <- 1 # number of jacobians so far
-   nres <- 1
-   resraw <- rjfun(start) # includes Jacobian
-   wres <- swts * resraw 
-   J <- swts * attr(resraw,"gradient")  # multiplication for wres does NOT chg attribute
-   QRJ <-qr(J)
-   qrDim <- min(dim(QRJ$qr))
-   if (QRJ$rank < qrDim) stop("Singular initial jacobian") # for now don't continue
-   ssmin <- sum(wres^2) # get the sum of squares (this is weighted)
-   cat("Before iteration, deviance=",ssmin,"\n")
-   while (! (convInfo <- convCrit()) ) { # Top main loop -- save convInfo at same time
-       delta <- qr.coef(QRJ, -wres) # LS solve of J delta ~= -wres
- #      cat("delta:"); print(delta)
-       fac <- 1.0
-       ssnew<-ssmin # initialize so we do one loop at least
-       while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
-# with bounds and masks will modify this
-
-           newp <- prm + fac * delta
-
-
-
-
-           fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-#           cat("newp:"); print(as.numeric(newp))
-           eq <- all( (prm+control$offset) == (newp+control$offset) )
-           if (! eq ) {
-              # ?? trying to get NEW values here. Does not want to re-evaluate when running!
-              # ?? Is it using p1 and p2 rather than prm??
-              newwres <- swts*resfun(newp)
-              nres <- nres + 1 # Only residual evaluated
-              ssnew <- sum(newwres^2) 
-              if (trace) cat("fac=",fac,"   ssnew=",ssnew,"\n")
-              if ( ssnew < ssmin) break
-           }
-           else {
->>>>>>> e0b838166b1aca7c461bedf6517bc6c0081e185b
               cat("Parameters unchanged\n")
               break
          }
@@ -369,7 +375,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
          keepgoing<-FALSE # No progress achieved ?? message or indicator?
          xcmsg <- "Default backtrack search failed"
       } else {         
-	       prm <- newp
+         prm <- newp
        	 ssmin <- ssnew
          resraw <- rjfun(prm) # ?? new res and gradient -- does extra res??
          haveJ <- TRUE

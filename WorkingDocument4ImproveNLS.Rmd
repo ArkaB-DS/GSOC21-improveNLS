@@ -67,6 +67,8 @@ report, but a form of extended diary of activity, issues and results.
 
 Here is an annotated listing of product of the project.
 
+- RefactoringNLS.Rms: the document which will become the main report of this project.
+
 - DerivsNLS.Rmd: a document to explain different ways in which Jacobian information
   is supplied to nonlinear least squares computation in R. File `ExDerivs.R` is
   intended to provide examples.?? needs documentation??
@@ -110,17 +112,40 @@ Here is an annotated listing of product of the project.
 - WorkingDocument4ImproveNLS.Rmd: this document
 
 
-
-
 ## ----------- DIARY PORTION ------------
 
 * In reverse date order *
+
+### [2021-7-19]
+
+- JN got first run bounds and masks working on Croucher example. Many questions
+  and issues remain, but it is getting seemingly correct answers compared to 
+  
+
+### 2021-7-18 and 19 AB
+
+Working on creating test files based on `Examples
+for tests`.  Initial draft based on BOD2 data sent to Dr.Nash. It contains
+nls vs nlsj for now; Will have to work on including nls vs
+minpack.lm::nlsLM and nls vs nlsr::nlxb.
 
 ### [2021-7-16] + [2021-7-17]
 
 - JN working on trying to put bounds into nlsj.R, but very early days.
 
 - Started project report whith background and goals. RefactoringNLS.Rmd
+
+### [2021-07-14 to 2021-7-16] AB
+
+Worked on `Examples for Tests` file. Includes those
+data from NRAIA package whose help files have models explicitly defined.
+Hobbs weed problem is also included in it. Will have to look into more
+examples??
+
+[2021-07-16] Via Gmeet with JN did a code-walk through nlsj.R and discussed on how to proceed
+with tests.
+
+
 
 ### [2021-7-15]
 

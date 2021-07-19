@@ -19,6 +19,8 @@ Ctheta<-c("p1","p2")
 mdata<-length(xdata)
 Cwts <- rep(0.25, mdata)
 Csubset<-1:8
+Clower<-c(0,0)
+Cupper<-c(1.5, 1.5)
 
 library(nlsj)
 # 
@@ -32,10 +34,18 @@ library(nlsj)
 
 # do the fit -- this is using ANALYTIC derivs??
 # fitj = nlsj(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE, control=nlsj.control(derivmeth="default"))
-fitj = nlsj(formula=Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(derivmeth="default"))
-
+# fitj = nlsj(formula=Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(derivmeth="default", watch=TRUE))
+fitj = nlsj(formula=Cform, data=Cdata, start=Cstart, trace=TRUE, lower=Clower, upper=Cupper, control=nlsj.control(derivmeth="default", watch=TRUE))
 # summarise
 summary(fitj)
+
+fitxj = nlsr::nlxb(formula=Cform, data=Cdata, start=Cstart, trace=TRUE, lower=Clower, upper=Cupper)
+
+# summarise
+summary(fitxj)
+fitxj
+
+
 
 tmp <- readline("more?")
 fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=1,p2=.2), subset=1:8, trace=TRUE)

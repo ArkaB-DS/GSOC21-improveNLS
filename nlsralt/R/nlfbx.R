@@ -239,7 +239,7 @@ if (trace) {
        if (ctrl$rofftest && (roff <= sqrt(epstol))) roffstop <- TRUE
 #        tmp <- readline('cont')
        delta<-try(qr.coef(JQR,-rplus)) # Note appended rows of y)
-       if (class(delta)=="try-error") {
+       if (inherits(delta,"try-error")) { ## ?? was (class(delta)=="try-error") 
           if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
           lamda<-laminc*lamda
           newjac<-FALSE # increasing lamda -- don't re-evaluate
@@ -250,6 +250,7 @@ if (trace) {
           gangle <- gproj/sqrt(crossprod(gjty) * crossprod(delta))
           gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
           if (watch) cat("gradient projection = ",gproj," g-delta-angle=",gangle,"\n")
+# ?? wrong position. Need BEFORE gangle calculated
           if (is.na(gproj) || (gproj >= 0) ) { # uphill direction -- should NOT be possible
             if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
             lamda<-laminc*lamda
