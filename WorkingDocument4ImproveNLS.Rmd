@@ -119,7 +119,70 @@ Here is an annotated listing of product of the project.
 ### [2021-7-19]
 
 - JN got first run bounds and masks working on Croucher example. Many questions
-  and issues remain, but it is getting seemingly correct answers compared to 
+  and issues remain, but it is getting seemingly correct answers compared to nlxb.
+  
+Test alternative coding for bounds. Note that for loop seems twice as fast in microbenchmark.
+
+```
+## tests of bounds setting - J Nash 210719
+# setup
+rm(list=ls())
+bdmsk <- c(1,1,0,-1,-3,1)
+set.seed(123)
+res <- runif(10)*10
+J <- matrix(1:60, nrow=10)
+pnum<-1:6
+npar<-6
+gjty<-t(J)%*%res # raw gradient
+tr1 <- function(){
+    for (i in 1:npar){
+       bmi<-bdmsk[i]
+       if (bmi==0) {
+           gjty[i]<-0 # masked
+           J[,i]<-0
+       }
+       if (bmi<0) {
+           if((2+bmi)*gjty[i] > 0) { # free parameter
+              bdmsk[i]<-1
+#             if (watch) cat("freeing parameter ",i," now at ",pnum[i],"\n")
+           } else {
+              gjty[i]<-0 # active bound
+              J[,i]<-0
+#             if (watch) cat("active bound ",i," at ",pnum[i],"\n") 
+           }
+       } # bmi
+    } # end for loop
+    ans<-list(J=J, gjty<-gjty, bdmsk=bdmsk)
+} # end tr1
+
+tr2 <- function(){
+#    btmp<-rep(1,npar)
+    gjty<-t(J)%*%res # raw gradient
+    idx0 <- which(bdmsk==0)
+    gjty[idx0]<-0 # masked
+    J[,idx0]<-0
+    idxb <- which((bdmsk < 0) & ((2+bdmsk)*gjty <= 0.0))
+    bdmsk[-idxb] <- 1 # change to free
+    gjty[idxb]<-0 # active bound
+    J[,idxb]<-0
+    ans<-list(J=J, gjty<-gjty, bdmsk=bdmsk)
+}
+bdmsk
+J
+gjty
+print(tr1())
+bdmsk
+gjty
+J
+print(tr2())$bdmsk
+print(tr1())$bdmsk
+library(microbenchmark)
+microbenchmark(tr1())
+microbenchmark(tr2())
+```
+
+
+  
   
 
 ### 2021-7-18 and 19 AB
