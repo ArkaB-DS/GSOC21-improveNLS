@@ -88,7 +88,7 @@ output:
      musc.2 <- nlxb(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
                    start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
 ```
-
+Possibly working through model frame. Note original nls code varIndex.
 
 ## Abstract
 
