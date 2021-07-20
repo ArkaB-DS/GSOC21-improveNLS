@@ -50,44 +50,7 @@ output:
 	  else eval(substitute(weights), data, environment(formula))
 	  
 - Can we handle indexed parameters??
-```
-     ## The muscle dataset in MASS is from an experiment on muscle
-     ## contraction on 21 animals.  The observed variables are Strip
-     ## (identifier of muscle), Conc (Cacl concentration) and Length
-     ## (resulting length of muscle section).
-     utils::data(muscle, package = "MASS")
-     
-     ## The non linear model considered is
-     ##       Length = alpha + beta*exp(-Conc/theta) + error
-     ## where theta is constant but alpha and beta may vary with Strip.
-     
-     with(muscle, table(Strip)) # 2, 3 or 4 obs per strip
-     
-     ## We first use the plinear algorithm to fit an overall model,
-     ## ignoring that alpha and beta might vary with Strip.
-     musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), muscle,
-                   start = list(th = 1), algorithm = "plinear")
-     ## IGNORE_RDIFF_BEGIN
-     summary(musc.1)
-     ## IGNORE_RDIFF_END
-     
-     ## Then we use nls' indexing feature for parameters in non-linear
-     ## models to use the conventional algorithm to fit a model in which
-     ## alpha and beta vary with Strip.  The starting values are provided
-     ## by the previously fitted model.
-     ## Note that with indexed parameters, the starting values must be
-     ## given in a list (with names):
-     b <- coef(musc.1)
-     musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
-                   start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-     ## IGNORE_RDIFF_BEGIN
-     summary(musc.2)
-     ## IGNORE_RDIFF_END
-     library(nlsr)
-     ## THIS FAILS -- we don't handle indexed parameters yet
-     musc.2 <- nlxb(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
-                   start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-```
+
 Possibly working through model frame. Note original nls code varIndex.
 
 ## Abstract
@@ -158,6 +121,56 @@ Here is an annotated listing of product of the project.
 
 ### [2021-7-19]
 
+Look at indexed parameters example from `nls()`. This does NOT work at moment for
+nlsr[alt], even with wrapnlsr.
+
+```
+     ## The muscle dataset in MASS is from an experiment on muscle
+     ## contraction on 21 animals.  The observed variables are Strip
+     ## (identifier of muscle), Conc (Cacl concentration) and Length
+     ## (resulting length of muscle section).
+     utils::data(muscle, package = "MASS")
+     
+     ## The non linear model considered is
+     ##       Length = alpha + beta*exp(-Conc/theta) + error
+     ## where theta is constant but alpha and beta may vary with Strip.
+     
+     with(muscle, table(Strip)) # 2, 3 or 4 obs per strip
+     
+     ## We first use the plinear algorithm to fit an overall model,
+     ## ignoring that alpha and beta might vary with Strip.
+     musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), muscle,
+                   start = list(th = 1), algorithm = "plinear")
+     ## IGNORE_RDIFF_BEGIN
+     summary(musc.1)
+     ## IGNORE_RDIFF_END
+     
+     ## Then we use nls' indexing feature for parameters in non-linear
+     ## models to use the conventional algorithm to fit a model in which
+     ## alpha and beta vary with Strip.  The starting values are provided
+     ## by the previously fitted model.
+     ## Note that with indexed parameters, the starting values must be
+     ## given in a list (with names):
+     b <- coef(musc.1)
+     musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
+                   start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
+     ## IGNORE_RDIFF_BEGIN
+     summary(musc.2)
+     ## IGNORE_RDIFF_END
+     library(nlsr)
+     ## THIS FAILS -- we don't handle indexed parameters yet
+     musc.2a <- try(nlxb(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
+                   start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1])))
+     if (inherits(musc.2a, "try-error")) cat("nlxb indexed does not work")
+     # But
+     musc.2b <- try(wrapnlsr(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), muscle,
+                   start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1])))
+     if (inherits(musc.2b, "try-error")) cat("wrapnlsr indexed does not work")
+```
+
+
+### [2021-7-19]
+
 - JN got first run bounds and masks working on Croucher example. Many questions
   and issues remain, but it is getting seemingly correct answers compared to nlxb.
   
@@ -220,10 +233,6 @@ library(microbenchmark)
 microbenchmark(tr1())
 microbenchmark(tr2())
 ```
-
-
-  
-  
 
 ### 2021-7-18 and 19 AB
 
