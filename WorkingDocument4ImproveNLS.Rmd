@@ -48,6 +48,8 @@ output:
 -   ## mimic what model.frame.default does
 	  wts <- if (mWeights) rep_len(1, n)
 	  else eval(substitute(weights), data, environment(formula))
+	  
+- Can we handle indexed parameters??
   
 
 ## Abstract
