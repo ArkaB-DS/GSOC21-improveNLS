@@ -72,9 +72,11 @@ fit0 <- lm(yeps ~ x, weights = wts)
 ## IGNORE_RDIFF_BEGIN
 summary(fit0, cor = TRUE)
 cf0 <- coef(summary(fit0))[, 1:2]
-fit <- nlsj(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),
-           weights = wts, trace = TRUE)
+fit <- nlsj(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),  weights = wts, trace = TRUE)
 summary(fit, cor = TRUE)
+df <- data.frame(x=x, yeps=yeps)
+fit2 <- nlsr::nlxb(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321), data=df,  weights = wts, trace = TRUE)
+fitn <- nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321), weights = wts, trace = TRUE)
 ## IGNORE_RDIFF_END
 stopifnot(all.equal(residuals(fit), residuals(fit0), tolerance = 1e-5,
                     check.attributes = FALSE))

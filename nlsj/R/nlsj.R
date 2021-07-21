@@ -294,7 +294,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       }
       convInfo <- convCrit() # This is essentially the convergence test
       if (trace) tracefn() # printout of tracking information
-      if (convInfo) {
+      if (! convInfo) {??wrong
          keepgoing <- FALSE
          break # to escape the main loop
       }
@@ -304,6 +304,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       cat("delta:"); print(as.numeric(delta))
       # Do we need the gradient projection??
       gjty <- t(J) %*% wres
+      cat("bdmsk:"); print(bdmsk)
       for (i in 1:npar){ #?? Improve using subsets
          bmi<-bdmsk[i]
          if (bmi==0) {
@@ -326,13 +327,20 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
           } # bmi
       } # end for loop on i
       gproj <- crossprod(delta, gjty)
-      if (is.na(gproj) || (gproj >= 0) ) 
-         stop("Uphill step direction") # should NOT be possible
+      if (is.na(gproj) || (gproj >= 0) ) {
+         if (trace) cat("Uphill step direction") # should NOT be possible, but at end??
+         keepgoing<-FALSE #?? may want cleaner exit
+         xcmsg <- "Uphill search direction"
+         break
+      }
       gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
       gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
       if (control$watch) cat("gradient projection = ",gproj,
                       " g-delta-angle=",gangle,"\n")
       step<-rep(1,npar)  # Check how far to bounds
+      cat("chk bds, pmr:");print(as.numeric(prm))
+      cat("       upper:");print(as.numeric(upper))
+      cat("       lower:");print(as.numeric(lower))
       for (i in 1:npar){
           bd<-bdmsk[i]
           da<-delta[i]
@@ -340,8 +348,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
           if (bd==0 || ((bd==-3) && (da<0)) ||((bd==-1) && (da>0))) {
              delta[i]<-0 # Cases where bounds or masks active
           } else {
-             if (delta[i]>0) step[i]<-(upper[i]-prm[i])/da
-             if (delta[i]<0) step[i]<-(lower[i]-prm[i])/da # positive
+             if ((da > 0) && (is.finite(upper[i]))) step[i]<-(upper[i]-prm[i])/da
+             if ((da < 0) && (is.finite(lower[i]))) step[i]<-(lower[i]-prm[i])/da
+             # positive steps in both cases
           }
       } # end loop (?? can we make more efficient?
       fac <- min(1.0, step[which(delta!=0)]) # stepsize control
@@ -366,6 +375,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
          }
          else {
               cat("Parameters unchanged\n")
+              xcmsg <- "Parameters unchanged"
               break
          }
       } # end inner while
@@ -383,11 +393,13 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
          nres <- nres + 1 # Both residual and jacobian are evaluated
          if (control$watch) tmp <- readline("next iteration")
        }
-#      if (trace) cat("Here report progress\n")
+ #      if (trace) cat("Here report progress\n")
        fac <- 2.0 * fac # to reset for next iteration
     } # end outer while
     ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
-    if (! is.null(xcmsg)) cmsg <- paste(convInfo$cmsg,"&&",xcmsg) # include extra info
+    cat("outside outer while loop\n")
+    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
+    cat("build m\n")
     m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wres}, # ?? weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
