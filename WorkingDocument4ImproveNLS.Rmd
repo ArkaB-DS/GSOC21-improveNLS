@@ -119,6 +119,36 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+### [2021-7-21]
+
+- JN looked into minpack.lm handling of bounds constraints, and also downloaded
+  the original **netlib** version of `minpack`. This does NOT handle bounds (at
+  least no mention of "bounds", "upper" or "lower" were found w.r.t. parameters).
+  Inside `minpack.lm` package, it seems that bounds are handled by the code
+
+```  
+  	if(par[i] < NUMERIC_POINTER(OS->lower)[i])
+	  par[i] = NUMERIC_POINTER(OS->lower)[i];
+  	if(par[i] > NUMERIC_POINTER(OS->upper)[i])
+	  par[i] = NUMERIC_POINTER(OS->upper)[i];
+```
+  This is simply moving the parameters to the bounds.
+  
+  Have I missed something?
+  
+
+
+
+### [2021-7-20] 
+
+Meeting online. Worked through some issues relating to testing. 
+
+Outside of meeting, JN got nlsj to do a "first run" with bounds. Much to be
+checked and cleaned up. 
+
+AB working on tests, both for the "within package" and "across packages" roles.
+
+
 ### [2021-7-19]
 
 Look at indexed parameters example from `nls()`. This does NOT work at moment for
