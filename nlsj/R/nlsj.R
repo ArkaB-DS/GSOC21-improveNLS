@@ -294,7 +294,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       }
       convInfo <- convCrit() # This is essentially the convergence test
       if (trace) tracefn() # printout of tracking information
-      if (! convInfo) {??wrong
+      if (convInfo) {
          keepgoing <- FALSE
          break # to escape the main loop
       }
@@ -328,7 +328,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       } # end for loop on i
       gproj <- crossprod(delta, gjty)
       if (is.na(gproj) || (gproj >= 0) ) {
-         if (trace) cat("Uphill step direction") # should NOT be possible, but at end??
+         if (trace) cat("Uphill step direction") 
+         # should NOT be possible, except possibly when converged??
          keepgoing<-FALSE #?? may want cleaner exit
          xcmsg <- "Uphill search direction"
          break
@@ -392,15 +393,15 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
          njac <- njac + 1
          nres <- nres + 1 # Both residual and jacobian are evaluated
          if (control$watch) tmp <- readline("next iteration")
-       }
+      }
  #      if (trace) cat("Here report progress\n")
-       fac <- 2.0 * fac # to reset for next iteration
-    } # end outer while
-    ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
-    cat("outside outer while loop\n")
-    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
-    cat("build m\n")
-    m <- list(resfun = function(prm) resfun(prm), # ??
+      fac <- 2.0 * fac # to reset for next iteration
+   } # end outer while
+   ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
+   cat("Exited outer while loop\n")
+   if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
+   cat("build m\n")
+   m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wres}, # ?? weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # OK
