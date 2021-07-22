@@ -97,7 +97,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
   
 
 # Weights
-   mraw <- length(eval(as.name(dnames[1])))
+   mraw <- length(eval(as.name(dnames[1]), envir=data))
    if(is.null(weights)) {
        weights<-rep(1.0, mraw) # set all weights to 1.0
    } 
