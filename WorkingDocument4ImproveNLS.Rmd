@@ -121,6 +121,18 @@ Here is an annotated listing of product of the project.
 
 ### [2021-7-21]
 
+[20-7-21] Discussed problems with test file outputs over GMeet.
+`tolerance` needs to be modified in certain expectations. Rather than
+comparing entire lists, was suggested to test particular list items.
+Problems with `testthat` while executing R CMD check, saying: "Error in
+library(testthat) : there is no package called ‘testthat’".
+
+[21-7-21] Fixed `testthat` issue. Apparantly, the test file names in the
+`testthat` sub-directory inside `tests` directory needs to be prefixed
+with "test-filename.R". Realized this when a template test file was
+created using  `usethis::use_test("nlspkg")` named "test-nlspkg.R". Still,
+tests require some work; errors maybe due to `nlsj`??
+
 - JN looked into minpack.lm handling of bounds constraints, and also downloaded
   the original **netlib** version of `minpack`. This does NOT handle bounds (at
   least no mention of "bounds", "upper" or "lower" were found w.r.t. parameters).
