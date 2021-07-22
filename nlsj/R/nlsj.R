@@ -38,7 +38,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         }
         else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
-   cat("ls(data):"); print(ls(data))
+#   cat("ls(data):"); print(ls(data))
    vnames <- all.vars(formula) # all names in the formula
    dnames <- vnames[which(vnames %in% ls(data))]
    if (length(dnames) < 1) stop("No data found")
@@ -49,8 +49,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 #   ll <- vapply(vnames, function(xx) {length(eval(parse(text=xx)))}, numeric(1) )
 #   pnames <- vnames[which(ll == 1)] ?? doesn't seem to be working
    npar <- length(pnames)
-   cat("vnames:"); print(vnames)
-   cat("npar=",npar," pnames:"); print(pnames)
+#   cat("vnames:"); print(vnames)
+#   cat("npar=",npar," pnames:"); print(pnames)
 
 # Start vector
    if (is.null(start)) { # start not specified
@@ -150,7 +150,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
              if (length(lnames) != 1L) {
                 warning("lhs has either no named variable or more than one")
              }
-             else { if (control$trace) cat("lhs has just the variable ",lnames,"\n")}
+             else { if (trace) cat("lhs has just the variable ",lnames,"\n")}
            } 
            else stop("Unrecognized formula")
    if (control$derivmeth == "numericDeriv") {
@@ -199,7 +199,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 #      format(ssmin, digits=d, flag="#"),
 #      convInfo$ctol,
 #      paste(vapply(getPars(), format, ""), collapse=" ")))
-    cat(ssmin,":(")
+    cat(ssmin,":(") # ?? deviance??
     for (ii in 1:npar) cat(prm[ii]," ")
     cat(")  rofftest=",attr(convInfo,"ctol"),"\n")
    } # end tracefn()
@@ -301,10 +301,10 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       # "default" algorithm -- added "try"
       delta <- try(qr.coef(QRJ, -wres)) # LS solve of J delta ~= -wres
       if (inherits(delta,"try-error")) stop("Cannot solve Gauss-Newton equations")
-      cat("delta:"); print(as.numeric(delta))
+#      cat("delta:"); print(as.numeric(delta))
       # Do we need the gradient projection??
       gjty <- t(J) %*% wres
-      cat("bdmsk:"); print(bdmsk)
+#      cat("bdmsk:"); print(bdmsk)
       for (i in 1:npar){ #?? Improve using subsets
          bmi<-bdmsk[i]
          if (bmi==0) {
@@ -339,9 +339,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       if (control$watch) cat("gradient projection = ",gproj,
                       " g-delta-angle=",gangle,"\n")
       step<-rep(1,npar)  # Check how far to bounds
-      cat("chk bds, pmr:");print(as.numeric(prm))
-      cat("       upper:");print(as.numeric(upper))
-      cat("       lower:");print(as.numeric(lower))
+#      cat("chk bds, pmr:");print(as.numeric(prm))
+#      cat("       upper:");print(as.numeric(upper))
+#      cat("       lower:");print(as.numeric(lower))
       for (i in 1:npar){
           bd<-bdmsk[i]
           da<-delta[i]
@@ -375,7 +375,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
              if ( ssnew < ssmin) break
          }
          else {
-              cat("Parameters unchanged\n")
+              if (trace) cat("Parameters unchanged\n")
               xcmsg <- "Parameters unchanged"
               break
          }
@@ -398,9 +398,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       fac <- 2.0 * fac # to reset for next iteration
    } # end outer while
    ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
-   cat("Exited outer while loop\n")
+#   cat("Exited outer while loop\n")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
-   cat("build m\n")
+#   cat("build m\n")
    m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wres}, # ?? weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
