@@ -19,9 +19,17 @@ knitr::opts_chunk$set(echo = TRUE)
 # Abstract
 
 This article reports the particular activities of our Google Summer of Code
-project "Improvements to nls()" that relate to R code for that function. A
+project "Improvements to nls()" that relate to R code for that function, which
+is intended for the estimation of models written as a formula that has at least
+one parameter that is not estimable via solving a set of linear equations. A
 companion document "Variety in Nonlinear Least Squares Codes" presents an 
-overview of methods for the problem.
+overview of methods for the problem which takes a much wider view of the
+problem of minimizing a function that can be written as a sum of squared
+terms.
+
+Our work has not fully addressed all the issues that we would like to see
+resolved, but we believe we have made sufficient progress to demonstrate that
+there are worthwhile improvements that can be made to the R function `nls()`.
 
 # The existing function and its shortcomings
 
@@ -30,28 +38,53 @@ for estimating nonlinear statistical models. The function was developed mainly i
 1990s by Doug Bates et al., initially for S (https://en.wikipedia.org/wiki/S_%28programming_language%29). 
 The ideas spring primarily from the book by @bateswatts.
 
-With a long history, it is not surprising that code has become untidy and overly patched. It is, to
+The `nls()` function has a remarkable and quite comprehensive set of capabilities for estimating
+nonlinear models that are expressed as formulas. In particular, we note that it
+- handles formulas that include R functions
+- allows data to be subset
+- permits parameters to be indexed over a set of related data
+- produces measures of variability (i.e., standard error estimates) for the estimated parameters
+- has related profiling capabilities
+
+With such a range of features and a long history, it is not surprising that code has become untidy 
+and overly patched. It is, to
 our mind, essentially unmaintainable. Moreover, it has deficiencies that can and should be fixed. Let
 us review some of the issues. We will then propose corrective actions, some of which we have carried out.
 
 ## Issue: Convergence and termination tests
 
-`nls()` 
+Within the standard documentation (**man**ual or ".Rd" file) `nls()` warns
 
->   **The default settings of nls generally fail on artificial “zero-residual” data problems.**
+>  **The default settings of nls generally fail on artificial “zero-residual” data problems.**
 
->   The nls function uses a relative-offset convergence criterion that compares the numerical imprecision at
-   the current parameter estimates to the residual sum-of-squares. This performs well on data of the form
+>  The nls function uses a relative-offset convergence criterion that compares the numerical imprecision at
+  the current parameter estimates to the residual sum-of-squares. This performs well on data of the form
 
->   $$y = f(x, \theta) + eps$$
+>  $$y = f(x, \theta) + eps$$
 
->   (with var(eps) > 0). It fails to indicate convergence on data of the form
+>  (with var(eps) > 0). It fails to indicate convergence on data of the form
 
->   $$y = f(x, \theta)$$
+>  $$y = f(x, \theta)$$
 
->   because the criterion amounts to comparing two components of the round-off error. To avoid a zero-divide in
-   computing the convergence testing value, a positive constant scaleOffset should be added to the denominator
-   sum-of-squares; it is set in control; this does not yet apply to algorithm = "port".
+>  because the criterion amounts to comparing two components of the round-off error. To avoid a zero-divide in
+  computing the convergence testing value, a positive constant scaleOffset should be added to the denominator
+  sum-of-squares; it is set in control; this does not yet apply to algorithm = "port".
+
+It turns out that this issue can be quite easily resolved. The key "convergence test" -- more properly
+a "termination test" for the **program** rather than testing for convergence of the underlying **algorithm** --
+is the Relative Offset Convergence Criterion (see @BatesWatts81). This works by projecting the proposed
+step in the parameter vector on the gradient and estimating how much the sum of squares loss function 
+will decrease. To avoid scale issues, we use the current size of the loss function as a measure and divide
+by it. When we have "converged", the estimated
+decrease is very small, as usually is its ratio to the sum of squares. However, in some cases we have the 
+possibility of an exact fit and the sum of squares is (almost) zero and we get the possibility of a 
+zero-divide failure. 
+
+The issue is easily resolved by adding a small quantity to the loss function. To preserve legacy behaviour,
+in 2021, one of us (JN) proposed that `nls.control()` have an additional parameter `scaleOffset` with a
+default value of zero for legacy behaviour. Setting it to a small number -- 1.0 is a reasonable choice --
+allows small-residual problems (i.e., near-exact fits) to be dealt with easily. We call this the
+**safeguarded relative offset convergence criterion**.
 
 ### Example of a small-residual problem
 
@@ -173,9 +206,27 @@ Running under: Linux Mint 20.2
 
 ## Issue: more general termination tests
 
-roffset
-smallsstest
-jacobians, residuals
+The single convergence criterion of `nls()` leaves out some possibilities that could
+be useful for some problems. The package `nlsr` (@nlsr-manual) already offers both 
+the safeguarded relative offset test (**roffset**) as well as a **small sum of 
+squares** test (**smallsstest**) that compares the latest evaluated sum of squared
+(weighted) residuals to a very small multiple of the initial sum of squares. The
+multiple uses a control setting `offset` which defaults to 100.0 and we compute
+the 4th power of the machine epsilon times this offset.
+
+```{r meps4, echo=TRUE}
+epstol<-100*.Machine$double.eps
+e4 <- epstol^4
+e4
+```
+
+We do note that `nls()` stops after `maxiter` "iterations". However, for almost all
+iterative algorithms, the meaning of "iteration" requires careful examination of the
+code. Instead, we prefer to record the number of times the residuals or the jacobian have
+been computed and put upper limits on these. Our codes exit (terminate) when these limits
+are reached. Generally we prefer larger limits than the default `maxiter=50` of `nls()`,
+but that may simply reflect our history of dealing with more difficult problems as we are
+the tool-makers users consult when things go wrong. 
 
 
 ## Issue: Failure when Jacobian is computationally singular
