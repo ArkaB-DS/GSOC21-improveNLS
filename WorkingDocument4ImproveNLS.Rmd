@@ -119,6 +119,33 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+### [2021-7-22]
+
+- JN did some cleanup of nlsj and made some modifications to the Croucher example
+  which we have been using to provide some initial checks of the code.
+  
+- AB provided some test files and infrastructure.
+
+- JN suggested a function rmNLS() to remove test routine elements to keep the
+  workspace tidy. We need to use `rm(list=objectname, envir=.GlobalEnv)` 
+  Note the "list=".
+
+To discuss July 23:
+
+- Should we create "base" files for families of test problems?
+- Should we put file / problem name into a variable?
+- Ditto for the description?
+- How should be structure / build the problem list?
+- In the "runner" program, how should the file location be specified?
+  This is a cross-platform issue, and we would like a standard program that needs
+  minimal change between platforms / users.
+- Should we modify rmNLS() or have rm() statements at end of runs?
+- How to specify which program is to be run?
+- How to provide lists of problems to be run?
+- Further discussion of the output.
+  
+
+
 ### [2021-7-21]
 
 [20-7-21] Discussed problems with test file outputs over GMeet.
