@@ -119,6 +119,17 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+### [2021-7-23]
+
+- nlsj more or less running OK with base Gauss Newton. Putting in Marquardt started
+  but messy. Issues of object$m$resid() (which is WEIGHTED) vs. resid(object)
+  (which is NOT) partly resolved, but definitely needs documenting better.
+  
+- meeting resolved some ideas. Runner is progressing. 
+
+
+
+
 ### [2021-7-22]
 
 - JN did some cleanup of nlsj and made some modifications to the Croucher example
@@ -145,7 +156,6 @@ To discuss July 23:
 - Further discussion of the output.
   
 
-
 ### [2021-7-21]
 
 [20-7-21] Discussed problems with test file outputs over GMeet.
@@ -159,6 +169,18 @@ library(testthat) : there is no package called ‘testthat’".
 with "test-filename.R". Realized this when a template test file was
 created using  `usethis::use_test("nlspkg")` named "test-nlspkg.R". Still,
 tests require some work; errors maybe due to `nlsj`??
+
+
+[24-07-21] Cleaned test files and ran R CMD check after moving the tests
+directory inside nlsj. Seems to work!
+Inside "run.R", benchmarkme::get_cpu does not seem to work on Windows 10.
+Reference Issue: https://github.com/csgillespie/benchmarkme/issues/25
+Workaround: CPU<-as.numeric(system('wmic MemoryChip get
+Capacity',intern=TRUE))[2]/1024^3
+Plans to improve structure of runner discussed over GMeet.
+
+
+
 
 - JN looked into minpack.lm handling of bounds constraints, and also downloaded
   the original **netlib** version of `minpack`. This does NOT handle bounds (at
