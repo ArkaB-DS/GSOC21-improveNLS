@@ -118,6 +118,7 @@ gla<-get_linear_algebra()
 gsd<-get_sys_details()
 ```
 
+?? get_ram may not work in Windows 10. 
 
 
 ### calceps.R

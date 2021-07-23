@@ -1,0 +1,74 @@
+July 23
+
+ Want to run nlsj with derivmeth="numericDeriv"  and equivalent of maxiter=50 (njac=50)
+
+Problem will be Croucher001
+   ==>  Croucher-base + start + ...
+
+Croucherrunstring   
+
+Want:  nlsj(formula=NLSformula, data=NLSdata, start=NLSstart, algorithm="default",
+       method      Croucher             Croucher       Croucher    method
+
+               control=nls.control(njac=50, derivmeth="numericDeriv"))
+                            method
+
+methods.csv
+
+   solverfn     controls    algorithm
+   "      ",     "      "
+
+problems.csv
+
+   Croucher001 
+
+methods.csv will be an edited version of methods-master.csv
+
+problems.csv                             problems-master.csv (also with documentation)
+
+# Croucher-base.R -- https://walkingrandomly.com/?p=5254
+# construct the data vectors using c()
+# NLSProbName: Croucher-base
+# OR??  NLSProbName <-"Croucher-base"
+# NLSProbDescription: {This is a fairly simple 2-parameter problem. This file is the "base"
+#     from which others in the Croucher family are built.}
+xdata <- c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
+ydata <- c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,0.919576,-0.730975,-1.42001)
+p1<- 1
+p2<-0.2
+NLSformula <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
+# Ccall<-call("-",Cform[[3]], Cform[[2]])
+NLSstart<-list(p1=p1,p2=p2) # This is the default start given in the reference.
+NLStestdata<-data.frame(xdata, ydata)
+## NLSdata??
+NLSweights <- rep(0.25, length(xdata))
+NLSsubset<-1:8
+NLSlower<-c(0,0)
+NLSupper<-c(1.5, 1.5)
+rm(xdata, ydata, p1, p2) # Normally remove these as we don't want to pollute the workspace
+-----------------------------------------------------------------------------''
+
+#  Croucher001.R
+NLSstart <- c(p1=1, p2=0.2)
+runline <- (formula=NLSformula, data=NLSdata, start=NLSstart)
+
+------------------------------------------------------------------------------
+
+lines from problems.csv
+
+solver       algorithm          control
+
+nlsj         default           (njac=50, derivmeth="numericDeriv")
+
+minpack.lm::nlsLM              (maxiter=50)
+
+
+
+
+
+
+
+
+
+
+
