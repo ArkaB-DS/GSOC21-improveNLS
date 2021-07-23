@@ -1,0 +1,237 @@
+# NLSProbName: Leaves_1.R
+# NLSProbDescription: { The Leaves data frame has 15 rows and 2 columns of leaf length over time.
+# The two columns are:This data frame contains the following columns:
+# `time`: e time from initial emergence (days).
+# `length`: leaf length (cm).
+# }
+
+
+# Use the Isom data from NRAIA package
+
+## DATA
+NLStestdata <- data.frame(
+	time=c( 0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5,  8.5,  9.5, 10.5, 11.5, 12.5, 13.5,
+		  14.5),
+	length = c( 1.3,  1.3,  1.9,  3.4,  5.3,  7.1, 10.6, 16.0, 16.4, 18.3, 20.9, 20.5, 21.3, 21.2,
+			20.9)
+	)
+
+## STARTING VALUE
+
+NLSstart <-c(Asym=3,xmid=2,scal=1) # a starting vector (named!)
+
+## MODEL
+NLSformula <-length ~ Asym/(1+exp((xmid-time)/scal))
+NLSlower <- NULL
+NLSupper <- NULL
+NLSrunline <- "(formula=NLSformula, data=NLStestdata, start=NLSstart)"
+output_nls <- eval(parse(text=paste("nls",NLSrunline))) # nls is our benchmark case
+output_nlsj <- eval(parse(text=paste("nlsj::nlsj",NLSrunline))) # nlsj is the new nls
+output_nlsLM <- eval(parse(text=paste("minpack.lm::nlsLM",NLSrunline))) # nlsLM
+output_nlxb <- eval(parse(text=paste("nlsr::nlxb",NLSrunline))) # nlxb
+
+# so, if we include nlsr::nlxb, minpack.lm::nlsLM, we can follow the above
+# nomenclature as define output_nlxb, output_nlsLM
+
+## Test expectations using testthat
+library(testthat) # not required finally!
+
+#### TESTING nls VS nlsj
+
+#library(nlsj) # not required finally!
+
+# NLSout/expout has "m", "convInfo", "data", "call",
+# "dataClasses", "control"
+
+## testing m values:  "resid"      "fitted"     "formula"    "deviance"   "lhs"       
+# "gradient"   "conv"       "incr"       "setVarying" "setPars"   
+# "getPars"    "getAllPars" "getEnv"     "trace"      "Rmat"      
+# "predict"
+
+test_that("testing m objects",{ #FAILED
+      # residuals
+	expect_equal(as.vector(resid(output_nls)),
+			 as.vector(resid(output_nlsj)))
+	# fitted
+	expect_equal(as.vector(fitted(output_nls)),
+			 as.vector(fitted(output_nlsj)))
+	# formula
+	expect_equal(formula(output_nls),
+			 formula(output_nlsj))
+	# deviance
+	expect_equal(deviance(output_nls),
+			 deviance(output_nlsj))
+	# gradient
+	expect_equal( output_nls$m$gradient(),
+			  output_nlsj$m$gradient())
+	# conv
+	expect_equal( output_nls$m$conv(),
+			  output_nlsj$m$conv())
+	# incr
+	expect_equal( output_nls$m$incr(),
+			  output_nlsj$m$incr())
+	# getAllPars # difference between getAllPars adn getPars?
+	expect_equal( output_nls$m$getAllPars(),
+			  output_nlsj$m$getAllPars())
+	# getEnv
+	expect_equal( output_nls$m$igetEnv(),
+			  output_nlsj$m$getEnv())
+	# trace 
+	##expect_equal( output_nls$m$trace(), ## Not run as it prints(devaince,conv,pars)
+	##		  output_nlsj$m$trace())	
+	# Rmat
+	expect_equal( output_nls$m$Rmat(),
+			  output_nlsj$m$Rmat())
+	# predict
+	expect_equal( output_nls$m$predict(),
+			  output_nlsj$m$predict())
+	}
+)
+
+# testing control #FAILED
+test_that("testing control list items",{
+		expect_equal(output_nls$control,
+				 output_nlsj$control)
+	}
+)
+
+# testing convInfo # FAILED
+test_that("testing conInfo list items",{
+		expect_equal(output_nls$convInfo,
+				 output_nlsj$convInfo)
+	}
+)
+
+#### TESTING nls VS minpacl.lm::nlsLM
+
+## testing m values:  # PASSED
+test_that("testing m objects",{
+      # residuals
+	expect_equal(as.vector(resid(output_nls)),
+			 as.vector(resid(output_nlsLM)))
+	# fitted
+	expect_equal(as.vector(fitted(output_nls)),
+			 as.vector(fitted(output_nlsLM)))
+	# formula
+	expect_equal(formula(output_nls),
+			 formula(output_nlsLM))
+	# deviance
+	expect_equal(deviance(output_nls),
+			 deviance(output_nlsLM))
+	# gradient
+	expect_equal( output_nls$m$gradient(),
+			  output_nlsLM$m$gradient())
+	# conv
+	expect_equal( output_nls$m$conv(),
+			  output_nlsLM$m$conv())
+	# incr
+	expect_equal( output_nls$m$incr(),
+			  output_nlsLM$m$incr())
+	# getAllPars # difference between getAllPars adn getPars?
+	expect_equal( output_nls$m$getAllPars(),
+			  output_nlsLM$m$getAllPars())
+	# getEnv
+	expect_equal( output_nls$m$getEnv(),
+			  output_nlsLM$m$getEnv())
+	# trace 
+	##expect_equal( output_nls$m$trace(), ## Not run as it prints(devaince,conv,pars)
+	##		  output_nlsLM$m$trace())	
+	# Rmat
+	expect_equal( output_nls$m$Rmat(),
+			  output_nlsLM$m$Rmat())
+	# predict
+	expect_equal( output_nls$m$predict(),
+			  output_nlsLM$m$predict())
+	}
+)
+
+# testing control #FAILED
+test_that("testing control list items",{
+		expect_equal(output_nls$control,
+				 output_nlsLM$control)
+	}
+)
+
+# testing convInfo ## FAILED
+test_that("testing conInfo list items",{
+		expect_equal(output_nls$convInfo,
+				 output_nlsLM$convInfo)
+	}
+)
+
+## TESTING nls VS nlsr::nlxb
+
+# testing coefficients # FAILED----> need to change tolerance - suggestions??
+test_that("testing parameter estimates",{
+		expect_equal(as.vector(output_nls$m$getAllPars()),
+				as.vector(coefficients(output_nlxb)))
+	}
+)
+# testing residuals # FAILED----> signs all opposite??
+test_that("testing residuals",{
+		expect_equal(as.vector(residuals(output_nls)),
+				as.vector(output_nlxb$resid))
+	}
+)
+# testing jacobian # FAILED----> should I change dimnames here? then it should pass
+test_that("testing jacobian",{
+		expect_equal(as.matrix(output_nls$m$gradient()),
+				 output_nlxb$jacobian)
+	}
+)
+# testing formula  #PASSED
+test_that("testing formula",{
+		expect_equal(formula(output_nls),
+			 	formula(output_nlxb))
+	}
+)
+# testing weights  #PASSED
+test_that("testing weights",{
+		expect_equal(weights(output_nls),
+			 	weights(output_nlxb))
+	}
+)
+# testing ssquares  #PASSED
+test_that("testing sum of squares",{
+		expect_equal(sum(as.vector(residuals(output_nls))^2),
+			 	output_nlxb$ssquares)
+	}
+)
+
+ 
+# How do I get feval, jeval, lower, upper in nls? Also, what is maskidx?Not documented in the help file of nlxb
+				
+
+
+
+
+
+print("End of test file 'Chloride_1.R' ")
+#-----------------------------------------#
+
+## To delete the new variables due to this test file from the workspace 
+
+# ls() ## see what variables are there in thr workspace
+
+## "demand", "NLSformula", "NLSlower", "NLSrunline", 
+## "NLSstart", "NLStestdata", "NLSupper", "output_nls" 
+## "output_nlsj", "time"     
+## note that "demand" and "time" won't be there in other test cases, generally
+## SUGGESTION: use NLSdata <- data.frame(time=c(1,2),demand=c(3,4))
+
+## then we can use rm("NLSformula","NLSrunline","NLSstart","NLStestdata",
+## "NLSupper","NLSlower","output_nls","output_nlsj","output_nlxb",
+## "output_nlsLM")
+
+## What do you think Dr. Nash? Further, the idea of uisng BOD2_x, where x represents a number 
+## would be better. Tags would indicate the differences in the x's
+
+
+
+
+
+
+
+
+
+

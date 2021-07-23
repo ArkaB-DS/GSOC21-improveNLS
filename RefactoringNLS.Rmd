@@ -417,20 +417,19 @@ On Tue, Jun 29, 2021 at 11:50 AM John Nash <Nashjc@uottawa.ca <mailto:Nashjc@uot
     >
 ```
 
-
 # Goals of our effort
 
-What we want to accomplish.
+Here are some of the goals we hope to accomplish.
 
 ## Code rationalization and documentation
 
 We want
 
-- to provide a packaged version of `nls()` (call it `nlsalt`) all in R that matches
-  the version in base R and what is packaged in `nlspkg` as described in the
-  "PkgFromRbase" document
+- to provide a packaged version of `nls()` (call it `nlsalt`) coded entirely in R 
+  that matches the version in base R or what is packaged in `nlspkg` as described 
+  in the "PkgFromRbase" document.
   
-- try to obtain cleaner structure for the overall `nls()` infrastructure. By this we
+- try to obtain a cleaner structure for the overall `nls()` infrastructure. By this we
   mean a re-factoring of the routines so they are better suited to maintenance of both
   the existing `nls()` methods and features as well as the new features we would like
   to add.
@@ -442,12 +441,47 @@ We want
 
 ## Provide tests
 
-- to ensure work-alike properties
-- to test individual functions to ensure they work across the range of calling 
-  mechanisms
-- for "silly" inputs to try to see if exceptions are caught
+We need suitable tests in order:
+
+- to ensure our new `nlsalt` or related packages work properly, in particular, giving
+  results comparable to or better than the `nls()` in base R or `nlspkg`;
+- to test individual solver functions to ensure they work across the range of calling 
+  mechanisms, that is, different ways of supplying inputs to the solver(s);
+- to pose "silly" inputs to nonlinear least squares solvers (in R) to see if 
+  these bad input exceptions are caught by the programs.
 
 ### A test runner program
+
+When we have a "new" or trial solver function, we would like to know if it gives 
+acceptable results on a range of sample problems of different types, starting
+parameters, input conditions, constraints, subsets, weights or other settings. 
+Ideally we want to be able to get a summary that is easy to read and assess. For
+example, one approach would be to list the names of a set of tests with a red, green
+or yellow dot beside the name for FAILURE, SUCCESS, or "NOT APPLICABLE". In the last
+category would be a problem with constraints that the solver is not designed to 
+handle. 
+
+To accomplish this, we need a suitable "runner" program that can be supplied with
+the name of a solver or solvers and a list of test problem cases. Problems generally
+have a base setup -- a specification of the function to fit as a formula, some data
+and a default starting set of parameters. Other cases can be created by imposing
+bounds or mask constraints, subsets of the data, and different starts. 
+
+How to set up this "runner" and its supporting infrastructure is non-trivial. While
+the pieces are not as complicated as the inter-related parts of the solvers, especially
+`nls()`, the categorization of tests, their documentation, and the structuring to make
+running them straightforward and easy requires much attention to detail.
+
+Some questions ???
+
+- do we need a "base" script for each family of test problem, with numbered particular
+  cases?
+  
+- how should we document the families and cases? What tags do we need to allow us to
+  quickly select lists of tests
+  
+- structure to output the results. AB's draft csv file and runner program.??
+
 
 ??? this is for the quick testing of sets of problems --- 
 documented in TestsDoc.
