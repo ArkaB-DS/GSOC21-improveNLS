@@ -53,7 +53,7 @@ a <- b <- 1; c <- -0.1
 y <- a+b*x+c*x^2+rnorm(200, sd=0.05)
 plot(x,y)
 curve(a+b*x+c*x^2, add = TRUE)
-## IGNORE_RDIFF_BEGIN
+## IGNORE_RDIFF_BEGIN ## nlsj does not call "port" (yet??)
 ## nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1), algorithm = "port")
 nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1))
 # ?? (fm <- nlsj(y ~ a+b*x+c*I(x^2), start = c(a=1, b=1, c=0.1),
@@ -75,7 +75,8 @@ cf0 <- coef(summary(fit0))[, 1:2]
 fit <- nlsj(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321),  weights = wts, trace = TRUE)
 summary(fit, cor = TRUE)
 df <- data.frame(x=x, yeps=yeps)
-fit2 <- nlsr::nlxb(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321), data=df,  weights = wts, trace = TRUE)
+## IGNORE WHEN RUNNING R CMD check since needs external pkg
+## fit2 <- nlsr::nlxb(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321), data=df,  weights = wts, trace = TRUE)
 fitn <- nls(yeps ~ a + b*x, start = list(a = 0.12345, b = 0.54321), weights = wts, trace = TRUE)
 ## IGNORE_RDIFF_END
 stopifnot(all.equal(residuals(fit), residuals(fit0), tolerance = 1e-5,

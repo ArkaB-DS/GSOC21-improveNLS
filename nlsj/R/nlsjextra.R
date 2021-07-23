@@ -116,7 +116,7 @@ fitted.nlsj <- function(object, ...)
 formula.nlsj <- function(x, ...) x$m$formula()
 
 residuals.nlsj <- function(object, type = c("response", "pearson"), ...)
-{
+{ # 210723 -- ?? error. Need to verify!!
     type <- match.arg(type)
     if (type == "pearson") {
         val <- as.vector(object$m$resid())
@@ -125,7 +125,8 @@ residuals.nlsj <- function(object, type = c("response", "pearson"), ...)
         if(!is.null(object$na.action)) val <- naresid(object$na.action, val)
         attr(val, "label") <- "Standardized residuals"
     } else {
-        val <- as.vector(object$m$lhs() - object$m$fitted())
+##??WRONG, but why?        val <- as.vector(object$m$lhs() - object$m$fitted())
+        val <- as.numeric(object$m$lhs()-object$m$fitted())
         if(!is.null(object$na.action))
             val <- naresid(object$na.action, val)
         lab <- "Residuals"

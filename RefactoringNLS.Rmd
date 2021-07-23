@@ -268,7 +268,14 @@ source code ...
 `model` is an argument to the `nls()` function, but it does not appear in obviously in the
 source code ...
 
+## Issue: documentation of results
 
+We have noticed that there are some important issues relating to the documentation of residuals,
+fits, and related objects computed by R modeling functions.
+
+The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` are UNWEIGHTED.
+But if we return `ans` from `nls()` or `minpack.lm::nlsLM` (??need to check), then `ans$m$resid()`
+is WEIGHTED. ??test script `wtdtest1.R`. 
 
 
 ## Issue: sources of data

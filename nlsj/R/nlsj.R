@@ -131,19 +131,20 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    }
 ##   bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
   
-# Formula processing
+# Formula processing ?? Do we need all these? Can we simplify?f
    # oneSidedFormula ?? Should we be more explicit?
    if (length(formula) == 2) {
         residexpr <- formula[[2L]] ##?? Need to make sure this works 
         ## ?? -- may need to be a call
-        lhs <- NULL
-        rhs <- eval(formula[[2L]], envir=localdata)
+        lhsexpr <- NULL
+        rhsexpr <- eval(formula[[2L]], envir=localdata)
    } else if (length(formula) == 3) {
          ##?? WARNING: seems to disagree with nls()
              residexpr <- call("-", formula[[3]], formula[[2]])
-             lhs <- eval(formula[[2L]], envir=localdata)
+             lhsexpr <- formula[[2L]]
+             
              # set the "promise" for the lhs of the model
-             rhs <- eval(formula[[3L]], envir=localdata)
+             rhsexpr <- formula[[3L]]
              lnames<-all.vars(formula[[2L]]) 
              # Check that lhs is a single variable from data ??
              ldname <- which(dnames %in% lnames)
@@ -164,6 +165,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         warning("Changing to alternative derivative method")
         control$derivmeth <- nlsj.control()$altderivmeth
    }
+   rhs <- eval(rhsexpr, envir=localdata)
+
+   lhs <- eval(lhsexpr, envir=localdata)
 
 # Define functions for residual and (residual + jacobian)
    resfun <- function(prm) { # only computes the residuals (unweighted)
@@ -183,6 +187,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        }
        val
    }
+
 
 ##   resid <- function(prm) {- swts * rjfun(prm)} # used to return in m ?? CHECK SIGN
    ## define for m$resid in return section
@@ -401,10 +406,16 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 #   cat("Exited outer while loop\n")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
 #   cat("build m\n")
+# Ensure reset of values of parameters.  Needed!
+   localdata <- list2env(as.list(prm), parent = data)
+   rhs <- eval(rhsexpr, envir=localdata)
+   lhs <- eval(lhsexpr, envir=localdata)
+
    m <- list(resfun = function(prm) resfun(prm), # ??
-             resid = function() {- wres}, # ?? weighted. NOTE SIGN?? ??callable?
+             resid = function() {- wres}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
-	     fitted = function() rhs, # OK
+	     fitted = function() rhs, # FAILS??
+#	     fitted = function() {as.numeric(lhs - resid())}, ??fails!
 	     formula = function() formula, #OK
 	     deviance = function() ssmin, # ?? Probably wrong -- needs to be callable
 	     lhs = function() lhs, #OK
@@ -416,7 +427,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
                  # ?? do we need to specify environment
 	   )
     class(m) <- "nlsModel"
-    result <- list(m=m, convInfo=convInfo, control=control)
+    result <- list(m=m, convInfo=convInfo, weights=weights, control=control)
     ##?? Add call -- need to set up properly somehow. Do we need model.frame?
     class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821
     result
