@@ -5,6 +5,7 @@ y <- x <- 1:10
 yeps <- y + rnorm(length(y), sd = 0.01)
 wts <- rep(c(1, 2), length = 10); wts[5] <- 0
 fit0 <- lm(yeps ~ x, weights = wts)
+## DOES NOT WORK: fit0x <- lm(yeps ~ a+b*x, weights=wts)
 ## IGNORE_RDIFF_BEGIN
 summary(fit0, cor = TRUE)
 cf0 <- coef(summary(fit0))[, 1:2]
@@ -18,6 +19,9 @@ summary(fitn)
 ## IGNORE_RDIFF_END
 stopifnot(all.equal(as.numeric(residuals(fit)), as.numeric(residuals(fit0)), tolerance = 1e-5,
                     check.attributes = FALSE))
+stopifnot(all.equal(residuals(fit), residuals(fit0), tolerance = 1e-5,
+                    check.attributes = FALSE))
+all.equal(residuals(fit), residuals(fit0), tolerance = 1e-5, check.attributes = FALSE)
 (as.numeric(fitn$m$resid())/as.numeric(resid(fitn)))^2-wts
 fnlsj <- fit$m$fitted()
 fnlsj

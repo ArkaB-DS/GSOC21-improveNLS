@@ -128,8 +128,6 @@ Here is an annotated listing of product of the project.
 - meeting resolved some ideas. Runner is progressing. 
 
 
-
-
 ### [2021-7-22]
 
 - JN did some cleanup of nlsj and made some modifications to the Croucher example
