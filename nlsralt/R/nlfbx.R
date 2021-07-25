@@ -237,7 +237,7 @@ if (trace) {
        roff <- max(abs(as.numeric(crossprod(qr.Q(JQR), rplus))))/sqrt(ssbest+1.0)
        if (watch) cat("roff =", roff,"  converged = ",(roff <= sqrt(epstol)),"\n")
        if (ctrl$rofftest && (roff <= sqrt(epstol))) roffstop <- TRUE
-#        tmp <- readline('cont')
+       if (watch) { cat("rplus:");print(rplus) }
        delta<-try(qr.coef(JQR,-rplus)) # Note appended rows of y)
        if (inherits(delta,"try-error")) { ## ?? was (class(delta)=="try-error") 
           if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
@@ -258,7 +258,7 @@ if (trace) {
             if (trace) cat(" Uphill search direction\n")
           } else { # downhill
             delta[maskidx]<-0
-            delta<-as.numeric(delta)
+            delta<-as.numeric(delta) ## ?? necessary?
             if (watch) {
               cat("delta:")
               print(delta)

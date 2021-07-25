@@ -8,12 +8,16 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 # DOES NOT CALL nlsjModel, but does everything here
 
 # Controls
-#   cat("control:"); print(control)
    if (is.null(control$derivmeth)) control$derivmeth="default" # for safety
    epstol <- (.Machine$double.eps * control$offset) 
+   epsh <- sqrt(epstol)
    epstol4 <- epstol^4 # used for smallsstest
    ##?? may want these in nlsj.control
    if (control$derivmeth == "numericDeriv") warning("Forcing numericDeriv")
+   cat("control:"); print(control)
+   tmp <- readline("cont.")
+   control$watch<-TRUE
+
 
 # Algorithm
    if (is.null(algorithm)) algorithm<-"default"
@@ -21,7 +25,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    alg <- which(algorithm %in% algchoice)
    switch(alg,
       "default" = if (trace) cat("nlsj: Using default algorithm\n"),
-      # rest
+      "marquardt" = if (trace) cat("nlsj: Using marquardt algorithm\n"),
+      # all other choices
       { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
         stop(msg) }
    ) # end switch choices
@@ -61,40 +66,11 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    }
    else { # we have a start vector
      snames<-names(start) # names in the start vector
-#     if ((length(snames) != length(pnames)) || (! all.equal(snames, pnames))) {
-#       cat("snames:"); print(snames)
-#       cat("pnames:"); print(pnames)
-#       stop("Start names differ in number or name from formula parameter names")
-#     }
      start <- as.numeric(start) # ensure we convert (e.g., if matrix)
      names(start) <- snames ## as.numeric strips names, so this is needed ??
    }
    prm <- start # start MUST be defined at this point
    localdata <- list2env(as.list(prm), parent = data)
-
-   
-   # ?? How nls() gets pnames
-   ## get names of the parameters from the starting values or selfStart model
-   # pnames <-
-   #   if (missing(start)) {
-   #     if(!is.null(attr(data, "parameters"))) {
-   #       names(attr(data, "parameters"))
-   #     } else { ## try selfStart - like object
-   #       cll <- formula[[length(formula)]]
-   #       if(is.symbol(cll)) { ## replace  y ~ S   by   y ~ S + 0 :
-   #         ## formula[[length(formula)]] <-
-   #         cll <- substitute(S + 0, list(S = cll))
-   #       }
-   #       fn <- as.character(cll[[1L]])
-   #       if(is.null(func <- tryCatch(get(fn), error=function(e)NULL)))
-   #         func <- get(fn, envir=parent.frame()) ## trying "above"
-   #       if(!is.null(pn <- attr(func, "pnames")))
-   #         as.character(as.list(match.call(func, call = cll))[-1L][pn])
-   #     }
-   #   } else
-   #     names(start)
-   # 
-  
 
 # Weights
    mraw <- length(eval(as.name(dnames[1]), envir=data))
@@ -123,13 +99,11 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    if (any(start < lower) || any(start > upper)) 
         stop("Infeasible start")
 
-#   bdmsk <- rep(1, npar)  # set all params free for now -- done each iteration anyway
    maskidx <- which(lower==upper) # ?? may want to put in tolerance??
    if (length(maskidx) > 0 && trace) {
        cat("The following parameters are masked:")
        print(pnames[maskidx])
    }
-##   bdmsk[maskidx] <- 0  # fixed parameters ??? do we want to define U and L parms
   
 # Formula processing ?? Do we need all these? Can we simplify?f
    # oneSidedFormula ?? Should we be more explicit?
@@ -188,22 +162,11 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
        val
    }
 
-
-##   resid <- function(prm) {- swts * rjfun(prm)} # used to return in m ?? CHECK SIGN
-   ## define for m$resid in return section
-
-##   deviance <- function(prm) { sum(resid(prm)^2)}
-   # ?? nls doesn't have prm in this function
-
 ## tracefn -- called trace in nls(), but trace is also logical argument in call
    tracefn = function() {
       d <- getOption("digits")
   # Note that we assume convInfo is available
-#      cat(sprintf("%-*s (%.2e): par = (%s)\n", d+4L+2L*(control$scaleOffset > 0),
-# ??     format(dev, digits=d, flag="#"),
-#      format(ssmin, digits=d, flag="#"),
-#      convInfo$ctol,
-#      paste(vapply(getPars(), format, ""), collapse=" ")))
+    cat(" ",nres,"/",njac," ")
     cat(ssmin,":(") # ?? deviance??
     for (ii in 1:npar) cat(prm[ii]," ")
     cat(")  rofftest=",attr(convInfo,"ctol"),"\n")
@@ -235,11 +198,11 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         ## Make it always available via nlsj()
         scoff <- control$scaleOffset
         if (scoff) scoff <- (mres - npar) * scoff^2 # adjust for problem 
-        ## at this point, QRJ and wres should be defined
+        ## at this point, QRJ and wresy should be defined
         if (haveQRJ) {
-           rr <- qr.qty(QRJ, wres)
-           print(rr[1L:npar])
-           print(rr[-(1L:npar)])
+           rr <- qr.qty(QRJ, - wresy) # ?? + or -?
+        #   print(rr[1L:npar])
+        #   print(rr[-(1L:npar)])
            ctol <- sqrt( sum(rr[1L:npar]^2) / (scoff + sum(rr[-(1L:npar)]^2)))
            ##            projected resids ss             deviance
         } else ctol <- .Machine$double.xmax ## We don't have QRJ defined, so big value
@@ -265,145 +228,198 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    } # end convCrit()
 
 # Initialization of iteration
+#   Algorithm controls
+   marqalg<-FALSE # Is there a better way??
+   slam <- 0.0 #?? to avoid trouble, cleanup later
+   if (algorithm=="default") defalg<-TRUE else defalg<-FALSE
+   if (algorithm=="marquardt") {
+      marqalg<-TRUE
+      slam <- sqrt(control$lamda)
+      cat("initial slam=",slam,"\n")
+#??NOT needed as is included later
+      if (slam <= epsh) slam <- epsh*10. # ensure NOT too small
+      slinc <- sqrt(control$laminc)
+      sldec <- sqrt(control$lamdec)
+   }
 # counts of evaluations
    xcmsg <- NULL
    haveQRJ <- FALSE # QR of Jacobian NOT available
    keepgoing <- TRUE # use to control the main loop
-   haveJ <- FALSE # just in case -- inform program J NOT available
-   nres <- 0 # Count of residual evaluations
-   njac <- 0 # Count of jacobian evaluations ("iterations")
+   haveJ <- FALSE # J NOT pulled from residual object
+   nres <- 1 # Count of residual evaluations
+   njac <- 1 # Count of jacobian evaluations ("iterations")
+   resb <- rjfun(start) # "best" so far
+   wresb <- swts* resb # as.numeric takes twice as long?!
+   # NOTE: multiplication for wresb does NOT chg attribute
+   prm <- start
+   ssnew <- sum(wresb^2) # get the sum of squares (this is weighted)
+   ssmin <- ssnew # the best ss (prm are parameters)
+   fac <- 1.0 # to ensure initially defined
+   cat("Top - slam=",slam," ssmin=",ssmin," at "); print(as.numeric(prm))
+   # ?? Do we want to record ss0, res0 ?
    while (keepgoing) { # Top main loop 
       if (! haveJ) { # need to get new Jacobian and reset bounds constraints
-         resraw <- rjfun(start) # includes Jacobian
-         njac <- njac + 1 
-         nres <- nres + 1 # ?? be nice to ONLY compute Jacobian
-      } # Probably ALWAYS recompute J here??
-      wres <- swts * resraw 
-      J <- swts * attr(resraw,"gradient")  
-      # NOTE: multiplication for wres does NOT chg attribute
-      haveJ <- TRUE # to record whether a current Jacobian is available
-      bdmsk<-rep(1,npar)
-      bdmsk[maskidx]<-0 # masked
-      bdmsk[which(prm-lower<epstol*(abs(lower)+epstol))]<- -3 # at lower bounds
-      bdmsk[which(upper-prm<epstol*(abs(upper)+epstol))]<- -1 # at upper bounds
-      # Here we use a tolerance to see if we are close to bounds
-      QRJ <-qr(J)
-      haveQRJ <- TRUE # ?? may not need all these later, but for now ...
-      qrDim <- min(dim(QRJ$qr))
-      if ((algorithm == "default") && (QRJ$rank < qrDim)) stop("Singular jacobian") 
-      # ?? for now don't continue with Gauss-Newton, since delta can't be computed
-      ssnew <- sum(wres^2) # get the sum of squares (this is weighted)
-      if (nres == 1) { # Set the starting sumsquares on first iteration
-         ssmin <- ssnew # the best ss (prm are parameters)
-         ssnew <- .Machine$double.xmax # To ensure we continue
+         J <- swts * attr(resb,"gradient")
+         njac <- njac + 1
+         haveJ <- TRUE # to record whether a current Jacobian is available
+         # Need to check bounds ONLY when new jacobian (and new gradient)
+         bdmsk<-rep(1,npar)
+         bdmsk[maskidx]<-0 # masked
+         bdmsk[which(prm-lower<epstol*(abs(lower)+epstol))]<- -3 # at lower bounds
+         bdmsk[which(upper-prm<epstol*(abs(upper)+epstol))]<- -1 # at upper bounds
+         # Here we use a tolerance to see if we are close to bounds
+         J0 <- J # save raw Jacobian
+         wresy <- wresb # needed for default
       }
-      convInfo <- convCrit() # This is essentially the convergence test
-      if (trace) tracefn() # printout of tracking information
-      if (convInfo) {
-         keepgoing <- FALSE
-         break # to escape the main loop
+      if (marqalg) { # This is whether or not new Jacobian
+	 if (slam <= epsh) slam <- epsh*10. # ensure NOT too small
+         J <- rbind(J0, diag(slam, npar)) # augment the Jacobian
+         wresy <- c(wresb, rep(0,npar)) # and the residuals (y)
+         # ?? This does NOT use any scaling. To be considered??
+         # Could mean(abs(diag(QRJ$qr))) be used to scale epsh as slam?
+         haveQRJ <- FALSE # since J has changed
       }
-      # "default" algorithm -- added "try"
-      delta <- try(qr.coef(QRJ, -wres)) # LS solve of J delta ~= -wres
-      if (inherits(delta,"try-error")) stop("Cannot solve Gauss-Newton equations")
-#      cat("delta:"); print(as.numeric(delta))
-      # Do we need the gradient projection??
-      gjty <- t(J) %*% wres
-#      cat("bdmsk:"); print(bdmsk)
-      for (i in 1:npar){ #?? Improve using subsets
-         bmi<-bdmsk[i]
-         if (bmi==0) {
-             gjty[i]<-0 # masked
-             J[,i]<-0
-          }
+      gjty <- t(J0) %*% wresb   # Need gradient projection for bounds
+      #?? Should this be wresb or wresy and J or J0. Probably J0 (original)
+      for (i in 1:npar){ # Tried subsets but slower
+        bmi<-bdmsk[i]
+        if (bmi==0) {
+           gjty[i]<-0 # masked
+           J[,i]<-0
+        }
 # Following code works by using sign = 2+bdmsk = 1 for upper bd, -1 for lower bd
 # If gradient is negative (downhill) at LB, sign*gradient is > 0. OK if delta > 0
 # If gradient is positive (uphill) at UB, we can step backwards, 
-#    sign * gradient > 0, and we can proceed if delta < 0 
-          if (bmi<0) {
-             if((2+bmi)*gjty[i] > 0) { # free parameter
-                bdmsk[i]<-1
-                if (control$watch) cat("freeing parameter ",i," now at ",prm[i],"\n")
-             } else {
-                gjty[i]<-0 # active bound
-                J[,i]<-0
-                if (control$watch) cat("active bound ",i," at ",prm[i],"\n") 
-             }
-          } # bmi
-      } # end for loop on i
-      gproj <- crossprod(delta, gjty)
-      if (is.na(gproj) || (gproj >= 0) ) {
-         if (trace) cat("Uphill step direction") 
-         # should NOT be possible, except possibly when converged??
-         keepgoing<-FALSE #?? may want cleaner exit
-         xcmsg <- "Uphill search direction"
-         break
-      }
-      gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
-      gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
-      if (control$watch) cat("gradient projection = ",gproj,
-                      " g-delta-angle=",gangle,"\n")
-      step<-rep(1,npar)  # Check how far to bounds
-#      cat("chk bds, pmr:");print(as.numeric(prm))
-#      cat("       upper:");print(as.numeric(upper))
-#      cat("       lower:");print(as.numeric(lower))
-      for (i in 1:npar){
-          bd<-bdmsk[i]
-          da<-delta[i]
-          if (control$watch) cat(i," bdmsk=",bd,"  delta=",da,"\n")
-          if (bd==0 || ((bd==-3) && (da<0)) ||((bd==-1) && (da>0))) {
-             delta[i]<-0 # Cases where bounds or masks active
+#   sign * gradient > 0, and we can proceed if delta < 0 
+        if (bmi<0) {
+          if((2+bmi)*gjty[i] > 0) { # free parameter
+             bdmsk[i]<-1
+             if (control$watch) cat("freeing parameter ",i," now at ",prm[i],"\n")
           } else {
-             if ((da > 0) && (is.finite(upper[i]))) step[i]<-(upper[i]-prm[i])/da
-             if ((da < 0) && (is.finite(lower[i]))) step[i]<-(lower[i]-prm[i])/da
-             # positive steps in both cases
+             gjty[i]<-0 # active bound
+             J[,i]<-0
+             if (control$watch) cat("active bound ",i," at ",prm[i],"\n") 
           }
-      } # end loop (?? can we make more efficient?
-      fac <- min(1.0, step[which(delta!=0)]) # stepsize control
-      ssnew<-ssmin # initialize so we do one loop at least
-      eq <- FALSE # In case it is needed below to check parameters changed
-      while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
-         newp <- prm + fac * delta
-         fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
-         #  cat("newp:"); print(as.numeric(newp))
-         eq <- all( (prm+control$offset) == (newp+control$offset) )
-         # We check if the parameters have been changed (eq TRUE) 
-         if (! eq ) { # parameters have changed, we can try to find new sumsquares
-             # ?? trying to get NEW values here. 
-             # ?? Does not want to re-evaluate when running!
-             newwres <- swts*resfun(newp) # ?? assume is evaluated
-             ## ?? should we introduce a non-compute flag?
-             nres <- nres + 1 # Only residual evaluated
-             ssnew <- sum(newwres^2) 
-             if (trace) cat("fac=",fac,"   ssnew=",ssnew,"\n")
-             # ?? be nice to have multi-level trace
-             if ( ssnew < ssmin) break
+        } # bmi < 0. bmi > 0 is free parameter, so no fuss
+      } # end for loop on i
+#      cat("haveQRJ:",haveQRJ," J:"); print(J)
+#      cat("wresb:"); print(as.numeric(wresb))
+      if (! haveQRJ) QRJ <-qr(J)
+      haveQRJ <- TRUE # Since we will have QRJ for sure here
+      qrDim <- min(dim(QRJ$qr))
+      if (defalg) {
+         if (QRJ$rank < qrDim) stop("Singular jacobian")
+         # ?? Don't continue with Gauss-Newton; delta can't be computed
+         # ?? Note that we could switch to Marquardt here! Better choice?
+      } 
+      # ?? marquardt is using J (augmented Jacobian) in convergence test. This may
+      # ?? not be exactly what we want. Leave it there for now.
+      convInfo <- convCrit() # This is the convergence test
+      if (marqalg && trace) cat("slam =",slam," ")
+      if (trace) tracefn() # printout of tracking information
+      if (convInfo) { # Stop if we have converged or must terminate
+         keepgoing <- FALSE
+         break # to escape the main loop
+      }
+      delta <- try(qr.coef(QRJ, -wresy)) # LS solve of J delta ~= -wres
+      deltaOK <- TRUE
+      if (inherits(delta,"try-error")) {
+          if (! marqalg) stop("Cannot solve Gauss-Newton equations")
+          # ?? again consider a switch to marquardt
+          deltaOK <- FALSE # Tells program we want to increase lambda / slam
+      } 
+      if (deltaOK) {
+         gproj <- as.numeric(crossprod(delta, gjty)) # ?? do we need as.numeric
+         if (is.na(gproj) || (gproj >= 0) ) {
+           if (trace) cat("Uphill step direction") 
+           # should NOT be possible, except possibly when converged??
+           keepgoing<-FALSE #?? may want cleaner exit
+           xcmsg <- "Uphill search direction"
+           break
          }
-         else {
+         gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
+         gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
+         if (control$watch) cat("gradient projection = ",gproj,
+                      " g-delta-angle=",gangle,"\n")
+         step<-rep(1,npar)  # Check how far to bounds
+         for (i in 1:npar){
+            bd<-bdmsk[i]
+            da<-delta[i]
+#            if (control$watch) cat(i," bdmsk=",bd,"  delta=",da,"\n")
+            if (bd==0 || ((bd==-3) && (da<0)) ||((bd==-1) && (da>0))) {
+               delta[i]<-0 # Cases where bounds or masks active
+            } else {
+               if ((da > 0) && (is.finite(upper[i]))) step[i]<-(upper[i]-prm[i])/da
+               if ((da < 0) && (is.finite(lower[i]))) step[i]<-(lower[i]-prm[i])/da
+               # positive steps in both cases
+            }
+         } # end loop
+         eq <- FALSE # In case it is needed below to check parameters changed
+         if (defalg) fac <- min(fac, step[which(delta!=0)]) # stepsize control
+         else fac <- min(1.0, step[which(delta!=0)]) # stepsize control
+         cat("stepsize=",fac," delta:"); print(as.numeric(delta))
+         while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
+           newp <- prm + fac * delta
+           fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
+           #  cat("newp:"); print(as.numeric(newp))
+           eq <- all( (prm+control$offset) == (newp+control$offset) )
+           # We check if the parameters have been changed (eq TRUE) 
+           if (! eq ) { # parameters have changed, we can try to find new sumsquares
+             res <- rjfun(newp) # ?? assume is evaluated
+             ## ?? should we introduce a non-compute flag?
+             ## ?? only use rjfun -- then don't need to call again for J
+             nres <- nres + 1
+             # Do NOT recompute wresb -- stays until new J used
+             ssnew <- sum((swts * res)^2) 
+             if (trace) cat("fac=",fac,"   ssnew=",ssnew,"  ")
+	     print(as.numeric(newp))
+             # ?? be nice to have multi-level trace
+             if (ssnew < ssmin) {
+                break # finished inner loop in all algs
+             }
+             else if (marqalg) {
+                 slam <- slam*slinc
+                 break # out of inner loop
+             }
+             # not marqalg, assume backtrack continues with new fac
+           }
+           else { ## eq TRUE
               if (trace) cat("Parameters unchanged\n")
               xcmsg <- "Parameters unchanged"
+              keepgoing <- FALSE # all methods??
               break
-         }
-      } # end inner while
-      if (is.na(ssnew)) stop("ss is NA -- parameters unchanged") #?? fix
-      if (trace) cat("after inner while loop over fac, ssnew=",ssnew," fac=",fac,"\n")
-      if (eq || (ssnew >= ssmin)) { # no progress in "default". Done!
-         keepgoing<-FALSE # No progress achieved ?? message or indicator?
-         xcmsg <- "Default backtrack search failed"
-      } else {         
-         prm <- newp
-       	 ssmin <- ssnew
-         resraw <- rjfun(prm) # ?? new res and gradient -- does extra res??
-         haveJ <- TRUE
-         njac <- njac + 1
-         nres <- nres + 1 # Both residual and jacobian are evaluated
-         if (control$watch) tmp <- readline("next iteration")
-      }
- #      if (trace) cat("Here report progress\n")
-      fac <- 2.0 * fac # to reset for next iteration
+           }
+         } # end inner while
+         if (is.na(ssnew)) stop("ss is NA -- parameters unchanged") #?? FIXME
+         if (! keepgoing || (fac <= control$minFactor)) { 
+           # no progress. Done! In marqalg and defalg
+           keepgoing<-FALSE # No progress achieved ?? message or indicator?
+           xcmsg <- "Search failed"
+         } else {  
+           if (ssnew < ssmin) {# found better point
+             if (defalg && trace) cat("Backtrack: ssnew=",ssnew," fac=",fac,"\n")
+             prm <- newp
+             ssmin <- ssnew
+             resb<-res
+             wresb <- swts*resb # ??can we rationalize somehow
+             haveJ <- FALSE # need new Jacobian
+             if (defalg) fac <- 2.0 * fac # to reset for next iteration
+             if (marqalg) slam <- sldec * slam # reduce lamda in Marquardt
+             if (control$watch) tmp <- readline("next iteration")
+           }
+           else { # not better
+             # Only way here at moment is marqalg, but slam already increased
+             if (defalg) stop("at bottom deltaOK - failure for defalg")
+           }
+         } # not eq
+      } # deltaOK
+      else { # delta NOT OK -- report
+         warning("delta NOT computed OK")
+         slam <- slinc * slam # will have stopped if not marqalg
+      }       
+      # at this point, we have either made progress (new ssmin)
+      # or we are going round again
    } # end outer while
-   ## names(prm) <- pnames # Make sure names re-attached. ??Is this needed??
-#   cat("Exited outer while loop\n")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
 #   cat("build m\n")
 # Ensure reset of values of parameters.  Needed!
@@ -414,8 +430,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wres}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
-	     fitted = function() rhs, # FAILS??
-#	     fitted = function() {as.numeric(lhs - resid())}, ??fails!
+	     fitted = function() rhs, # working??  UNWEIGHTED
 	     formula = function() formula, #OK
 	     deviance = function() ssmin, # ?? Probably wrong -- needs to be callable
 	     lhs = function() lhs, #OK
