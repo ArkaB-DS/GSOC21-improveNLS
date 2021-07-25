@@ -12,13 +12,13 @@ weed <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443,
           38.558, 50.156, 62.948, 75.995, 91.972)
 tt <- 1:12
 
-NLStestdata <- data.frame(y=weed, tt=tt) # should we use standard name?
+NLSdata <- data.frame(y=weed, tt=tt) # should we use standard name?
 NLSstart <- c(b1=200, b2=50, b3=0.3) # a starting vector (named!)
 ## Unscaled model
 NLSformula <- y ~ b1/(1+b2*exp(-b3*tt))
 NLSlower <- NULL
 NLSupper <- NULL
-NLSrunline <- "(formula=NLSformula, data=NLStestdata, start=NLSstart)"
+NLSrunline <- "(formula=NLSformula, data=NLSdata, start=NLSstart)"
 NLSexpout <- "Nonlinear regression model
   model: y ~ b1/(1 + b2 * exp(-b3 * tt))
    data: parent.frame()

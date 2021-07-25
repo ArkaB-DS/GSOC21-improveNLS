@@ -31,31 +31,36 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
         stop(msg) }
    ) # end switch choices
 
+getlen <- function(lnames) {
+      nn<-length(lnames)
+      ll<-rep(NA,nn)
+      for (i in 1:nn) ll[i]=length(get(lnames[i]))
+      ll
+}
    
 # Data
-    stopifnot(inherits(formula, "formula"))
-    if (missing(data)) {  ## rather than   #  if (is.null(data)) {
-        warning("Data is not declared explicitly. Caution!")
-	data <- environment(formula) # this will handle variables in the parent frame
-    }
-    else if (is.list(data)){
-	    data <- list2env(data, parent = environment(formula))
+   stopifnot(inherits(formula, "formula"))
+   vnames <- all.vars(formula) # all names in the formula
+   if (missing(data)) {  ## rather than   #  if (is.null(data)) {
+      warning("Data is not declared explicitly. Caution!")
+      data <- environment(formula) # this will handle variables in the parent frame??
+      dnames <- vnames[which(vnames %in% ls(data))]
+      ldata<-getlen(vnames) # lengths of data
+      dnames <- vnames[which(ldata > 1)]
+      pnames <- vnames[which(ldata == 1)] # could 
+   }
+   else if (is.list(data)){
+          data <- list2env(data, parent = environment(formula))
+          dnames <- vnames[which(vnames %in% ls(data))]
+          if (length(dnames) < 1) stop("No data found")
+          pnames <- vnames[ - which(vnames %in% dnames)] 
+          # the "non-data" names in the formula
         }
         else if (!is.environment(data))
         	stop("'data' must be a dataframe, list, or environment")
-#   cat("ls(data):"); print(ls(data))
-   vnames <- all.vars(formula) # all names in the formula
-   dnames <- vnames[which(vnames %in% ls(data))]
-   if (length(dnames) < 1) stop("No data found")
-# ?? This fails when we have the parameters in variables as well. So we need
-# ?? to figure out which are the true "variables" of the problem and which are
-# ?? parameters.
-   pnames <- vnames[ - which(vnames %in% dnames)] # the "non-data" names in the formula
-#   ll <- vapply(vnames, function(xx) {length(eval(parse(text=xx)))}, numeric(1) )
-#   pnames <- vnames[which(ll == 1)] ?? doesn't seem to be working
+
    npar <- length(pnames)
-#   cat("vnames:"); print(vnames)
-#   cat("npar=",npar," pnames:"); print(pnames)
+   if (npar < 1) stop("No parameters!")
 
 # Start vector
    if (is.null(start)) { # start not specified
@@ -103,7 +108,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    if (length(maskidx) > 0 && trace) {
        cat("The following parameters are masked:")
        print(pnames[maskidx])
-   }
+   } else {cat("maskidx:");print(maskidx)}
+     
   
 # Formula processing ?? Do we need all these? Can we simplify?f
    # oneSidedFormula ?? Should we be more explicit?
@@ -252,19 +258,23 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    wresb <- swts* resb # as.numeric takes twice as long?!
    # NOTE: multiplication for wresb does NOT chg attribute
    prm <- start
+   cat("npar=",npar," pnames:"); print(pnames)
+
    ssnew <- sum(wresb^2) # get the sum of squares (this is weighted)
    ssmin <- ssnew # the best ss (prm are parameters)
    fac <- 1.0 # to ensure initially defined
    cat("Top - slam=",slam," ssmin=",ssmin," at "); print(as.numeric(prm))
    # ?? Do we want to record ss0, res0 ?
+   cat("npar=",npar,"\n")
+   bdmsk<-rep(1,npar)
+   print(bdmsk)
    while (keepgoing) { # Top main loop 
       if (! haveJ) { # need to get new Jacobian and reset bounds constraints
          J <- swts * attr(resb,"gradient")
          njac <- njac + 1
          haveJ <- TRUE # to record whether a current Jacobian is available
          # Need to check bounds ONLY when new jacobian (and new gradient)
-         bdmsk<-rep(1,npar)
-         bdmsk[maskidx]<-0 # masked
+         if (length(bdmsk) > 0) bdmsk[maskidx]<-0 # masked
          bdmsk[which(prm-lower<epstol*(abs(lower)+epstol))]<- -3 # at lower bounds
          bdmsk[which(upper-prm<epstol*(abs(upper)+epstol))]<- -1 # at upper bounds
          # Here we use a tolerance to see if we are close to bounds
@@ -281,8 +291,10 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       }
       gjty <- t(J0) %*% wresb   # Need gradient projection for bounds
       #?? Should this be wresb or wresy and J or J0. Probably J0 (original)
+      print(bdmsk)
       for (i in 1:npar){ # Tried subsets but slower
         bmi<-bdmsk[i]
+        cat("i=",i," bmi=",bmi,"\n")
         if (bmi==0) {
            gjty[i]<-0 # masked
            J[,i]<-0
@@ -428,7 +440,7 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    lhs <- eval(lhsexpr, envir=localdata)
 
    m <- list(resfun = function(prm) resfun(prm), # ??
-             resid = function() {- wres}, #  weighted. NOTE SIGN?? ??callable?
+             resid = function() {- wresb}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
 	     fitted = function() rhs, # working??  UNWEIGHTED
 	     formula = function() formula, #OK
