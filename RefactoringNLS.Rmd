@@ -204,7 +204,7 @@ Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Linux Mint 20.2
 ```
 
-## Issue: more general termination tests
+### More general termination tests
 
 The single convergence criterion of `nls()` leaves out some possibilities that could
 be useful for some problems. The package `nlsr` (@nlsr-manual) already offers both 
@@ -243,7 +243,6 @@ work-around is the Levenberg-Marquardt stabilization (@Marquardt1963, Levenberg1
 jn77ima). Versions of this have been implemented in packages `minpack.lm` and `nlsr`.
 
 
-
 ## Issue: Jacobian computation
 
 analytic in nlsr, `numericDeriv()`, others
@@ -263,9 +262,9 @@ analytic in nlsr, `numericDeriv()`, others
 `na.action` is an argument to the `nls()` function, but it does not appear in obviously in the
 source code ...
 
-## Issue: model
+## Issue: model frame
 
-`model` is an argument to the `nls()` function, but it does not appear in obviously in the
+`model` is an argument to the `nls()` function, but it does not appear obviously in the
 source code ...
 
 ## Issue: documentation of results
@@ -321,7 +320,7 @@ it would be useful to have $b$ and $d$ values different so the Jacobian is not s
 some sort of sequence like  1.0, 1.1, 1.2, 1.3 for the four parameters might be better and it
 can be provided quite simply instead of all 1s. 
 
-## Issue: results of running nls()
+## Issue: documentation of the results of running nls()
 
 The output of nls() is an object of class "nls" which has the following structure:
 
@@ -344,7 +343,7 @@ complicate the code. Over time, R has become much more efficient on modern compu
 the need to use compiled C and Fortran is less critical. Moreover, the burden for maintenance
 could be much reduced by moving code entirely to R.
 
-## Issue: code documentation 
+## Issue: code documentation for maintenance 
 
 `setPars()` -- explain weaknesses. Only used by profile.nls()
 

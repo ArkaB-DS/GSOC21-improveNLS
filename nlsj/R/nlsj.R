@@ -27,7 +27,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
       "default" = if (trace) cat("nlsj: Using default algorithm\n"),
       "marquardt" = if (trace) cat("nlsj: Using marquardt algorithm\n"),
       # all other choices
-      { msg <- paste("Algorithm choice '",alg,"' not yet implemented or does not exist")
+      { msg <- paste("Algorithm choice '",alg,
+                     "' not yet implemented or does not exist")
         stop(msg) }
    ) # end switch choices
 

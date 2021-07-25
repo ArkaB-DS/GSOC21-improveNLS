@@ -20,6 +20,9 @@ getlen <- function(lnames) {
   for (i in 1:nn) ll[i]=length(get(lnames[i]))
   ll
 }
+lenVar <- function(var) tryCatch(length(eval(as.name(var), data, env)),
+                                 error = function(e) -1L)
+
 # rm(dnames)
 # lnames<-getlen(vnames)
 # print(lnames)
