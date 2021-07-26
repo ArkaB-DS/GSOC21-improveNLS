@@ -30,8 +30,11 @@ terms.
 Our work has not fully addressed all the issues that we would like to see
 resolved, but we believe we have made sufficient progress to demonstrate that
 there are worthwhile improvements that can be made to the R function `nls()`.
+An important overall consideration in our work has been the maintainability of
+the code base that supports the `nls()` functionality, as we believe that the
+existing code makes maintenance and improvement very difficult.
 
-# The existing function and its shortcomings
+# The existing nls() function: strenghts and shortcomings
 
 `nls()` is the tool in base R (the distributed software package from https://cran.r-project.org)
 for estimating nonlinear statistical models. The function was developed mainly in the 1980s and
@@ -44,11 +47,11 @@ nonlinear models that are expressed as formulas. In particular, we note that it
 - allows data to be subset
 - permits parameters to be indexed over a set of related data
 - produces measures of variability (i.e., standard error estimates) for the estimated parameters
-- has related profiling capabilities
+- has related profiling capabilities for exploring the likelihood surface as parameters are changed
 
 With such a range of features and a long history, it is not surprising that code has become untidy 
 and overly patched. It is, to
-our mind, essentially unmaintainable. Moreover, it has deficiencies that can and should be fixed. Let
+our mind, essentially unmaintainable. Moreover, its underlying methods can and should be improved. Let
 us review some of the issues. We will then propose corrective actions, some of which we have carried out.
 
 ## Issue: Convergence and termination tests
@@ -85,6 +88,9 @@ in 2021, one of us (JN) proposed that `nls.control()` have an additional paramet
 default value of zero for legacy behaviour. Setting it to a small number -- 1.0 is a reasonable choice --
 allows small-residual problems (i.e., near-exact fits) to be dealt with easily. We call this the
 **safeguarded relative offset convergence criterion**.
+
+We are pleased to report that this improvement is in the R-devel distributed code at time of writing
+and will migrate to the base R distribution when updated.
 
 ### Example of a small-residual problem
 
@@ -231,21 +237,39 @@ the tool-makers users consult when things go wrong.
 
 ## Issue: Failure when Jacobian is computationally singular
 
-This is the infamous "singular gradient" termination. In some cases it is due
+This is the infamous "singular gradient" termination. A Google search of 
+
+```
+R nls "singular gradient"
+```
+
+gets over 4000 hits that are spread over the years. 
+In some cases this is due
 to failure of the simple finite difference approximation of the Jacobian in the
-`numericDeriv()` function that is a part of `nls()`. `nlsr` has used analytic
-derivatives, and we can import this functionality to the `nls()` code.
+`numericDeriv()` function that is a part of `nls()`. `nlsr` can use analytic
+derivatives, and we can import this functionality to the `nls()` code as an
+improvement. See below in the section **Jacobian computation**.
 
 However, the more common source of the issue is that the Jacobian is very close
 to singular for some values of the model parameters. In such cases we need to find
 an alternative algorithm to the Gauss-Newton iteration of `nls()`. The most common
 work-around is the Levenberg-Marquardt stabilization (@Marquardt1963, Levenberg1944, 
 jn77ima). Versions of this have been implemented in packages `minpack.lm` and `nlsr`.
+and we have preliminary versions of an `nls` replacement that can incorporate a
+version of the Levenberg-Marquardt stabilization. (There are some issues of 
+integration with other code structures and of complexity of the computations that
+suggest we should use a simplified LM stabilization.)
 
 
 ## Issue: Jacobian computation
 
-analytic in nlsr, `numericDeriv()`, others
+`nls()`, with the `numericDeriv()` function, computes the Jacobian as the "gradient"
+attribute of the residual vector. This is implemented as a mix of R and C code, but
+we have created a rather more compact version entirely in R in this Google Summer of
+Code project. See the document **DerivsNLS.pdf**.
+
+```{r code=xfun::read_utf8('badJlogmod.R')}
+```
 
 ## Issue: Subsetting
 
@@ -500,5 +524,6 @@ documented in TestsDoc.
 - informal reports
 - problem sets
 - code and documentation
+
 
 # References

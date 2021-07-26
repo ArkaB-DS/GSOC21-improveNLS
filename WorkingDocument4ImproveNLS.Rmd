@@ -119,6 +119,14 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+### [2021-7-25] 
+
+- JN: continued work on nlsj to check features working. Some rewrite of sections
+  of the Refactoring article. 
+
+
+
+
 ### [2021-7-24] 
 
 - gradual working through the code to add Marquardt yet not lose Gauss Newton.

@@ -354,6 +354,15 @@ The issue of constraints and the need for a step in parameter values for derivat
 was one of the motivations for trying to find analytic derivatives in package `nlsr` and the 
 continuing effort to bring them into other R tools.
 
+## A case that blocks `nls()` from running
+
+The following example shows that even supplying "good" starting points does not allow
+a usable Jacobian to be computed by `numericDeriv()`. This example is also in the 
+document **RefactoringNLS**.
+
+```{r code=xfun::read_utf8('badJlogmod.R')}
+```
+
 
 # Appendix 1: Base R numericDeriv code
 
