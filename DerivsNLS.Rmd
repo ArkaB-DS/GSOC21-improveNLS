@@ -37,24 +37,25 @@ traceval  <-  TRUE  # traceval set TRUE to debug or give full history
 
 ## TODOS (mostly from nlsr vignette nlsr-devdoc.Rmd)
 
-- how to insert numerical derivatives when Deriv unable to get result
+- how to insert numerical derivatives when Deriv unable to get result (nlsr)
 - approximations for jacfn beyond fwd approximation. How to specify??
 - how to force numerical approximations in nlfb() in a 
-manner consistent with that used in `optimx::optimr()`, that is, to
-surround the name of `jacfn` with quotes if it is a numerical approximation,
-or to provide a logical control to `nlxb()` for this purpose.
-
+  manner consistent with that used in `optimx::optimr()`, that is, to
+  surround the name of `jacfn` with quotes if it is a numerical approximation,
+  or to provide a logical control to `nlxb()` for this purpose.
 
 # Jacobians in nls()
 
 This document source is in file **DerivsNLS.Rmd**.
 
-`nls()` needs Jacobians calculated at the current set of trial nonlinear model
-parameters to set up the Gauss-Newton equations. Unfortunately, `nls()` calls
-the Jacobian the "gradient", and uses function `numericDerivs()` to compute them.
+`nls()` and other nonlinear least squares programs in R need a Jacobian matrix 
+calculated at the current set of trial nonlinear model parameters to set up 
+the Gauss-Newton equations or their stabilized modifications in methods such as
+that of Marquardt (@Marquardt1963). Unfortunately, `nls()` calls
+the Jacobian the "gradient", and uses function `numericDeriv()` to compute them.
 This document is an attempt to describe different ways to compute the Jacobian
-for use in nls() and related software, and to evaluate the performance of these
-approaches.
+for use in nls() and related software, and to evaluate these approaches from
+several perspectives.
 
 In evaluating performance, we need to know the conditions under which the evaluation
 was conducted. Thus the computations included in this document, which is built using
@@ -74,93 +75,77 @@ tdat  <-  seq_along(ydat) # for testing
 
 # A simple starting vector -- must have named parameters for nlxb, nls, wrapnlsr.
 start1  <-  c(b1=1, b2=1, b3=1)
-eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt))
-str(eunsc)
+eunsc  <-   y ~ b1/(1+b2*exp(-b3*tt)) # formula -- display structure with str(eunsc)
 # Can we convert a string form of this "model" to a formula
-ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))"
-str(ceunsc)
-
-# Will be TRUE if we have made the conversion
+ceunsc <- " y ~ b1/(1+b2*exp(-b3*tt))" # This will give character form: str(ceunsc)
+# Next line Will be TRUE if we have made the conversion OK
 print(as.formula(ceunsc)==eunsc)
-
-## LOCAL DATA IN DATA FRAMES
-weeddata1  <-  data.frame(y=ydat, tt=tdat)
-
-## Put data in an Environment
-weedenv <- list2env(weeddata1)
-weedenv$b1 <- start1[[1]]
-weedenv$b2 <- start1[[2]]
-weedenv$b3 <- start1[[3]]
-# Display content of the Environment
-## Note that may need to do further commands to get everything
-ls.str(weedenv)
-# Generate the residual "call"
-rexpr<-call("-",eunsc[[3]], eunsc[[2]])
-# Get the residuals
-r0<-eval(rexpr, weedenv)
-print(r0)
-cat("Sumsquares at 1,1,1 is ",sum(r0^2),"\n")
-
-## Another way
-ldata<-list2env(as.list(start1),envir=weedenv)
-ldata
-ls.str(ldata)
-eval(rexpr,envir=ldata)
-
-## Do we need to get a model frame? How? and How to use it?
-
-## Now ready to try things out.
+weeddata1  <-  data.frame(y=ydat, tt=tdat) ## LOCAL DATA IN DATA FRAMES
+weedenv <- list2env(weeddata1) ## Put data in an Environment
+# Add the parameter data as "variables" 
+weedenv$b1 <- start1[[1]]; weedenv$b2 <- start1[[2]]; weedenv$b3 <- start1[[3]]
+# Display content of the Environment with ## ls.str(weedenv)
+# We are now set up for computations
 ```
 
 # Tools for Jacobians
 
-## numericDeriv() original version
+There are a number of ways to get the Jacobian in R.
+
+## numericDeriv() original version from base R
 
 `numericDeriv` is the R function used by `nls()` to evaluate Jacobians for its Gauss-Newton
 equations. The R source code is in the file `nls.R`. It calls a C function numeric_deriv
-in `nls.c`. 
+in `nls.c`. These have been extracted in an R package form as `nlspkg` by Duncan Murdoch
+as described in our document **PkgFromRbase.Rmd: Making a package from base R files**, and
+we will use that version.
+
+In the following we will test and time `numericDeriv()` along with various of its options.
 
 ```{r nd1}
-## Seems to work -- BUT note file ExDerivs.R has many "failures"??
-theta <- c("b1", "b2", "b3")
-ndeunsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv)
-print(ndeunsc)
-print(sum(ndeunsc^2))
-tndeunsc<-microbenchmark(ndeunsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv))
-print(tndeunsc)
+rexpr<-call("-",eunsc[[3]], eunsc[[2]]) # Generate the residual "call"
+res0<-eval(rexpr, weedenv) # Get the residuals
+print(res0) # the base residuals
+cat("Sumsquares at 1,1,1 is ",sum(res0^2),"\n")
+rexpr<-call("-",eunsc[[3]], eunsc[[2]]) # This is the "call" that computes the residual
+## Try the numericDeriv option
+theta<-names(start1)
+## suppressMessages(library(nlspkg))
+suppressMessages(ndnls<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv))
+print(ndnls)
+print(sum(ndnls^2))
+tndnls<-microbenchmark(ndnls<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv))
+print(tndnls)
+
 ## numericDeriv also has central difference option, as well as choice of eps parameter
 ## Central diff
-ndeunsc2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
-print(ndeunsc2)
-print(sum(ndeunsc2^2))
-tndeunsc2<-microbenchmark(ndeunsc2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
-print(tndeunsc2)
+ndnlsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+print(ndnlsc)
+print(sum(ndnlsc^2))
+tndnlsc<-microbenchmark(ndnlsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+print(tndnlsc)
 
 ## Forward diff with smaller eps
-ndeunscx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
-print(ndeunscx)
-print(sum(ndeunscx^2))
-tndeunscx<-microbenchmark(ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
-print(tndeunscx)
+ndnlsx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+print(ndnlsx)
+print(sum(ndnlsx^2))
+tndnlsx<-microbenchmark(ndnlsx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+print(tndnlsx)
 
 ## Central diff with smaller eps
-ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
-print(ndeunscx2)
-print(sum(ndeunscx2^2))
-tndeunscx2<-microbenchmark(ndeunscx2<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
-print(tndeunscx2)
+ndnlscx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+print(ndnlscx)
+print(sum(ndnlscx^2))
+tndnlscx<-microbenchmark(ndnlscx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+print(tndnlscx)
 
-## Add dir parameter
-## to forward diff
-ndeunsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv)
-print(ndeunsc)
-ndeunscd<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, dir=-1)
-print(ndeunscd)
-ndeunscc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
-print(ndeunscc)
-ndeunsccd<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, dir=-1)
-print(ndeunsccd)
-
+## Add dir parameter -- the direction of the parameter shift
+ndnlsd<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, dir=-1)
+# Does dir make a difference? This might be accidental for forward difference.
+max(abs(ndnlsd-ndnls))
+ndnlscd<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, dir=-1)
+# Does dir make a difference? For central diff it should NOT!
+max(abs(ndnlscd-ndnlsc))
 ```
 
 
@@ -171,32 +156,58 @@ This version (see Appendix 2) has C code replaced with R equivalents.
 
 ```{r and1}
 ## Try ExDerivs.R ??
-andeunsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv)
-print(andeunsc)
-print(sum(andeunsc^2))
-tandeunsc<-microbenchmark(andeunsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv))
-print(tandeunsc)
+suppressMessages(andnls<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv))
+# print(andnls); print(sum(andnls^2))
+tandnls<-microbenchmark(andnls<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv))
+print(tandnls)
 ## numericDeriv also has central difference option, as well as choice of eps parameter
 ## Central diff
-andeunsc2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
-print(andeunsc2)
-print(sum(andeunsc2^2))
-tandeunsc2<-microbenchmark(andeunsc2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
-print(tandeunsc2)
+andnlsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+ndnlsc<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE)
+# print(andnlsc); print(sum(andnlsc^2))
+tandnlsc<-microbenchmark(andnlsc<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE))
+print(tandnlsc)
 
 ## Forward diff with smaller eps
-andeunscx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
-print(andeunscx)
-print(sum(andeunscx^2))
-tandeunscx<-microbenchmark(andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
-print(tandeunscx)
+andnlsx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+ndnlsx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10)
+# print(andnlsx); print(sum(andnlsx^2))
+tandnlsx<-microbenchmark(andnlsx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=1e-10))
+print(tandnlsx)
 
 ## Central diff with smaller eps
-andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
-print(andeunscx2)
-print(sum(andeunscx2^2))
-tandeunscx2<-microbenchmark(andeunscx2<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
-print(tandeunscx2)
+andnlscx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+ndnlscx<-nlspkg::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10)
+# print(andnlscx) ; print(sum(andnlscx^2))
+tandnlscx<-microbenchmark(andnlscx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=1e-10))
+print(tandnlscx)
+
+## Comparisons for Jacobian between nlspkg and nlsalt i.e. R&C vs just R
+max(abs(attr(ndnls, "gradient")-attr(andnls,"gradient")))
+max(abs(attr(ndnlsc, "gradient")-attr(andnlsc,"gradient")))
+max(abs(attr(ndnlsx, "gradient")-attr(andnlsx,"gradient")))
+max(abs(attr(ndnlscx, "gradient")-attr(andnlscx,"gradient")))
+
+## Using dir
+cat("eps (regular) = ",.Machine$double.eps^(1/2),
+    "  eps (central) =",.Machine$double.eps^(1/3),"\n")
+andnlsd<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, dir=-1)
+max(abs(attr(andnlsd, "gradient")-attr(ndnls,"gradient")))
+max(abs(attr(andnlsd, "gradient")-attr(andnls,"gradient")))
+andnlscd<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, dir=-1)
+max(abs(attr(andnlscd, "gradient")-attr(ndnlsc,"gradient")))
+
+## Try comparisons over different eps sizes
+for (ee in 3:10){
+andnlsd<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, dir=-1, eps=10^(-ee))
+andnlscd<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, dir=-1, eps=10^(-ee))
+andnlsx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, eps=10^(-ee))
+andnlscx<-nlsalt::numericDeriv(rexpr, theta, rho=weedenv, central=TRUE, eps=10^(-ee))
+cat("Regular diff, eps=10^(-",ee,"):",
+      max(abs(attr(andnlsd,"gradient")-attr(andnlsx,"gradient"))),"\n")
+cat("Central diff, eps=10^(-",ee,"):",
+    max(abs(attr(andnlscd,"gradient")-attr(andnlscx,"gradient"))),"\n")
+}
 ```
 
 The `dir` parameter allows us to use a backward difference for the derivative. This 
@@ -210,12 +221,10 @@ difference is specified when near a bound.
 
 - In the case of lower bounds, a central difference can overstep the bound when
   a parameter is "close" or on the bound.
-- In the case of an upper bound, changing the `dir` will not change the derivative
-  expression and steps in both forward and backward directions of the parameter
-  are taken.
+- In the case of an upper bound, changing the `dir` will not change the central 
+  derivative approximation expression and steps in both forward and backward 
+  directions of the parameter are taken.
   
-  
-
 ## Symbolic methods from `nlsr`
 
 The package `nlsr` has a function `model2rjfun()` that converts an expression
@@ -253,11 +262,11 @@ choices of approximation.
 
 ```{r numDeriv1}
 # We use the residual function (without gradient attribute) from nlsr
-jeunsc<-jacobian(res0, start1)
-jeunsc
+jnlsc<-jacobian(res0, start1)
+jnlsc
 # Timings of the analytic jacobian calculations
-tjeunsc<-microbenchmark(jeunsc<-jacobian(res0, start1))
-print(tjeunsc)
+tjnlsc<-microbenchmark(jnlsc<-jacobian(res0, start1))
+print(tjnlsc)
 ```
 
 Note that the manual pages for `numDeriv` offer many options for the functions in
@@ -272,27 +281,27 @@ result, even though it is possible that the generated order of calculations
 may introduce inaccuracies in the supposedly analytic derivatives.
 
 `numericDeriv` computes a similar structure (residuals with "gradient" attribute):
-`ndeunsc`: the forward difference result with default `eps` (1e-07 according to manual)
-`ndeunsc2`: Central difference with default `eps`
-`ndeunscx`: Forward difference with smaller eps=1e-10
-`ndeunscx2`: Central difference with smaller eps=1e-10
+`ndnlsc`: the forward difference result with default `eps` (1e-07 according to manual)
+`ndnlsc2`: Central difference with default `eps`
+`ndnlscx`: Forward difference with smaller eps=1e-10
+`ndnlscx2`: Central difference with smaller eps=1e-10
 
-`jeunsc`: numDeriv::jacobian() result with default settings.
+`jnlsc`: numDeriv::jacobian() result with default settings.
 
 ```{r compjac1}
 ## Matrix comparisons
-attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")
-attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")
-attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")
-attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")
-jeunsc-attr(vfunsc,"gradient")
+attr(ndnls, "gradient")-attr(vfunsc,"gradient")
+attr(ndnlsc, "gradient")-attr(vfunsc,"gradient")
+attr(ndnlsx, "gradient")-attr(vfunsc,"gradient")
+attr(ndnlscx, "gradient")-attr(vfunsc,"gradient")
+jnlsc-attr(vfunsc,"gradient")
 
 ## Summary comparisons
-max(abs(attr(ndeunsc, "gradient")-attr(vfunsc,"gradient")))
-max(abs(attr(ndeunsc2, "gradient")-attr(vfunsc,"gradient")))
-max(abs(attr(ndeunscx, "gradient")-attr(vfunsc,"gradient")))
-max(abs(attr(ndeunscx2, "gradient")-attr(vfunsc,"gradient")))
-max(abs(jeunsc-attr(vfunsc,"gradient")))
+max(abs(attr(ndnls, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndnlsc, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndnlsx, "gradient")-attr(vfunsc,"gradient")))
+max(abs(attr(ndnlscx, "gradient")-attr(vfunsc,"gradient")))
+max(abs(jnlsc-attr(vfunsc,"gradient")))
 ```
 
 
@@ -354,11 +363,10 @@ The issue of constraints and the need for a step in parameter values for derivat
 was one of the motivations for trying to find analytic derivatives in package `nlsr` and the 
 continuing effort to bring them into other R tools.
 
-## A case that blocks `nls()` from running
+## A case where the initial Jacobian is singular
 
-The following example shows that even supplying "good" starting points does not allow
-a usable Jacobian to be computed by `numericDeriv()`. This example is also in the 
-document **RefactoringNLS**.
+The following example shows that numericDeriv() does a reasonable job of computing
+the Jacobian, but the result is still singular.
 
 ```{r code=xfun::read_utf8('badJlogmod.R')}
 ```

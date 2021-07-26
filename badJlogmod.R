@@ -20,26 +20,22 @@ Jatst<-jmod(st) # compute this at the start from package nlsr
 Jatst<-attr(Jatst,"gradient") # and extract the Jacobian
 #
 # Now try to compute Jacobian produced by nls()
-theta <- c("a","b","c") # the parameter names
 env<-environment(form) # We need the environment of the formula
 eform<-eval(form, envir=env) # and the evaluated expression
-jnlsatst<-numericDeriv(form[[3L]], theta=theta, rho=env)
+localdata<-list2env(as.list(st), parent=env)
+jnlsatst<-numericDeriv(form[[3L]], theta=names(st), rho=localdata)
 Jnls<-attr(jnlsatst,"gradient")
 Jnls # from nls()
 Jatst # from nlsr -- analytic derivative
+max(abs(Jnls-Jatst))
 svd(Jnls)$d
 svd(Jatst)$d
-# what if we try to get closer to the parameters?
-n0b<-try(nls(form, start=c(a=1, b=1,c=1.3), data=data.frame(x=x, y=y), trace=TRUE))
-# or even start at the solution?
+# Even start at the solution?
 n0c<-try(nls(form, start=coef(n1), data=data.frame(x=x, y=y), trace=TRUE))
 
-## attempts with nlsj -- not working right away??
+## attempts with nlsj 
 library(nlsj)
-n0jn<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="numericDeriv"))) # and watch the fun as this fails. 
+n0jn<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="numericDeriv")))
 tmp<-readline("more.")
-n0ja<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="default"))) # and watch the fun as this fails. 
+n0ja<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="default"))) 
 
-library(nlsalt)
-nlsmod<-nlsModel(form, start=st, data=df)
-# ?? why are we getting these differences??
