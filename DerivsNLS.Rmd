@@ -107,6 +107,8 @@ rexpr<-call("-",eunsc[[3]], eunsc[[2]]) # Generate the residual "call"
 res0<-eval(rexpr, weedenv) # Get the residuals
 print(res0) # the base residuals
 cat("Sumsquares at 1,1,1 is ",sum(res0^2),"\n")
+treseval<-microbenchmark(res0<-eval(rexpr, weedenv))
+print(treseval)
 rexpr<-call("-",eunsc[[3]], eunsc[[2]]) # This is the "call" that computes the residual
 ## Try the numericDeriv option
 theta<-names(start1)
@@ -231,23 +233,23 @@ The package `nlsr` has a function `model2rjfun()` that converts an expression
 describing how the residual functions are computed into an R function that
 computes the residuals at a particular set of parameters and sets the 
 **attribute** "gradient" of the vector of residual values to the Jacobian at
-the particular set of parameters. 
+the particular set of parameters. `model2rjfun()` does much the same work
+as the `res0<-eval(rexpr, weedenv)` expression evaluation, but adds derivative
+expressions to the function. 
 
 ```{r nlsr1}
 # nlsr has function model2rjfun. We can evaluate just the residuals
 res0<-model2rjfun(eunsc, start1, data=weeddata1, jacobian=FALSE)
 res0(start1)
+tres0nlsr<-microbenchmark(res0(start1)) # time it
+print(tres0nlsr)
 # or the residuals and jacobian
-## nlsr::model2rjfun forms a function with gradient (jacobian) attribute
 funsc <- model2rjfun(eunsc, start1, data=weeddata1) # from nlsr: creates a function
 tmodel2rjfun <- microbenchmark(model2rjfun(eunsc, start1, data=weeddata1))
 print(tmodel2rjfun)
-print(funsc)
-print(funsc(start1))
-print(environment(funsc))
-print(ls.str(environment(funsc)))
-print(ls(environment(funsc)$data))
-eval(eunsc, environment(funsc))
+## Ways to display information about the residual/jacobian function
+# print(funsc); print(funsc(start1)); print(environment(funsc)); print(ls.str(environment(funsc)))
+# print(ls(environment(funsc)$data)); eval(eunsc, environment(funsc))
 vfunsc<-funsc(start1)
 print(vfunsc)
 tfunsc<-microbenchmark(funsc(start1))
@@ -262,15 +264,27 @@ choices of approximation.
 
 ```{r numDeriv1}
 # We use the residual function (without gradient attribute) from nlsr
-jnlsc<-jacobian(res0, start1)
-jnlsc
+jnumd<-jacobian(res0, start1) #  uses default "Richardson" method
+jnumd
 # Timings of the analytic jacobian calculations
-tjnlsc<-microbenchmark(jnlsc<-jacobian(res0, start1))
-print(tjnlsc)
+tjnumd<-microbenchmark(jnumd<-jacobian(res0, start1))
+print(tjnumd)
+
+jnumds<-jacobian(res0, start1, method="simple") #  uses default "Richardson" method
+jnumds
+# Timings of the analytic jacobian calculations
+tjnumds<-microbenchmark(jnumds<-jacobian(res0, start1, method="simple"))
+print(tjnumds)
+
+jnumdc<-jacobian(res0, start1, method="complex") #  uses default "Richardson" method
+jnumdc
+# Timings of the analytic jacobian calculations
+tjnumdc<-microbenchmark(jnumdc<-jacobian(res0, start1, method="complex"))
+print(tjnumdc)
 ```
 
 Note that the manual pages for `numDeriv` offer many options for the functions in
-the package. At 2021-5-27 we have yet to explore these.
+the package. We have yet to explore many of these.
 
 # Comparisons
 
@@ -281,50 +295,96 @@ result, even though it is possible that the generated order of calculations
 may introduce inaccuracies in the supposedly analytic derivatives.
 
 `numericDeriv` computes a similar structure (residuals with "gradient" attribute):
-`ndnlsc`: the forward difference result with default `eps` (1e-07 according to manual)
-`ndnlsc2`: Central difference with default `eps`
+`ndnlsc`: the forward difference result with default `eps` (.Machine$double.eps^(1/2))
+`ndnlsc2`: Central difference with default `eps` (.Machine$double.eps^(1/3))
 `ndnlscx`: Forward difference with smaller eps=1e-10
 `ndnlscx2`: Central difference with smaller eps=1e-10
 
-`jnlsc`: numDeriv::jacobian() result with default settings.
+`jnumd`: numDeriv::jacobian() result with default settings.
 
 ```{r compjac1}
-## Matrix comparisons
-attr(ndnls, "gradient")-attr(vfunsc,"gradient")
-attr(ndnlsc, "gradient")-attr(vfunsc,"gradient")
-attr(ndnlsx, "gradient")-attr(vfunsc,"gradient")
-attr(ndnlscx, "gradient")-attr(vfunsc,"gradient")
-jnlsc-attr(vfunsc,"gradient")
+## Matrix comparisons -- uncomment code to show these, which use page space
+# attr(ndnls, "gradient")-attr(vfunsc,"gradient")
+# attr(ndnlsc, "gradient")-attr(vfunsc,"gradient")
+# attr(ndnlsx, "gradient")-attr(vfunsc,"gradient")
+# attr(ndnlscx, "gradient")-attr(vfunsc,"gradient")
+# jnumd - attr(vfunsc,"gradient")
+# jnumds - attr(vfunsc,"gradient")
+# jnumdc - attr(vfunsc,"gradient")
 
-## Summary comparisons
+## Summary comparisons - maximum absolute differences
 max(abs(attr(ndnls, "gradient")-attr(vfunsc,"gradient")))
 max(abs(attr(ndnlsc, "gradient")-attr(vfunsc,"gradient")))
 max(abs(attr(ndnlsx, "gradient")-attr(vfunsc,"gradient")))
 max(abs(attr(ndnlscx, "gradient")-attr(vfunsc,"gradient")))
-max(abs(jnlsc-attr(vfunsc,"gradient")))
+max(abs(jnumd - attr(vfunsc,"gradient")))
+max(abs(jnumds - attr(vfunsc,"gradient")))
+max(abs(jnumdc - attr(vfunsc,"gradient")))
 ```
 
+## Observations
 
-# Performance results for different computing environments
+Some particular notes:
 
-Here we present tables of the results, preceded by identified descriptions of the machines we
-used. We use ideas and functions from the document `MachineSummary` to provide a characterization
-and identity for each machine used.
+- the mean time for the default `numericDeriv()` of `nls()` is quite
+  fast and its coefficient of variation (sd/mean) is around 0.42. The
+  timings are actually very slightly faster than the analytic expressions
+  of `nlsr`, but the latter has a COV of 0.36.
+  
+- this default method Jacobian unfortunately deviates from the analytical
+  computation by a relatively large amount (of the order of 1e-6 for our
+  example). 
+  
+- the central difference version of `numericDeriv()` does better (about 
+  three orders of magnitude smaller deviation from the analytic result),
+  and the time is comparable with the analytic evaluation.
+  
+- making the `eps` parameter smaller degrades the accuracy of the Jacobian
+  computed via `numericDeriv()`. This may be counter-intuitive for those 
+  unfamiliar with numerical methods. Essentially, a smaller `eps` results in
+  subtraction of very close values for the residuals. 
+  
+- the "simple" option of the `numDeriv` function `jacobian()` gives similarly
+  poor accuracy. 
+  
+- the "Richardson" (default) results of `numDeriv` are of similar accuracy to
+  the central difference option of `numericDeriv()` but at a much greater time
+  cost -- about 23 times slower.
+  
+- on the other hand, the "complex" option gets an essentially analytic result,
+  approximately 8 orders of magnitude better than the central difference approximation
+  of `numericDeriv`, for a time cost only 3.5 times as great. Unfortunately, not all
+  models are amenable to the complex step approximation.
 
-M21-LM20.1 
 
-?? still to be run
+# Cautionary notes on performance results
 
-?? What machines provide a range of possibilities.
+The results here have been evaluated on a single computer. In fact, while we could
+process the Rmarkdown file on any of several machines, the work was mainly carried out
+on a machine characterized with the string
 
-# Discussion of derivative computation for nonlinear least squares
+```
+M21:john-Linux-5.11.0-25-generic|Intel(R) Core(TM) i5-10400 CPU @ 2.90GHz|33482145792bytesRAM 
+```
+
+This is a relatively capable tower PC, but otherwise unremarkable. 
+
+Nevertheless, we found that running the timings more than once when other tasks were in 
+progress did result in variations in the mean and standard deviation of the timings of several
+percentage points. We would expect both absolute differences in times and changes in relative
+performance with different processors and operating systems, and had thought to carry out some
+investigation of such differences. However, such effort seems less valuable than pursuing more
+capable nonlinear least squares and derivative code.
+
+
+# Some notes on derivative computation for nonlinear least squares
 
 In no particular order, we comment on some issues relating to the Jacobian calculations
 in nonlinear least squares.
 
 ## Nomenclature
 
-R is not in step with many other areas of numerical computation when labelling different
+R is not in step with many other areas of numerical computation when labeling different
 objects in the nonlinear least squares problem. In particular, R uses the term "gradient"
 when the object of interest is the Jacobian matrix. In that it is useful in performing 
 iterations of the Gauss-Newton or related equations to have the Jacobian associated with
@@ -355,9 +415,9 @@ More tricky is dealing with constraints that are close together. Note that these
 for example, two linear (planar) constraints that approach at a narrow angle. In the apex where
 these constraints intersect, we will have tight bounds on parameters. If the constraint is not
 one that is imposed by the nature of the residual or objective function, for example, a log() 
-or square root near zero, then we can generally proceed and allow the derivative approximator
+or square root near zero, then we can generally proceed and allow the derivative approximation
 to evaluate outside the constraints. Things are decidedly nastier if we do have inadmissible
-values. 
+values of the parameters. This is where analytic Jacobian evaluation is very helpful. 
 
 The issue of constraints and the need for a step in parameter values for derivative approximations
 was one of the motivations for trying to find analytic derivatives in package `nlsr` and the 
@@ -370,6 +430,8 @@ the Jacobian, but the result is still singular.
 
 ```{r code=xfun::read_utf8('badJlogmod.R')}
 ```
+
+?? this does not give a very clear example.
 
 
 # Appendix 1: Base R numericDeriv code
@@ -394,3 +456,5 @@ This code is in two files, nls.R and nls.c and is extracted here.
 ```{r nlsndnew, comment=NA, echo=FALSE}
    cat(readLines('./nlsalt/R/nlsnd.R'), sep = '\n')
 ```
+
+# References
