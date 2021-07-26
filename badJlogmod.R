@@ -33,3 +33,13 @@ svd(Jatst)$d
 n0b<-try(nls(form, start=c(a=1, b=1,c=1.3), data=data.frame(x=x, y=y), trace=TRUE))
 # or even start at the solution?
 n0c<-try(nls(form, start=coef(n1), data=data.frame(x=x, y=y), trace=TRUE))
+
+## attempts with nlsj -- not working right away??
+library(nlsj)
+n0jn<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="numericDeriv"))) # and watch the fun as this fails. 
+tmp<-readline("more.")
+n0ja<-try(nlsj(form, start=st, data=df, trace=TRUE,control=nlsj.control(derivmeth="default"))) # and watch the fun as this fails. 
+
+library(nlsalt)
+nlsmod<-nlsModel(form, start=st, data=df)
+# ?? why are we getting these differences??

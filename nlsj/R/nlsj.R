@@ -321,7 +321,10 @@ getlen <- function(lnames) {
       haveQRJ <- TRUE # Since we will have QRJ for sure here
       qrDim <- min(dim(QRJ$qr))
       if (defalg) {
-         if (QRJ$rank < qrDim) stop("Singular jacobian")
+         if (QRJ$rank < qrDim) {
+            print(J)
+            stop("Singular jacobian")
+         }
          # ?? Don't continue with Gauss-Newton; delta can't be computed
          # ?? Note that we could switch to Marquardt here! Better choice?
       } 
@@ -347,6 +350,7 @@ getlen <- function(lnames) {
            if (trace) cat("Uphill step direction") 
            # should NOT be possible, except possibly when converged??
            keepgoing<-FALSE #?? may want cleaner exit
+           # ??? do we want to increase slam if marquardt?
            xcmsg <- "Uphill search direction"
            break
          }

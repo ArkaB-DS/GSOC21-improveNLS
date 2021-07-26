@@ -97,9 +97,11 @@ nlsModel <- function(form, data, start, wts, upper=NULL, scaleOffset = 0, nDcent
 		    attr(rhs, "gradient") <- gr <- as.vector(gr)
     QR <- qr(.swts * gr)
     qrDim <- min(dim(QR$qr))
-    if(QR$rank < qrDim)
+    if(QR$rank < qrDim) {
+        cat("weighted Jacobian:\n")
+        print((.swts * gr))
         stop("singular gradient matrix at initial parameter estimates")
-
+    }
     getPars.varying <- function() unlist(mget(names(ind), env))[useParams]
     setPars.noVarying <- function(newPars)
     {
