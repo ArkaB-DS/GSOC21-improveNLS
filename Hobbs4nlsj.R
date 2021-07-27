@@ -147,33 +147,30 @@ algorithm="port", trace=traceval))
 summary(hunls05)
 
 
+### ==============================================================
+# Single number bounds
+lb <- c(0,0,0)
+ub <- c(3,3,3)
 
+hunlsj06md <- try(nlsj(wmods, start=st, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj06md)
 
-anlsLM1b1a <- try(nlsLM(wmods, start=start1, data=weedframe, lower=c(0,0,0),
-                   upper=c(3,3,3)))
-print(anlsLM1b1a)
+hunlsj06dn <- try(nlsj(wmods, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj06dn)
 
-anlm1b <- nls.lm(par=start1, fn=shobbs.res, jac=shobbs.jac, lower=c(0,0,0),
-                  upper=c(2,6,3))
-print(anlm1b)
+hunlsj06dd <- try(nlsj(wmods, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj06dd)
 
-anlf1b <- nlfb(start=start1, resfn=shobbs.res, jacfn=shobbs.jac, lower=c(0,0,0),
-                upper=c(2,6,3))
-print(anlf1b)
+hunlxbx06<-nlxbx(wmods, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxbx06)
 
-anlm1bx <- nls.lm(par=newst, fn=shobbs.res, jac=shobbs.jac, lower=c(0,0,0),
-                   upper=c(2,6,3))
-print(anlm1bx)
+hunlxb06<-nlxb(wmods, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxb06)
 
-anlf1bx <- nlfb(start=newst, resfn=shobbs.res, jacfn=shobbs.jac, lower=c(0,0,0),
-                upper=c(2,6,3))
-print(anlf1bx)
+hump06<-nlsLM(wmods, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+summary(hump06)
 
-shobbs.fn <- function(x) {
-   resid <- shobbs.res(x)
-   val<-as.numeric(crossprod(resid))
-}
+hunls06 <- try(nls(wmods, start=st, data=weedframe, lower=lb, upper=ub,
+algorithm="port", trace=traceval))
+summary(hunls06)
 
-require(dfoptim)
-anmkb1b <- nmkb(par=start1, fn=shobbs.fn, lower=c(0,0,0), upper=c(2,6,3))
-anmkb1b
