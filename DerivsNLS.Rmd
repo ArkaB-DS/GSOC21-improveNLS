@@ -423,15 +423,13 @@ The issue of constraints and the need for a step in parameter values for derivat
 was one of the motivations for trying to find analytic derivatives in package `nlsr` and the 
 continuing effort to bring them into other R tools.
 
-## A case where the initial Jacobian is singular
+## A case where a parameter is close to inadmissible
 
 The following example shows that numericDeriv() does a reasonable job of computing
 the Jacobian, but the result is still singular.
 
 ```{r code=xfun::read_utf8('badJlogmod.R')}
 ```
-
-?? this does not give a very clear example.
 
 
 # Appendix 1: Base R numericDeriv code

@@ -19,97 +19,136 @@ require(minpack.lm)
 require(nlsj)
 require(nlsralt)
 traceval<-TRUE
-jumq1m <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="marquardt", trace=traceval, control=nlsj.control(lamda=1e-4)))
-print(jumq1m)
-tmp <- readline("next")
-jr1m<-nlxbx(wmodu, start=st, data=weedframe, trace=traceval, control=list(watch=FALSE))
-print(jr1m)
-cat("Default usually fails from bad start\n")
-tmp <- readline("next")
-jumq1d <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", trace=traceval))
-print(jumq1d)
-n01d <- try(nls(wmodu, start=st, data=weedframe, trace=traceval))
-print(n01d)
+hunlsj01md <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="marquardt", trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj01md)
 
+hunlsj01dn <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj01dn)
+
+hunlsj01dd <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj01dd)
+
+hunlxbx01<-nlxbx(wmodu, start=st, data=weedframe, trace=traceval, control=list(watch=FALSE))
+print(hunlxbx01)
+
+hunlxb01<-nlxb(wmodu, start=st, data=weedframe, trace=traceval, control=list(watch=FALSE))
+print(hunlxb01)
+
+hump01<-nlsLM(wmodu, start=st, data=weedframe, trace=traceval, control=list(watch=FALSE))
+summary(hump01)
+
+hunls01 <- try(nls(wmodu, start=st, data=weedframe, trace=traceval))
+summary(hunls01)
+
+### ==============================================================
 stgood<-c(b1=200, b2=50, b3=0.3)
-tmp <- readline("next")
-jumq2m <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="marquardt", trace=traceval, control=nlsj.control(lamda=1e-4)))
-print(jumq2m)
-tmp <- readline("next")
-jumq2d <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="default", trace=traceval))
-print(jumq2d)
-jumq2d <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="default", trace=traceval))
-print(jumq2d)
-n02d <- try(nls(wmodu, start=stgood, data=weedframe, trace=traceval))
-print(n02d)
+hunlsj02md <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="marquardt", trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj02md)
 
+hunlsj02dn <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="default", trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj02dn)
+
+hunlsj02dd <- try(nlsj(wmodu, start=stgood, data=weedframe, algorithm="default", trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj02dd)
+
+hunlxbx02<-nlxbx(wmodu, start=stgood, data=weedframe, trace=traceval, control=list(watch=FALSE))
+print(hunlxbx02)
+
+hunlxb02<-nlxb(wmodu, start=stgood, data=weedframe, trace=traceval, control=list(watch=FALSE))
+print(hunlxb02)
+
+hump02<-nlsLM(wmodu, start=stgood, data=weedframe, trace=traceval, control=list(watch=FALSE))
+summary(hump02)
+
+hunls02 <- try(nls(wmodu, start=stgood, data=weedframe, trace=traceval))
+summary(hunls02)
+
+### ==============================================================
 cat("Infeasible start test\n")
-start1inf <- c(b1=4, b2=4, b3=4) # b3 OUT OF BOUNDS for next few tries
-anxb2i <- try(nlxb(wmodu, start=start1inf, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                   trace=traceval))
-print(anxb2i)
-## Infeasible start! No warning message!
-anlM2i <- try(nlsLM(wmodu, start=start1inf, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                    trace=traceval))
-print(anlM2i)
-# nls gives warnings
-anls2ia <- try(nls(wmodu, start=start1inf, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                   trace=traceval))
-anls2i <- try(nls(wmodu, start=start1inf, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                   algorithm="port", trace=traceval))
-print(anls2i)
+st1inf <- c(b1=4, b2=4, b3=4) # OUT OF BOUNDS 
+lb<-c(0, 0, 0)
+ub<-c(2, 6, 3)
 
+hunlsj03md <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj03md)
 
+hunlsj03dn <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj03dn)
+
+hunlsj03dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj03dd)
+
+hunlxbx03<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxbx03)
+
+hunlxb03<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxb03)
+
+hump03<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+summary(hump03)
+
+hunls03 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub, algorithm="port", trace=traceval))
+summary(hunls03)
+
+### ==============================================================
 # feasible start i.e. on or within bounds
-start1<-st
-anxb1 <- try(nlxb(wmodu, start=start1, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                   trace=traceval))
-print(anxb1)
-anlM1 <- try(nlsLM(wmodu, start=start1, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                    trace=traceval))
-print(anlM1)
-# nls gives warnings
-anls1 <- try(nls(wmodu, start=start1, data=weedframe, lower=c(0,0,0), upper=c(2, 6, 3), 
-                  algorithm="port", trace=traceval))
-print(anls1)
+## start = st = c(1, 1, 1)
+lb<-c(0, 0, 0)
+ub<-c(2, 6, 3)
 
-# Hobbs scaled problem with bounds, formula specification
-## cat("BUT ... nls() seems to do better from the TRACE information\n")
-anlshob1b <- nls(wmods, start=start1, trace=traceval, data=weedframe, lower=c(0,0,0),
-             upper=c(2,6,3), algorithm='port')
-#  check the answer
-print(anlshob1b)
-cat("More precisely...crossprod(resid(anlsb))=",crossprod(resid(anlshob1b)),"\n")
-## nlsLM seems NOT to work with bounds ?? try more examples?
-anlsLM1b <- nlsLM(wmods, start=start1, data=weedframe, lower=c(0,0,0),
-                 upper=c(2,6,3))
-print(anlsLM1b)
-newst<-coef(anlsLM1b)
-print(newst)
-anlsLM1bx <- nlsLM(wmods, start=newst, data=weedframe, lower=c(0,0,0),
-                   upper=c(2,6,3))
-print(anlsLM1bx)
-anlx1bx <- nlxb(wmods, start=newst, data=weedframe, lower=c(0,0,0),
-                   upper=c(2,6,3))
-print(anlx1bx)
+hunlsj04md <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj04md)
 
-anlx1b <- nlxb(wmods, start=start1, data=weedframe, lower=c(0,0,0),
-                  upper=c(2,6,3))
-print(anlx1b)
+hunlsj04dn <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj04dn)
 
-cat("Single number bounds:\n")
+hunlsj04dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj04dd)
 
-anlx1b1 <- try(nlxb(wmods, start=start1, data=weedframe, lower=0,
-                upper=3))
-print(anlx1b1)
+hunlxbx04<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxbx04)
 
-anls1b1 <- try(nls(wmods, start=start1, data=weedframe, lower=0,
-                upper=3, algorithm="port"))
-print(anls1b1)
+hunlxb04<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxb04)
 
-anlsLM1b1 <- try(nlsLM(wmods, start=start1, data=weedframe, lower=0,
-                   upper=3))
-print(anlsLM1b1)
+hump04<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+summary(hump04)
+
+hunls04 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub,
+algorithm="port", trace=traceval))
+summary(hunls04)
+
+
+### ==============================================================
+# Single number bounds
+lb <- 0
+ub <- 3
+
+hunlsj05md <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+print(hunlsj05md)
+
+hunlsj05dn <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+print(hunlsj05dn)
+
+hunlsj05dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+print(hunlsj05dd)
+
+hunlxbx05<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxbx05)
+
+hunlxb05<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+print(hunlxb05)
+
+hump05<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+summary(hump05)
+
+hunls05 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub,
+algorithm="port", trace=traceval))
+summary(hunls05)
+
+
+
+
 anlsLM1b1a <- try(nlsLM(wmods, start=start1, data=weedframe, lower=c(0,0,0),
                    upper=c(3,3,3)))
 print(anlsLM1b1a)

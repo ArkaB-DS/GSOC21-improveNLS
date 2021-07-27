@@ -3,7 +3,7 @@
 form<-y ~ 10*a*(8+b*log(1-0.049*c*x)) # the model formula
 # This model uses log near a small argument, which skirts the dangerous
 # value of 0. The parameters a, b, c could all be 1 "safely" as a start.
-x<-1:30 # define x
+x<-3*(1:10) # define x
 np<-length(x)
 a<-1.01
 b<-.9

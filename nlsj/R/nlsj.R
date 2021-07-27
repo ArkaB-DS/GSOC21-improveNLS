@@ -14,9 +14,9 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
    epstol4 <- epstol^4 # used for smallsstest
    ##?? may want these in nlsj.control
    if (control$derivmeth == "numericDeriv") warning("Forcing numericDeriv")
-   cat("control:"); print(control)
-   tmp <- readline("cont.")
-   control$watch<-TRUE
+#   cat("control:"); print(control)
+#   tmp <- readline("cont.")
+#   control$watch<-TRUE
 
 
 # Algorithm
@@ -109,7 +109,7 @@ getlen <- function(lnames) {
    if (length(maskidx) > 0 && trace) {
        cat("The following parameters are masked:")
        print(pnames[maskidx])
-   } else {cat("maskidx:");print(maskidx)}
+   } ## NOT NEEDED else {cat("maskidx:");print(maskidx)}
      
   
 # Formula processing ?? Do we need all these? Can we simplify?f
@@ -242,7 +242,7 @@ getlen <- function(lnames) {
    if (algorithm=="marquardt") {
       marqalg<-TRUE
       slam <- sqrt(control$lamda)
-      cat("initial slam=",slam,"\n")
+#      cat("initial slam=",slam,"\n")
 #??NOT needed as is included later
       if (slam <= epsh) slam <- epsh*10. # ensure NOT too small
       slinc <- sqrt(control$laminc)
@@ -259,16 +259,16 @@ getlen <- function(lnames) {
    wresb <- swts* resb # as.numeric takes twice as long?!
    # NOTE: multiplication for wresb does NOT chg attribute
    prm <- start
-   cat("npar=",npar," pnames:"); print(pnames)
+#   cat("npar=",npar," pnames:"); print(pnames)
 
    ssnew <- sum(wresb^2) # get the sum of squares (this is weighted)
    ssmin <- ssnew # the best ss (prm are parameters)
    fac <- 1.0 # to ensure initially defined
-   cat("Top - slam=",slam," ssmin=",ssmin," at "); print(as.numeric(prm))
+#   cat("Top - slam=",slam," ssmin=",ssmin," at "); print(as.numeric(prm))
    # ?? Do we want to record ss0, res0 ?
-   cat("npar=",npar,"\n")
+#   cat("npar=",npar,"\n")
    bdmsk<-rep(1,npar)
-   print(bdmsk)
+#   print(bdmsk)
    while (keepgoing) { # Top main loop 
       if (! haveJ) { # need to get new Jacobian and reset bounds constraints
          J <- swts * attr(resb,"gradient")
@@ -292,10 +292,10 @@ getlen <- function(lnames) {
       }
       gjty <- t(J0) %*% wresb   # Need gradient projection for bounds
       #?? Should this be wresb or wresy and J or J0. Probably J0 (original)
-      print(bdmsk)
+#      print(bdmsk)
       for (i in 1:npar){ # Tried subsets but slower
         bmi<-bdmsk[i]
-        cat("i=",i," bmi=",bmi,"\n")
+#        cat("i=",i," bmi=",bmi,"\n")
         if (bmi==0) {
            gjty[i]<-0 # masked
            J[,i]<-0
@@ -322,7 +322,7 @@ getlen <- function(lnames) {
       qrDim <- min(dim(QRJ$qr))
       if (defalg) {
          if (QRJ$rank < qrDim) {
-            print(J)
+            if (trace) print(J)
             stop("Singular jacobian")
          }
          # ?? Don't continue with Gauss-Newton; delta can't be computed
@@ -374,7 +374,7 @@ getlen <- function(lnames) {
          eq <- FALSE # In case it is needed below to check parameters changed
          if (defalg) fac <- min(fac, step[which(delta!=0)]) # stepsize control
          else fac <- min(1.0, step[which(delta!=0)]) # stepsize control
-         cat("stepsize=",fac," delta:"); print(as.numeric(delta))
+         if (control$watch) {cat("stepsize=",fac," delta:"); print(as.numeric(delta))}
          while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
            newp <- prm + fac * delta
            fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
@@ -388,8 +388,10 @@ getlen <- function(lnames) {
              nres <- nres + 1
              # Do NOT recompute wresb -- stays until new J used
              ssnew <- sum((swts * res)^2) 
-             if (trace) cat("fac=",fac,"   ssnew=",ssnew,"  ")
-	     print(as.numeric(newp))
+             if (control$watch) { 
+                 cat("fac=",fac,"   ssnew=",ssnew,"  "); 
+                 print(as.numeric(newp))
+             }
              # ?? be nice to have multi-level trace
              if (ssnew < ssmin) {
                 break # finished inner loop in all algs
