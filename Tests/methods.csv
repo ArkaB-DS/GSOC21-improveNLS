@@ -1,0 +1,5 @@
+solver,algorithm,control
+nlsj::nlsj,default,default
+minpack.lm::nlsLM,default,default
+nlsj::nlsj,default,"maxiter=50, scaleOffset=0.5"
+minpack.lm::nlsLM,default,maxiter=50
