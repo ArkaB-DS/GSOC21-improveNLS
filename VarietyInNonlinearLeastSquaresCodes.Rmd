@@ -634,7 +634,7 @@ Hobbs weed problem.
 ??FIXME??
 
 ```{r hobbtime1}
-source("HobbsTiming.R", echo=TRUE)
+source("Tests/Examples/HobbsTiming.R", echo=TRUE)
 ```
 
 

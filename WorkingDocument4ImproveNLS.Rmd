@@ -119,6 +119,21 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+[2021-07-25 - 2021-07-26] 
+
+- AB: Got a working workaround function to resolve RAM
+  issue for Windows (probably; Machine ID is now machine dependent. Need to
+  make it robust??). Started "runner_v2" to compare various NLS methods.
+  Observed that "plinear" created an error `"Error in nls(formula =
+  NLSformula, data = NLSdata, start = NLSstart, algorithm =
+  NLSmethods$algorithm[j]) :
+  step factor 0.000488281 reduced below 'minFactor' of 0.000976562"`.
+
+  There is an issue with "control" in "methods.csv" file. Trying to resolve it.
+  Spreadsheet is running successfully, but with default options only. Should
+  column names be extended??
+
+
 ### [2021-7-25] 
 
 - JN: continued work on nlsj to check features working. Some rewrite of sections

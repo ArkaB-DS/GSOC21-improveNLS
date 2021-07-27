@@ -428,7 +428,7 @@ continuing effort to bring them into other R tools.
 The following example shows that numericDeriv() does a reasonable job of computing
 the Jacobian, but the result is still singular.
 
-```{r code=xfun::read_utf8('badJlogmod.R')}
+```{r code=xfun::read_utf8('Tests/Examples/badJlogmod.R')}
 ```
 
 
@@ -439,14 +439,14 @@ This code is in two files, nls.R and nls.c and is extracted here.
 ## From nls.R
 
 ```{r nlsR, comment=NA, echo=FALSE}
-   cat(readLines('./nls-numericDeriv.R'), sep = '\n')
+   cat(readLines('archived/nls-numericDeriv.R'), sep = '\n')
 ```
 
 
 ## From nls.c
 
 ```{r nlsc, comment=NA, echo=FALSE}
-   cat(readLines('./nls-numericDeriv.c'), sep = '\n')
+   cat(readLines('archived/nls-numericDeriv.c'), sep = '\n')
 ```
 
 # Appendix 2: numericDeriv() from nlsalt package (all in R)
