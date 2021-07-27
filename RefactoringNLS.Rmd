@@ -13,7 +13,7 @@ bibliography: ImproveNLS.bib
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-## ??require(bookdown) # language engine to display text??
+## require(bookdown) # language engine to display text - does not seem necessary
 ```
 
 # Abstract
@@ -268,7 +268,7 @@ attribute of the residual vector. This is implemented as a mix of R and C code, 
 we have created a rather more compact version entirely in R in this Google Summer of
 Code project. See the document **DerivsNLS.pdf**.
 
-```{r code=xfun::read_utf8('badJlogmod.R')}
+```{r code=xfun::read_utf8('Tests/Examples/badJlogmod.R')}
 ```
 
 ## Issue: Subsetting
@@ -297,9 +297,8 @@ We have noticed that there are some important issues relating to the documentati
 fits, and related objects computed by R modeling functions.
 
 The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` are UNWEIGHTED.
-But if we return `ans` from `nls()` or `minpack.lm::nlsLM` (??need to check), then `ans$m$resid()`
-is WEIGHTED. ??test script `wtdtest1.R`. 
-
+But if we return `ans` from `nls()` or `minpack.lm::nlsLM` or our new `nlsj` (interim package), 
+then `ans$m$resid()` is WEIGHTED.
 
 ## Issue: sources of data
 
@@ -318,13 +317,33 @@ that equivalent behaviour is guaranteed.
 
 Nonlinear estimation algorithms are almost all iterative and need a set of starting
 parameters. `nls()` offers a special class of modeling formulae called **selfStart** 
-models. There are a number of these in base R (??list) and others in R packages
-such as (?? list or examples). Unfortunately, the structure of the programming of 
+models. There are a number of these in base R (see list below) and others in R packages
+such as CRAN package nlraa (@MiguezNLRAA2021). Unfortunately, the structure of the programming of 
 these is such that the methods by which initial parameters are computed is entangled
 with the particularities of the `nls()` code. Though there is a `getInitial()` function,
 this is not easy to use to simply compute the initial parameter estimates.
 
+?? TODO: find a way to use getInitial() more easily.
+
+### selfStart models in base R
+
+```
+SSasymp
+SSasympOff
+SSasympOrig
+SSbiexp
+SSfol
+SSfpl
+SSlogis
+SSmicmen
+SSgompertz2
+SSweibull
+```
+
 ?? weird output in testing
+
+<!-- ?? https://www.r-bloggers.com/2020/02/a-collection-of-self-starters-for-nonlinear-regression-in-r/ -->
+<!-- may be useful -->
 
 ```
 > ls()
