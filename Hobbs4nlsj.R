@@ -78,13 +78,13 @@ print(hunlsj03dn)
 hunlsj03dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
 print(hunlsj03dd)
 
-hunlxbx03<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxbx03<-try(nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE)))
 print(hunlxbx03)
 
-hunlxb03<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxb03<-try(nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE)))
 print(hunlxb03)
 
-hump03<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hump03<-try(nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE)))
 summary(hump03)
 
 hunls03 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub, algorithm="port", trace=traceval))
@@ -96,25 +96,25 @@ summary(hunls03)
 lb<-c(0, 0, 0)
 ub<-c(2, 6, 3)
 
-hunlsj04md <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+hunlsj04md <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
 print(hunlsj04md)
 
-hunlsj04dn <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+hunlsj04dn <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
 print(hunlsj04dn)
 
-hunlsj04dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+hunlsj04dd <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
 print(hunlsj04dd)
 
-hunlxbx04<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxbx04<-nlxbx(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 print(hunlxbx04)
 
-hunlxb04<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxb04<-nlxb(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 print(hunlxb04)
 
-hump04<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hump04<-nlsLM(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 summary(hump04)
 
-hunls04 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub,
+hunls04 <- try(nls(wmodu, start=st, data=weedframe, lower=lb, upper=ub,
 algorithm="port", trace=traceval))
 summary(hunls04)
 
@@ -124,25 +124,25 @@ summary(hunls04)
 lb <- 0
 ub <- 3
 
-hunlsj05md <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
+hunlsj05md <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="marquardt", lower=lb, upper=ub, trace=traceval, control=nlsj.control(lamda=1e-4)))
 print(hunlsj05md)
 
-hunlsj05dn <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
+hunlsj05dn <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="numericDeriv")))
 print(hunlsj05dn)
 
-hunlsj05dd <- try(nlsj(wmodu, start=st1inf, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
+hunlsj05dd <- try(nlsj(wmodu, start=st, data=weedframe, algorithm="default", lower=lb, upper=ub, trace=traceval, control=nlsj.control(derivmeth="default")))
 print(hunlsj05dd)
 
-hunlxbx05<-nlxbx(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxbx05<-nlxbx(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 print(hunlxbx05)
 
-hunlxb05<-nlxb(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hunlxb05<-nlxb(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 print(hunlxb05)
 
-hump05<-nlsLM(wmodu, start=st1inf, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
+hump05<-nlsLM(wmodu, start=st, data=weedframe, trace=traceval, lower=lb, upper=ub, control=list(watch=FALSE))
 summary(hump05)
 
-hunls05 <- try(nls(wmodu, start=st1inf, data=weedframe, lower=lb, upper=ub,
+hunls05 <- try(nls(wmodu, start=st, data=weedframe, lower=lb, upper=ub,
 algorithm="port", trace=traceval))
 summary(hunls05)
 
