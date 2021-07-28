@@ -2,6 +2,7 @@
 
 export(
    nlsj,
+   nlsgn,
    numericDeriv,
    nlsj.control
 )
