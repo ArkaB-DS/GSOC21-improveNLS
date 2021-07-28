@@ -449,6 +449,7 @@ getlen <- function(lnames) {
       # at this point, we have either made progress (new ssmin)
       # or we are going round again
    } # end outer while
+   tmp <- readline("end of while loop in nlsj")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
 #   cat("build m\n")
 # Ensure reset of values of parameters.  Needed!
