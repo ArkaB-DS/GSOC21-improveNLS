@@ -151,11 +151,12 @@ getlen <- function(lnames) {
    lhs <- eval(lhsexpr, envir=localdata)
 
 # Define functions for residual and (residual + jacobian)
-   resfun <- function(prm) { # only computes the residuals (unweighted)
-      if (is.null(names(prm))) names(prm) <- names(start)
-      localdata <- list2env(as.list(prm), parent = data)
-      eval(residexpr, envir = localdata) # ?? needed? or is eval(residexpr) enough?
-   }
+# Currently do not use resfun -- just rjfun
+#   resfun <- function(prm) { # only computes the residuals (unweighted)
+#      if (is.null(names(prm))) names(prm) <- names(start)
+#      localdata <- list2env(as.list(prm), parent = data)
+#      eval(residexpr, envir = localdata) # ?? needed? or is eval(residexpr) enough?
+#   }
 
    rjfun <- function(prm) { # Computes residuals and jacobian
        if (is.null(names(prm))) names(prm) <- names(start)
@@ -186,9 +187,10 @@ getlen <- function(lnames) {
    csmsg <- paste("Small wtd sumsquares (deviance) <= ",epstol4)
    # above could depend on the problem
    comsg <- paste("Relative offset less than ",control$tol)
+   cfmsg <- paste("Step factor less than ",control$minFactor)
    cnmsg <- "No parameters for this problem"
    cxmsg <- "Not yet defined"
-   cvmsg <- c(cjmsg, crmsg, csmsg, comsg, cnmsg, cxmsg)
+   cvmsg <- c(cjmsg, crmsg, csmsg, comsg, cfmsg, cnmsg, cxmsg)
 
    convCrit <- function() { # returns TRUE if should terminate algorithm
         # put the trace function here and don't include in m
@@ -214,6 +216,8 @@ getlen <- function(lnames) {
            ##            projected resids ss             deviance
         } else ctol <- .Machine$double.xmax ## We don't have QRJ defined, so big value
         co <- (ctol <= control$tol) # compare relative offset criterion
+        cf <- (fac <= control$minFactor)
+        
         # other things??
         cn <- (npar < 1) # no parameters
         cx <- FALSE # Anything else to be added
@@ -221,7 +225,7 @@ getlen <- function(lnames) {
             cval <- TRUE
             ctol <- NA
         }
-        cvec <- c(cj, cr, cs, co, cn, cx)
+        cvec <- c(cj, cr, cs, co, cf, cn, cx)
         cmsg <- "Termination msg: "
         for (i in 1:length(cvec)){
             if (cvec[i]) cmsg <- paste(cmsg,cvmsg[i],"&&")
@@ -323,6 +327,7 @@ getlen <- function(lnames) {
       if (defalg) {
          if (QRJ$rank < qrDim) {
             if (trace) print(J)
+            # could have defalg and marqalg both TRUE if we allow switch method here
             stop("Singular jacobian")
          }
          # ?? Don't continue with Gauss-Newton; delta can't be computed
@@ -331,9 +336,11 @@ getlen <- function(lnames) {
       # ?? marquardt is using J (augmented Jacobian) in convergence test. This may
       # ?? not be exactly what we want. Leave it there for now.
       convInfo <- convCrit() # This is the convergence test
+      if (control$watch) print(convInfo)
       if (marqalg && trace) cat("slam =",slam," ")
       if (trace) tracefn() # printout of tracking information
       if (convInfo) { # Stop if we have converged or must terminate
+         if (control$watch) cat("convInfo TRUE -- stop iteration\n")
          keepgoing <- FALSE
          break # to escape the main loop
       }
@@ -347,12 +354,13 @@ getlen <- function(lnames) {
       if (deltaOK) {
          gproj <- as.numeric(crossprod(delta, gjty)) # ?? do we need as.numeric
          if (is.na(gproj) || (gproj >= 0) ) {
-           if (trace) cat("Uphill step direction") 
+           if (trace) cat("Uphill or NA step direction") 
            # should NOT be possible, except possibly when converged??
-           keepgoing<-FALSE #?? may want cleaner exit
+#           keepgoing<-FALSE #?? may want cleaner exit
            # ??? do we want to increase slam if marquardt?
            xcmsg <- "Uphill search direction"
-           break
+           tmp <- readline("uphill search")
+#??           break
          }
          gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
          gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
@@ -383,17 +391,28 @@ getlen <- function(lnames) {
            # We check if the parameters have been changed (eq TRUE) 
            if (! eq ) { # parameters have changed, we can try to find new sumsquares
              res <- rjfun(newp) # ?? assume is evaluated
-             ## ?? should we introduce a non-compute flag?
-             ## ?? only use rjfun -- then don't need to call again for J
-             nres <- nres + 1
-             # Do NOT recompute wresb -- stays until new J used
-             ssnew <- sum((swts * res)^2) 
+             ## ?? Currently only use rjfun -- then don't need to call again for J
+             nres <- nres + 1 # but count just the residual use
+             ## Put at least one NA in res if "not computable", but this may not be
+             ## something the user can control in detail
+             if (any(is.na(res))) {
+                if (marqalg) { # note that we could have both defalg and marqalg true if we
+                ## allow switch when singular gradient ??
+                   slam <- slam*slinc
+                   warning("NA in residuals")
+                   break # out of inner loop
+                }
+                ssnew <- .Machine$double.max # ensure BIG
+             } 
+             else { # Do NOT recompute wresb -- stays until new J used
+                ssnew <- sum((swts * res)^2) 
+             }   
              if (control$watch) { 
-                 cat("fac=",fac,"   ssnew=",ssnew,"  "); 
+                 cat("fac=",fac,"   ssnew=",ssnew,"  ",(ssnew<ssmin)," "); 
                  print(as.numeric(newp))
-             }
-             # ?? be nice to have multi-level trace
+             } # ?? be nice to have multi-level trace
              if (ssnew < ssmin) {
+                if (trace) cat("<")
                 break # finished inner loop in all algs
              }
              else if (marqalg) {
@@ -401,21 +420,16 @@ getlen <- function(lnames) {
                  break # out of inner loop
              }
              # not marqalg, assume backtrack continues with new fac
-           }
+           } # end ! eq (parameters changed)
            else { ## eq TRUE
               if (trace) cat("Parameters unchanged\n")
               xcmsg <- "Parameters unchanged"
               keepgoing <- FALSE # all methods??
+              tmp <- readline("Unchanged")
               break
            }
          } # end inner while
-         if (is.na(ssnew)) stop("ss is NA -- parameters unchanged") #?? FIXME
-         if (! keepgoing || (fac <= control$minFactor)) { 
-           # no progress. Done! In marqalg and defalg
-           keepgoing<-FALSE # No progress achieved ?? message or indicator?
-           xcmsg <- "Search failed"
-         } else {  
-           if (ssnew < ssmin) {# found better point
+         if (keepgoing && (ssnew < ssmin)) {# found better point
              if (defalg && trace) cat("Backtrack: ssnew=",ssnew," fac=",fac,"\n")
              prm <- newp
              ssmin <- ssnew
@@ -425,12 +439,7 @@ getlen <- function(lnames) {
              if (defalg) fac <- 2.0 * fac # to reset for next iteration
              if (marqalg) slam <- sldec * slam # reduce lamda in Marquardt
              if (control$watch) tmp <- readline("next iteration")
-           }
-           else { # not better
-             # Only way here at moment is marqalg, but slam already increased
-             if (defalg) stop("at bottom deltaOK - failure for defalg")
-           }
-         } # not eq
+         } # don't need to use else
       } # deltaOK
       else { # delta NOT OK -- report
          warning("delta NOT computed OK")
@@ -439,6 +448,7 @@ getlen <- function(lnames) {
       # at this point, we have either made progress (new ssmin)
       # or we are going round again
    } # end outer while
+   tmp <- readline("end of while loop in nlsj")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
 #   cat("build m\n")
 # Ensure reset of values of parameters.  Needed!
