@@ -1,6 +1,7 @@
 test_better <- function( objectnew, objectold){
 ## 2021-7-30 Attempt to describe philosophy when new method does not fail
 ##  example: singular gradient
+# We will want to use skip() in some of the cases
    pass <- FALSE
    if (expect_error(objectold)){ # this is as we expect
           cat("Old method produces error\n")
