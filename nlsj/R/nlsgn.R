@@ -262,6 +262,7 @@ getlen <- function(lnames) {
                  print(as.numeric(newp))
              } # ?? be nice to have multi-level trace
              if (ssnew <= ssmin) { # nls() uses <=. JN prefers <
+                fac <- min(1.0, 2.0*fac)
                 if (trace) cat("<")
                 break # finished inner loop in all algs
              } else { fac <- 0.5*fac }
@@ -283,7 +284,6 @@ getlen <- function(lnames) {
              wresb <- swts*resb # ??can we rationalize somehow
              haveJ <- FALSE # need new Jacobian
              haveQRJ <- FALSE #!! must reset
-             fac <- min(1.0, 2.0 * fac) # to reset for next iteration
              if (control$watch) tmp <- readline("next iteration")
          } # don't need to use else
       } else warning("delta NOT computed OK")
