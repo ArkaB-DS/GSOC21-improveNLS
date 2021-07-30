@@ -338,7 +338,7 @@ getlen <- function(lnames) {
       convInfo <- convCrit() # This is the convergence test
       if (control$watch) print(convInfo)
       if (marqalg && trace) cat("slam =",slam," ")
-      if (trace) tracefn() # printout of tracking information
+      if (trace) tracefn() # printout of tracking information <<<<<<<<<<<< printout
       if (convInfo) { # Stop if we have converged or must terminate
          if (control$watch) cat("convInfo TRUE -- stop iteration\n")
          keepgoing <- FALSE
@@ -356,11 +356,11 @@ getlen <- function(lnames) {
          if (is.na(gproj) || (gproj >= 0) ) {
            if (trace) cat("Uphill or NA step direction") 
            # should NOT be possible, except possibly when converged??
-#           keepgoing<-FALSE #?? may want cleaner exit
+           keepgoing<-FALSE #?? may want cleaner exit
            # ??? do we want to increase slam if marquardt?
            xcmsg <- "Uphill search direction"
            tmp <- readline("uphill search")
-#??           break
+           break #??
          }
          gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
          gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
@@ -380,12 +380,14 @@ getlen <- function(lnames) {
             }
          } # end loop
          eq <- FALSE # In case it is needed below to check parameters changed
+         cat("fac before =",fac)
          if (defalg) fac <- min(fac, step[which(delta!=0)]) # stepsize control
          else fac <- min(1.0, step[which(delta!=0)]) # stepsize control
+         cat("  after=",fac,"\n")
          if (control$watch) {cat("stepsize=",fac," delta:"); print(as.numeric(delta))}
          while ((ssnew >= ssmin)  && (fac > control$minFactor)) {
+           cat("fac=",fac," ssnew=")
            newp <- prm + fac * delta
-           fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
            #  cat("newp:"); print(as.numeric(newp))
            eq <- all( (prm+control$offset) == (newp+control$offset) )
            # We check if the parameters have been changed (eq TRUE) 
@@ -396,7 +398,7 @@ getlen <- function(lnames) {
              ## Put at least one NA in res if "not computable", but this may not be
              ## something the user can control in detail
              if (any(is.na(res))) {
-                if (marqalg) { # note that we could have both defalg and marqalg true if we
+                if (marqalg) { # note: could have both defalg and marqalg true if we
                 ## allow switch when singular gradient ??
                    slam <- slam*slinc
                    warning("NA in residuals")
@@ -407,12 +409,14 @@ getlen <- function(lnames) {
              else { # Do NOT recompute wresb -- stays until new J used
                 ssnew <- sum((swts * res)^2) 
              }   
+             cat(ssnew,"\n")
              if (control$watch) { 
                  cat("fac=",fac,"   ssnew=",ssnew,"  ",(ssnew<ssmin)," "); 
                  print(as.numeric(newp))
              } # ?? be nice to have multi-level trace
              if (ssnew < ssmin) {
                 if (trace) cat("<")
+                fac <- min(2.0*fac, 1.0) # reset for next iteration to match nls()
                 break # finished inner loop in all algs
              }
              else if (marqalg) {
@@ -428,16 +432,17 @@ getlen <- function(lnames) {
               tmp <- readline("Unchanged")
               break
            }
+           fac <- 0.5 * fac # ?? this is fixed in nls(), but we could alter
          } # end inner while
          if (keepgoing && (ssnew < ssmin)) {# found better point
-             if (defalg && trace) cat("Backtrack: ssnew=",ssnew," fac=",fac,"\n")
+             if (defalg && control$watch) 
+                  cat("Backtrack: ssnew=",ssnew," fac=",fac,"\n")
              prm <- newp
              ssmin <- ssnew
              resb<-res
              wresb <- swts*resb # ??can we rationalize somehow
              haveJ <- FALSE # need new Jacobian
              haveQRJ <- FALSE 
-             if (defalg) fac <- 2.0 * fac # to reset for next iteration
              if (marqalg) slam <- sldec * slam # reduce lamda in Marquardt
              if (control$watch) tmp <- readline("next iteration")
          } # don't need to use else
@@ -449,7 +454,6 @@ getlen <- function(lnames) {
       # at this point, we have either made progress (new ssmin)
       # or we are going round again
    } # end outer while
-   tmp <- readline("end of while loop in nlsj")
    if (! is.null(xcmsg)) cmsg <- paste(attr(convInfo,"cmsg"),"&&",xcmsg) # include extra info
 #   cat("build m\n")
 # Ensure reset of values of parameters.  Needed!
@@ -460,6 +464,8 @@ getlen <- function(lnames) {
    m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wresb}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
+             jacobian = function() attr(resb,"gradient"),
+             gradient = function() attr(resb,"gradient"),
 	     fitted = function() rhs, # working??  UNWEIGHTED
 	     formula = function() formula, #OK
 	     deviance = function() ssmin, # ?? Probably wrong -- needs to be callable

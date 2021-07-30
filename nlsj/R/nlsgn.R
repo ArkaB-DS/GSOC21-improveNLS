@@ -300,6 +300,8 @@ getlen <- function(lnames) {
    m <- list(resfun = function(prm) resfun(prm), # ??
              resid = function() {- wresb}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
+             jacobian = function() attr(resb,"gradient"),
+             gradient = function() attr(resb,"gradient"),
 	     fitted = function() rhs, # working??  UNWEIGHTED
 	     formula = function() formula, #OK
 	     deviance = function() ssmin, # ?? Probably wrong -- needs to be callable
