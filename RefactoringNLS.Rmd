@@ -375,6 +375,86 @@ The nls object contains some elements that are awkward to produce by other algor
 Moreover, some information that would be useful is not presented obviously (??examples -
 convergence/termination info, Jsingvals)
 
+## Issue: partially linear models and their specification
+
+Specifying a model to a solver should, ideally, use the same syntax across
+solver tools. Unfortunately, R allows multiple approaches.
+
+One obvious case is that nonlinear modeling tools are a superset of linear ones.
+Yet the explicit model
+
+```
+y ~ a*x + b
+```
+
+does not work with the linear modeling function `lm()`, which requires
+this model to be specified as
+
+```
+y ~ x
+```
+
+However, even within `nls()`, we see annoying inconsistencies. Consider the 
+following FOUR different calling sequences for the same problem, though the
+second is to illustrate how one intuitive choice will not work. In this failed
+attempt, putting the `Asym` parameter in the model causes the `plinear` algorithm
+to try to add another term to the model. We believe this is unfortunate, and would
+like to see a consistent syntax. At the time of writing (end of July 2021) we do
+not have any resolution in mind for this issue.
+
+```{r log4ways, echo=TRUE}
+DNase1 <- subset(DNase, Run == 1)
+
+## using a selfStart model
+fm1DNase1 <- nls(density ~ SSlogis(log(conc), Asym, xmid, scal), DNase1)
+summary(fm1DNase1)
+## the coefficients only:
+coef(fm1DNase1)
+## including their SE, etc:
+coef(summary(fm1DNase1))
+
+## using conditional linearity
+fm2DNase1 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
+                 data = DNase1,
+                 start = list(xmid = 0, scal = 1),
+                 algorithm = "plinear")
+summary(fm2DNase1)
+
+## using conditional linearity AND Asym -- why otherwise?? JN
+fm2aDNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
+                 data = DNase1,
+                 start = list(Asym=3, xmid = 0, scal = 1),
+                 algorithm = "plinear",
+                 trace = TRUE))
+summary(fm2aDNase1)
+
+## without conditional linearity
+fm3DNase1 <- nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
+                 data = DNase1,
+                 start = list(Asym = 3, xmid = 0, scal = 1))
+summary(fm3DNase1)
+
+## using Port's nl2sol algorithm
+fm4DNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
+                 data = DNase1,
+                 start = list(Asym = 3, xmid = 0, scal = 1),
+                 algorithm = "port"))
+summary(fm4DNase1)
+```
+
+### Further comments on partially linear models
+
+Ideally, we believe it would be best to specify all models with a complete set of parameters.
+That is, the model is as it would be written down for use, rather than for estimation. Furthermore,
+we ask if it is possible for us to devise code that will detect linearity, rather than expecting 
+the user to provide the special structure and `algorithm=plinear` setting. Some ideas about a 
+Linear and Nonlinear Discoverer have been
+proposed by @Zhang2011LinNonlin, but these seem to relate to an independent (and hence
+confusing) use of the same term for a class of models that have almost nothing in common
+with the present issue). We have yet (end of July 2021) to consider how we might translate
+any ideas to code in an improved `nls()` or similar function.
+
+
 ## Issue: code structure
 
 The `nls()` code is structured in a way that inhibits both maintenance and improvement.

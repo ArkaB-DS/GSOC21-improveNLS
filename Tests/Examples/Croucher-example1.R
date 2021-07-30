@@ -24,7 +24,6 @@ Cupper<-c(1.5, 1.5)
 
 library(nlsj)
 library(nlsr)
-<<<<<<< HEAD
 # sink("test4.txt", split=TRUE)
 fitj<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(watch=FALSE))
 fitgn<-nlsgn(Cform, data=Cdata, start=Cstart, trace=TRUE)
@@ -32,7 +31,6 @@ fitjm<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, algorithm="marquardt",c
 fitn<-nls(Cform, data=Cdata, start=Cstart, trace=TRUE, control=nls.control(printEval=FALSE))
 fitr<-nlxb(Cform, data=Cdata, start=Cstart, trace=TRUE)
 # sink()
-=======
 sink("test4.txt", split=TRUE)
 fitj<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(watch=TRUE))
 fitjm<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, algorithm="marquardt",control=nlsj.control(watch=TRUE))
