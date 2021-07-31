@@ -271,6 +271,13 @@ Code project. See the document **DerivsNLS.pdf**.
 ```{r code=xfun::read_utf8('Tests/Examples/badJlogmod.R')}
 ```
 
+It should be noted that the selfStart models in the `./src/library/stats/R/zzModels.R` file
+provide the Jacobian in the "gradient" attribute of the "one-sided" formula that defines each
+model, and these Jacobians are the analytic forms. The `nls()` function, after computing the
+"right hand side" or `rhs` of the residual, then checks to see if the "gradient" attribute is
+defined, and, if not, uses `numericDeriv` to compute a Jacobian into that attribute. This code
+is within the `nlsModel()` or `nlsModel.pliner()` functions. 
+
 ## Issue: Subsetting
 
 `nls()` accepts an argument `subset`. Unfortunately, this acts through the mediation of
