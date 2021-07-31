@@ -119,6 +119,21 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+[2021-7-28] to [2021-7-30]
+
+JN: worked on nlsj and on a stripped down version nlsgn (only the Gauss Newton
+and no bounds). Some issues with haveQRJ NOT being reset when a successful 
+line search complete. Also the tactical rules for setting the stepsize `fac`
+had to be adjusted as AB pointed out that the "Leaves" test was not getting
+answers equivalent to those from `nls()`. Also some cleanup of several documents.
+
+Both: meeting of July 30 found glitch in Gillespie's benchmarkme::get_ram(). 
+Sorted out some of the issues in tests (for packages) and the run.R program,
+in particular the string to be added for different "control" sections of the
+calls. 
+
+AB: more work on the tests.
+
 [2021-07-25 - 2021-07-26] 
 
 - AB: Got a working workaround function to resolve RAM
@@ -138,9 +153,6 @@ Here is an annotated listing of product of the project.
 
 - JN: continued work on nlsj to check features working. Some rewrite of sections
   of the Refactoring article. 
-
-
-
 
 ### [2021-7-24] 
 
