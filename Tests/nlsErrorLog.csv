@@ -1,0 +1,7 @@
+"DateTime","MachID","FileName","Solver","Algorithm","Control","Message"
+"","","","","","",""
+"2021-08-02 01:44","LAPTOP-M87LB32I:ARKAJYOTI-Windows-10 x64|AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx|8 GB RAM","BOD2_1.R","nlsj::nlsj","plinear","nlsj::nlsj.control(minFactor=1)","step factor 0.5 reduced below 'minFactor' of 1"
+"2021-08-02 01:44","LAPTOP-M87LB32I:ARKAJYOTI-Windows-10 x64|AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx|8 GB RAM","Leaves_1.R","nlsj::nlsj","plinear","nlsj::nlsj.control(minFactor=1)","step factor 0.5 reduced below 'minFactor' of 1"
+"2021-08-02 01:44","LAPTOP-M87LB32I:ARKAJYOTI-Windows-10 x64|AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx|8 GB RAM","Lipo_1.R","nlsj::nlsj","plinear","nlsj::nlsj.control(minFactor=1)","singular matrix 'a' in solve"
+"2021-08-02 01:44","LAPTOP-M87LB32I:ARKAJYOTI-Windows-10 x64|AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx|8 GB RAM","Hobbs_1.R","nlsj::nlsj","plinear","nlsj::nlsj.control(minFactor=1)","step factor 0.5 reduced below 'minFactor' of 1"
+"2021-08-02 01:44","LAPTOP-M87LB32I:ARKAJYOTI-Windows-10 x64|AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx|8 GB RAM","Chloride_1.R","nlsj::nlsj","plinear","nlsj::nlsj.control(minFactor=1)","step factor 0.5 reduced below 'minFactor' of 1"
