@@ -473,6 +473,22 @@ and if there is an element called `xdata`, it can be accessed as `result$model$x
 
 ### Information that is NOT in the nls result object
 
+`nlsr::nlxb()` solves ostensibly the same problem as `nls()` but only returns
+
+```
+coefficients    A named vector giving the parameter values at the supposed solution.
+
+ssquares        The sum of squared residuals at this set of parameters.
+
+resid           The residual vector at the returned parameters.
+
+jacobian        The jacobian matrix (partial derivatives of residuals w.r.t. the 
+                parameters) at the returned parameters.
+
+feval           The number of residual evaluations (sum of squares computations) used.
+
+jeval           The number of Jacobian evaluations used.
+```
 
 
 
