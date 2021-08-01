@@ -824,9 +824,6 @@ nls <-
 # #undef NON_CONV_FINIS_2
 	
 	
-	
-	
-	
 ##------ End of nls_iter portion	
 	}
     else { ## "port" i.e., PORT algorithm
