@@ -490,10 +490,9 @@ feval           The number of residual evaluations (sum of squares computations)
 jeval           The number of Jacobian evaluations used.
 ```
 
-
-
-(??examples -
-convergence/termination info, Jsingvals).
+This is a much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
+explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
+counts of evaluations are also returned.
 
 ## Issue: partially linear models and their specification
 
@@ -743,6 +742,54 @@ documented in TestsDoc.
 - informal reports
 - problem sets
 - code and documentation
+
+## Strategic choices in a nonlinear model estimation
+
+A key difference in approach between `nls()` and `nlsr::nlxb()`, possibly the key
+difference, is that `nls()` builds a large infrastructure from which the Gauss-Newton
+iteration can be executed and other statistical information such as profiles can be
+computed, while `nlxb()` returns quite limited information, and in its execution
+computes what is needed on an as and when basis. This follows a path that one of us
+(JN) established almost 50 years ago with the software that became @cnm79, using
+setup, solver, and post-solution analysis phases to computation. Here, that last 
+phase is not part of `nlxb(), but is the domain of other functions in the `nlsr`
+package. `nls()` also has some similar functions, but they are much more tied into
+the infrastruction that is created mostly in the `nslModel()` function.
+
+The `nls()` approach, as implemented in the base R code and `nlspkg` leads to considerable
+entangling of the different functions and capabilities. This is to an extent that even after
+both the preparation for and carrying out of the present project, we do not feel confident
+to explain the code completely, nor to maintain it. However, we have made some progress toward
+such a goal. Part of that has been to render the code in R. In this there remain some tasks
+to complete, and they are possibly difficult.
+
+### Opinion for discussion
+
+To advance the stability and maintainability of R, we believe that the functions that carry out
+quite advanced calculations like those achieved by `nls()` should be organized to have their 
+interactions as orderly as possible. The aspects of `nls()` that have given us the most trouble
+are as follows:
+
+- The functions that compute the residuals and jacobians are frequently computed by presuming
+  the current data and parameters for those functions are available in an environment. As long
+  as the correct environment is used, this provides a surprisingly short syntax to invoke the
+  calculations. 
+  
+- Weights, subsets, and various contextual controls such as that for the `na.action` that tells
+  our code what to do with undefined or missing numbers. Again, this makes for a very simple
+  invocation of the calculation, but the context is hidden from the user -- and it can be
+  difficult for those of us trying to maintain or improve the code to be certain we have the
+  context correct.
+  
+- The mixing of R and C code makes for high performance, but without developer documentation 
+  leaves programmers with a lot of work to do to adjust the code. We believe in keeping code --
+  at least a runnable reference version -- in a single programming language. If necessary, by
+  measuring ("profiling") the code, we can find bottlenecks and replace just those slower 
+  parts of the reference code.
+
+- We believe that a setup, solve, and post-solution structure for complicated functions reduces
+  the number of objects that must be kept in appropriate alignment at any one stage in a set
+  of calculations.
 
 
 # References
