@@ -330,34 +330,37 @@ these is such that the methods by which initial parameters are computed is entan
 with the particularities of the `nls()` code. Though there is a `getInitial()` function,
 this is not easy to use to simply compute the initial parameter estimates.
 
-?? TODO: find a way to use getInitial() more easily.
-
-### selfStart models in base R
-
-```
-SSasymp
-SSasympOff
-SSasympOrig
-SSbiexp
-SSfol
-SSfpl
-SSlogis
-SSmicmen
-SSgompertz2
-SSweibull
-```
-
-?? weird output in testing
-
-<!-- ?? https://www.r-bloggers.com/2020/02/a-collection-of-self-starters-for-nonlinear-regression-in-r/ -->
-<!-- may be useful -->
+The following example shows how the `SSlogis` selfStart function can generate a set
+of initial parameters for a 3-parameter logistic curve. The form used by `SSlogis`
+is
 
 ```
-> ls()
-[1] "ldata"     "lform"     "lstart2"   "lstartbad" "t"         "y"        
-> apar <- getInitial(y~SSlogis(t, Asym, xmid, scal), data=ldata)
-Error in nls(y ~ 1/(1 + exp((xmid - x)/scal)), data = xy, start = list(xmid = aux[[1L]],  : 
-  number of iterations exceeded maximum of 50
+y ~ Asym/(1+exp((xmid-tt)/scal))
+```
+The example shows how these starting parameters can be transformed to those of 
+another form of the model, namely,
+
+```
+y ~ b1/(1 + b2*exp(-b3*t))
+```
+
+```{r hobbsSSlogis}
+weed <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443,
+          38.558, 50.156, 62.948, 75.995, 91.972)
+tt <- 1:12
+
+NLSformula0 <- y ~ b1/(1+b2*exp(-b3*tt))
+NLSformula <- y ~ SSlogis(tt, Asym, xmid, scal)
+NLStestdata <- data.frame(y=weed, tt=tt) # should we use standard name?
+NLSstart <- getInitial(NLSformula, NLStestdata)
+s0 <- getInitial(NLSformula, NLStestdata)
+print(s0)
+library(nlsj)
+s1<-list(b1=s0[1], b2=exp(s0[2]/s0[3]), b3=1/s0[3])
+print(as.numeric(s1))
+
+hobblog<-nlsj(NLSformula0, data=NLStestdata, start=s1)
+hobblog
 ```
 
 In the event that a selfStart model is not available, `nls()` sets all the starting parameters 
@@ -369,6 +372,32 @@ $$  y \tilde a*exp(-b*x) + c*exp(-d*x)$$
 it would be useful to have $b$ and $d$ values different so the Jacobian is not singular. Thus
 some sort of sequence like  1.0, 1.1, 1.2, 1.3 for the four parameters might be better and it
 can be provided quite simply instead of all 1s. 
+
+### selfStart models in base R
+
+?? how much information to include
+
+```
+SSasymp 
+SSasympOff
+SSasympOrig
+SSbiexp
+SSfol
+SSfpl
+SSlogis
+SSmicmen
+SSgompertz2
+SSweibull
+```
+
+### Strategic issues in selfStart models
+
+Because the Gauss-Newton algorithm is rather unreliable from many starting sets
+of parameters, selfStart models are more than an accessory to `nls()` but a part
+of the infrastructure. However, creating such functions is a lot of work, and their
+documentation (file `./src/library/stats/man/selfStart.Rd`) is quite complicated.
+
+
 
 ## Issue: documentation of the results of running nls()
 
