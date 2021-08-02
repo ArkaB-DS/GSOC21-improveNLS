@@ -32,15 +32,21 @@ b2 = 0.1
 b3 = 0.1
 b4 = 0.1
 NLSstart <-c(b2 = b2, b3 = b3, b4 = b4) # a starting vector (named!)
+NLSstart2 <-c(b1=1, b2 = b2, b3 = b3, b4 = b4) # a starting vector (named!)
 
 ## MODEL
 NLSformula <- rate ~ b3*(n.pent - iso.pen/1.632)/(1+b2*hyd+b3*n.pent+b4*iso.pen)
+NLSformula2 <- rate ~ b1 * b3*(n.pent - iso.pen/1.632)/(1+b2*hyd+b3*n.pent+b4*iso.pen)
 NLSlower <- NULL
 NLSupper <- NULL
 NLSrunline <- '(formula=NLSformula, data=NLStestdata, start=NLSstart,algorithm="plinear")'
+NLSrunline2 <- '(formula=NLSformula2, data=NLStestdata, start=NLSstart2, trace=TRUE)'
+NLSrunline3 <- '(formula=NLSformula2, data=NLStestdata, start=NLSstart2, trace=TRUE, algorithm="marquardt")'
 output_nls <- eval(parse(text=paste("nls",NLSrunline))) # nls is our benchmark case
 output_nlsj <- eval(parse(text=paste("nlsj::nlsj",NLSrunline))) # nlsj is the new nls
-
+output_nlsj2 <- eval(parse(text=paste("nlsj",NLSrunline2)))
+output_nlsj3 <- eval(parse(text=paste("nlsj",NLSrunline3)))
+tmp <- readline("continue")
 ## Test expectations using testthat
 #library(testthat) # comment out later!!
 
