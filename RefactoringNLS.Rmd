@@ -824,7 +824,7 @@ computes what is needed on an as and when basis. This follows a path that one of
 setup, solver, and post-solution analysis phases to computation. Here, that last 
 phase is not part of `nlxb(), but is the domain of other functions in the `nlsr`
 package. `nls()` also has some similar functions, but they are much more tied into
-the infrastruction that is created mostly in the `nslModel()` function.
+the infrastructure that is created mostly in the `nslModel()` function.
 
 The `nls()` approach, as implemented in the base R code and `nlspkg` leads to considerable
 entangling of the different functions and capabilities. This is to an extent that even after
