@@ -375,19 +375,20 @@ can be provided quite simply instead of all 1s.
 
 ### selfStart models in base R
 
-?? how much information to include
+The following models are provided (in file ./src/library/stats/R/zzModels.R)
 
 ```
-SSasymp 
-SSasympOff
-SSasympOrig
-SSbiexp
-SSfol
-SSfpl
-SSlogis
-SSmicmen
-SSgompertz2
-SSweibull
+SSasymp         - asymptotic regression model
+SSasympOff      - alternate formulation of asymptotic regression model with offset
+SSasympOrig     - exponential curve through the origin to an asymptote
+SSbiexp         - y ~ ~ A1 * exp(-exp(lrc1)*input) + A2 * exp(-exp(lrc2) * input)
+SSfol           - y ~ Dose * (exp(lKe + lKa - lCl) * (exp(-exp(lKe) * input) -
+                          exp(-exp(lKa) * input))/(exp(lKa) - exp(lKe)))
+SSfpl           - four parameter logistic model
+SSlogis         - three parameter logistic model
+SSmicmen        - Michaelis-Menten model for enzyme kinetics
+SSgompertz2     - Gompertz model for growth curve data
+SSweibull       - Weibull model for growth curve data
 ```
 
 ### Strategic issues in selfStart models
@@ -539,7 +540,8 @@ fm2DNase1 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
                  algorithm = "plinear")
 summary(fm2DNase1)
 
-## using conditional linearity AND Asym -- why otherwise?? JN
+## using conditional linearity AND Asym -- why should it be otherwise?? JN
+
 fm2aDNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
                  data = DNase1,
                  start = list(Asym=3, xmid = 0, scal = 1),
@@ -736,12 +738,80 @@ documented in TestsDoc.
 
 # Output of the project
 
-?? see Working Doc etc.
+The project output is available in the Git repository https://gitlab.com/nashjc/improvenls
 
-- formal reports
-- informal reports
-- problem sets
-- code and documentation
+## Formal reports or documentation 
+
+- RefactoringNLS.Rms: this document which will become the main report of the project.
+
+- TestsDoc.Rmd: a survey of testing tools in R. ?? need to incorporate MachID and
+  the many tests. ?? Arkajyoti: should we think of working this up into a paper for
+  JSS or the R-Journal? It has more general possibilities and fits into the subject
+  of regression testing, but we would need to provide some literature review. My 
+  view is that this COULD be a long term side-interest for your academic work, but
+  that would depend on your own interests as well as opportunities. Note that this
+  document reflects the work in the the "Problem sets and test infrastructure"
+  below.
+
+
+
+## Informal reports
+
+These are documents used to discuss particular aspects of our work.
+
+- DerivsNLS.Rmd: a document to explain different ways in which Jacobian information
+  is supplied to nonlinear least squares computation in R. File `ExDerivs.R` is
+  intended to provide examples.?? needs documentation??
+
+- ImproveNLS.bib: a consolidated BibTex bibliography for all documents in this
+  project, possibly with wider application to nonlinear least squares in general
+
+- MachineSummary.Rmd: an informal investigation of ways to report the characteristics
+  and identity of machines running tests. `MachID.R` offers a concise summary function
+  to identify a particular computational system used for tests. 
+  ?? Note that there remains the get_ram() open issue for Windows 10 in the `benchmarkme`
+  package.
+
+- VarietyInNonlinearLeastSquaresCodes.Rmd: a review of the different algorithms and
+  the many choices in their implementation for nonlinear least squares. ??unfinished
+  but getting there. This is more a JN career interest, and a follow up to the 2014
+  book. 
+
+- PkgFromRbase.Rmd: an explanation of the construction of the `nlspkg` from the
+  code in R-base. We could think of putting this in R-bloggers or similar. Or if
+  we came up with a more general template, then an R-Journal article.
+
+- WorkingDocument4ImproveNLS.Rmd: essentially a way to record what we have worked on.
+  A project diary.
+
+## Problem sets and test infrastructure
+
+- ?? we need to make sure these are well organized. 
+
+## Code and documentation
+
+- nlspkg: a packaged version of the nls() code from R-base. Thanks to Duncan Murdoch
+
+- nlsalt: attempt to mirror nls() behaviour entirely in R. This is UNFINISHED. 
+  The effort showed that the structure of the programs was difficult to follow, 
+  undocumented, and unsuited to adding improvements like the Marquardt stabilization. 
+  We were able to get a pure-R version of numericDeriv() and rework most of the functions 
+  of `nlsModel` (but not `nlsModel.plinear`). This work may continue after the project
+  formally ends, but collaboration is likely needed with workers who have a deep knowledge
+  of R internals. `nls-flowchart.txt` was a start at documentation of the structure of `nls()`.
+
+- nls-changes-for-small-residuals-in-nls-R-4.0.2.zip: collected material for the 
+  fix by JN to the relative offset convergence criterion failure when there are small 
+  residuals in problems sent to `nls()`. 
+  
+- nlsj: A refactoring of the nls() functionality. `redesign2107.txt` gives some notes.
+
+- nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
+  discovered as a result of this project. Need to add subset correctly and document
+  changes e.g., to numerical derivatives. This is for JN rather than AB.
+
+
+
 
 ## Strategic choices in a nonlinear model estimation
 
