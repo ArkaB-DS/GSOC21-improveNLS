@@ -30,7 +30,7 @@ output_nls <- eval(parse(text=paste("nls",NLSrunline))) # nls is our benchmark c
 output_nlsj <- eval(parse(text=paste("nlsj::nlsj",NLSrunline))) # nlsj is the new nls
 
 ## Test expectations using testthat
-library(testthat) # comment out later!!
+#library(testthat) # comment out later!!
 
 #### TESTING nls VS nlsj
 # SETTING TOLERANCE

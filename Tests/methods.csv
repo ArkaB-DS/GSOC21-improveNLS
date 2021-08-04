@@ -1,5 +1,7 @@
 solver,algorithm,control
-nlsj::nlsj,default,default
-minpack.lm::nlsLM,default,default
-nlsj::nlsj,default,"maxiter=50, scaleOffset=0.5"
-minpack.lm::nlsLM,default,maxiter=50
+nlsj::nlsj,default,nlsj::nlsj.control()
+minpack.lm::nlsLM,default,minpack.lm::nls.lm.control()
+minpack.lm::nlsLM,default,minpack.lm::nls.lm.control(maxiter=50)
+nlsj::nlsj,default,"nlsj::nlsj.control(maxiter=500,scaleOffset=100)"
+nlsj::nlsj,default,nlsj::nlsj.control(minFactor=0.0001)
+nlsj::nlsj,marquardt,nlsj::nlsj.control()
