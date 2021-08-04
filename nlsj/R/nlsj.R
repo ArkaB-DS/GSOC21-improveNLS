@@ -1,5 +1,5 @@
 nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(),
-            algorithm = "default", weights=NULL, subset, trace = FALSE,
+            algorithm = "default", weights=NULL, subset=NULL, trace = FALSE,
             na.action, model=FALSE, lower = -Inf, upper = Inf, ...) {
 # ?? left out -- FIXME??    na.action, model = FALSE, (masked from nlxb)
 # ?? at this stage ONLY treat "default", but will add bounds
@@ -7,6 +7,8 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 ##?? Should a lot of this material be in nlsjModel() to build tools for problem??
 # DOES NOT CALL nlsjModel, but does everything here
 
+##?? ... args may NOT be well-defined for this function. CAUTION  
+  
 # Controls
    if (is.null(control$derivmeth)) control$derivmeth="default" # for safety
    epstol <- (.Machine$double.eps * control$offset) 
@@ -78,7 +80,20 @@ getlen <- function(lnames) {
    prm <- start # start MUST be defined at this point
    localdata <- list2env(as.list(prm), parent = data)
 
-# Weights
+   #  model frame
+   # if (model) {
+   #   cat("model frame args:\n")
+   #   args<-list(formula=formula, data=data, subset=subset, ...)
+   #   # We include ... for completeness, but may be undefined or wrong
+   #   print(str(args))
+   #   tmp<-readline("continue.")
+   #   mf <- do.call(stats::model.frame, args)
+   #   print(str(mf))
+   #   tmp<-readline("more.")
+   # } else 
+        mf <- NULL
+   
+   # Weights
    mraw <- length(eval(as.name(dnames[1]), envir=data))
    if(is.null(weights)) {
        weights<-rep(1.0, mraw) # set all weights to 1.0
@@ -91,7 +106,7 @@ getlen <- function(lnames) {
      if (! all(is.integer(subset))) stop("subset must have integer entries")
      if ( any(subset < 1) || any(subset > mraw) ) stop("subset entry out of range")
      #?? need to test these possibilities
-     weights[- subset] <- 0.0 # NOTE: the minus gets the values NOT in the dataset
+     weights[- subset] <- 0.0 # NOTE: the minus sgets the values NOT in the dataset
    }
    mres<-length(weights[which(weights > 0.0)]) # number of residuals (observations)
    swts<-sqrt(weights)
@@ -478,7 +493,8 @@ getlen <- function(lnames) {
                  # ?? do we need to specify environment
 	   )
     class(m) <- "nlsModel"
-    result <- list(m=m, convInfo=convInfo, weights=weights, control=control)
+    # ?? as of 20210802, missing na.action, call, convergence, message, dataClasses
+    result <- list(m=m, convInfo=convInfo, weights=weights, model=mf, control=control)
     ##?? Add call -- need to set up properly somehow. Do we need model.frame?
     class(result) <- "nlsj" ## CAUSES ERRORS ?? Does it?? 190821
     result
