@@ -5,7 +5,7 @@
 
 \name{nlsj.control}
 \alias{nlsj.control}
-\title{Control the Iterations in nls}
+\title{Control the Iterations in nlsj}
 \description{
   Allow the user to set some characteristics of the \code{\link{nls}}
   nonlinear least squares algorithm.
@@ -104,13 +104,14 @@ nlsj.control(maxiter = 500, tol = 0.00001, minFactor = 1/1024,
   Bates, D. M. and Watts, D. G. (1988),
   \emph{Nonlinear Regression Analysis and Its Applications}, Wiley.
 }
-\author{Douglas Bates and Saikat DebRoy; John C. Nash for part of the
-  \code{scaleOffset} option.}
+\author{Douglas Bates and Saikat DebRoy; John C. Nash for extensions
+  made in the 2020 Improvements to nls() Google Summer of Code 
+  project with Arkajyoti Bhattacharjee.}
 \seealso{
   \code{\link{nls}}
 }
 \examples{
-nls.control(minFactor = 1/2048)
+nlsj.control(minFactor = 1/2048)
 }
 \keyword{nonlinear}
 \keyword{regression}
