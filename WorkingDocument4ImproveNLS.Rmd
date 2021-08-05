@@ -119,6 +119,56 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+[3-8-2021] Discussed problems with runner files and testthat files -
+    1. NLSlower, NLSupper, NLSsubset, NLSweights not used - later
+    2. gradient in run_JN causing problems - solved
+    3. How to set up nlsr in methods? "algorithm=" needs to be handled!
+         Idea: Before output_nls and output, define NLSrunline if
+    solver==nlsr::nlxb;
+               algorithm=default in output_nls;
+               how to setup control for nlsr::nlxb - setup runline -- FILTER IT
+    4. commented out gradient from "Passed" condition and changed 6-->5 --
+   SOLVED
+    5. minpack convInfo()?? -- SOLVED
+    6. where to put try statement? problems like gradient may occur?
+            SOLUTION - put try statements and write a function check2()
+    that outputs "ERROR" in passed?
+    7. Note - Tetra gives singular grad in nls but not in nlsj -- BETTER??
+    8. Compare "port" in nls with "default" in nlsj and "marquardt" in
+nlsj for bounds. Do also (for bounds) nlsLM, nlxb.
+
+```
+------------------------------------------------
+```
+
+Latest test and runner folders attached in a single zip file.
+
+SUGGESTIONS -
+
+In GitLab repo - improvenls, inside "Tests", you can
+
+DELETE: "singular Gradient Problems", "test_better.R", "test-Sulfi_1.R",
+"test-Sacch2_1.R",
+"test-Tetra_1.R"
+
+KEEP: "test-Isom_1.R"
+
+
+Note that both "Tests" and inside "nlsj"-"tests" are similar. I think
+putting the attached (inside zip file) "tests" in the nlsj-tests would be
+better. One file in "Tests" does have a comment - "better stub" - so maybe
+you are using those files somewhere? If not, you may consider to delete
+them as well.
+
+[1-8-2021 to 2-8-2021] AB. Edited run file in runner directory to create
+"nlsErrorLog.csv" hat contains which solver, algorithm, control, filename,
+date and machine that causes an error while running run.R. Added edited
+Croucher_base.R in testhat. run.R is currently running without any error.
+Maybe need to add more test files in runner??
+
+[28-7-2021 to 30-7-2021] Fixed runner directory contents and edited
+testthat files. Succeeded with "control" using JN's suggestion.
+
 [2021-7-28] to [2021-7-30]
 
 JN: worked on nlsj and on a stripped down version nlsgn (only the Gauss Newton
@@ -228,9 +278,6 @@ Workaround: CPU<-as.numeric(system('wmic MemoryChip get
 Capacity',intern=TRUE))[2]/1024^3
 Plans to improve structure of runner discussed over GMeet.
 
-
-
-
 - JN looked into minpack.lm handling of bounds constraints, and also downloaded
   the original **netlib** version of `minpack`. This does NOT handle bounds (at
   least no mention of "bounds", "upper" or "lower" were found w.r.t. parameters).
@@ -246,9 +293,6 @@ Plans to improve structure of runner discussed over GMeet.
   
   Have I missed something?
   
-
-
-
 ### [2021-7-20] 
 
 Meeting online. Worked through some issues relating to testing. 
@@ -935,18 +979,7 @@ do provide.
   to do that cleanly, we will want to separate the functions into different files.
   This will mean we have to be careful that the package still builds OK.
    
-  This can be accomplished via (following commented in the Rmd file). Note that
-  the issue is addressed in several ways in `/home/gramps/GrampsSetup/GrampsSetup.Rmd`,
-  which needs to be better explained here. 
-
-<!-- # Note this setup -- gives nice output -->
-<!--   ```{bash tt, echo=FALSE, comment=NA} -->
-<!--    cat ~/bin/f-g-M21 -->
-<!--   ``` -->
-
-
 https://towardsdatascience.com/rtest-pretty-testing-of-r-packages-50f50b135650
-
 
 https://towardsdatascience.com/unit-testing-in-r-68ab9cc8d211
 
