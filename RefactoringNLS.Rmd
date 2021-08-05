@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Abstract
 
 This article reports the particular activities of our Google Summer of Code
-project "Improvements to nls()" that relate to R code for that function, which
+project "Improvements to nls()" that relate to the R code for that function, which
 is intended for the estimation of models written as a formula that has at least
 one parameter that is not estimable via solving a set of linear equations. A
 companion document "Variety in Nonlinear Least Squares Codes" presents an 
@@ -34,7 +34,7 @@ An important overall consideration in our work has been the maintainability of
 the code base that supports the `nls()` functionality, as we believe that the
 existing code makes maintenance and improvement very difficult.
 
-# The existing nls() function: strenghts and shortcomings
+# The existing nls() function: strengths and shortcomings
 
 `nls()` is the tool in base R (the distributed software package from https://cran.r-project.org)
 for estimating nonlinear statistical models. The function was developed mainly in the 1980s and
@@ -43,20 +43,21 @@ The ideas spring primarily from the book by @bateswatts.
 
 The `nls()` function has a remarkable and quite comprehensive set of capabilities for estimating
 nonlinear models that are expressed as formulas. In particular, we note that it
+
 - handles formulas that include R functions
 - allows data to be subset
 - permits parameters to be indexed over a set of related data
 - produces measures of variability (i.e., standard error estimates) for the estimated parameters
 - has related profiling capabilities for exploring the likelihood surface as parameters are changed
 
-With such a range of features and a long history, it is not surprising that code has become untidy 
+With such a range of features and a long history, it is not surprising that the code has become untidy 
 and overly patched. It is, to
 our mind, essentially unmaintainable. Moreover, its underlying methods can and should be improved. Let
 us review some of the issues. We will then propose corrective actions, some of which we have carried out.
 
 ## Issue: Convergence and termination tests
 
-Within the standard documentation (**man**ual or ".Rd" file) `nls()` warns
+Within the standard documentation (**man** or ".Rd" file) `nls()` warns
 
 >  **The default settings of nls generally fail on artificial “zero-residual” data problems.**
 
@@ -70,7 +71,7 @@ Within the standard documentation (**man**ual or ".Rd" file) `nls()` warns
 >  $$y = f(x, \theta)$$
 
 >  because the criterion amounts to comparing two components of the round-off error. To avoid a zero-divide in
-  computing the convergence testing value, a positive constant scaleOffset should be added to the denominator
+  computing the convergence testing value, a positive constant `scaleOffset` should be added to the denominator
   sum-of-squares; it is set in control; this does not yet apply to algorithm = "port".
 
 It turns out that this issue can be quite easily resolved. The key "convergence test" -- more properly
@@ -89,7 +90,7 @@ default value of zero for legacy behaviour. Setting it to a small number -- 1.0 
 allows small-residual problems (i.e., near-exact fits) to be dealt with easily. We call this the
 **safeguarded relative offset convergence criterion**.
 
-We are pleased to report that this improvement is in the R-devel distributed code at time of writing
+We are pleased to report that this improvement is in the R-devel distributed code at the time of writing
 and will migrate to the base R distribution when updated.
 
 ### Example of a small-residual problem
@@ -245,7 +246,7 @@ R nls "singular gradient"
 
 gets over 4000 hits that are spread over the years. 
 In some cases this is due
-to failure of the simple finite difference approximation of the Jacobian in the
+to the failure of the simple finite difference approximation of the Jacobian in the
 `numericDeriv()` function that is a part of `nls()`. `nlsr` can use analytic
 derivatives, and we can import this functionality to the `nls()` code as an
 improvement. See below in the section **Jacobian computation**.
@@ -291,12 +292,12 @@ is within the `nlsModel()` or `nlsModel.pliner()` functions.
 ## Issue: na.action
 
 `na.action` is an argument to the `nls()` function, but it does not appear in obviously in the
-source code ...
+source code ...??
 
 ## Issue: model frame
 
 `model` is an argument to the `nls()` function, but it does not appear obviously in the
-source code ...
+source code ...??
 
 ## Issue: documentation of results
 
@@ -686,7 +687,7 @@ We want
 
 - try to explain what we do, either in comments or separate maintainer documentation.
   Since we are complaining about the lack of explanatory material for the current
-  code, we feel it incumbent on us to provide such material for our own work, and if
+  code, we feel it is incumbent on us to provide such material for our own work, and if
   possible for the existing code.
 
 ## Provide tests
@@ -822,9 +823,9 @@ computed, while `nlxb()` returns quite limited information, and in its execution
 computes what is needed on an as and when basis. This follows a path that one of us
 (JN) established almost 50 years ago with the software that became @cnm79, using
 setup, solver, and post-solution analysis phases to computation. Here, that last 
-phase is not part of `nlxb(), but is the domain of other functions in the `nlsr`
+phase is not part of `nlxb()`, but is the domain of other functions in the `nlsr`
 package. `nls()` also has some similar functions, but they are much more tied into
-the infrastructure that is created mostly in the `nslModel()` function.
+the infrastructure that is created mostly in the `nlsModel()` function.
 
 The `nls()` approach, as implemented in the base R code and `nlspkg` leads to considerable
 entangling of the different functions and capabilities. This is to an extent that even after
