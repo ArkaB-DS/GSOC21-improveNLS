@@ -119,6 +119,10 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+Heather's comment: 
+For the internal data sets like "problems.csv" you might use sysdata.rda: https://r-pkgs.org/data.html#data-sysdata
+
+
 [2021-8-6] AB: Worked on creating a package version of the runner folder called
 "nlscompare". Still messy. [To be discussed in the meeting.]
 Created a corresponding article using The R Journal template from
