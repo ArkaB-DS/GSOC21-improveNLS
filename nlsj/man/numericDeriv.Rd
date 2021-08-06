@@ -5,9 +5,10 @@
 
 \name{numericDeriv}
 \alias{numericDeriv}
-\title{Evaluate Derivatives Numerically}
+\title{Evaluate Derivatives (Jacobian) Numerically}
 \description{
-  \code{numericDeriv} numerically evaluates the gradient of an expression.
+  \code{numericDeriv} numerically evaluates the Jacobian of an expression for
+  residuals in a nonlinear least squares problem expressed in nls() style.
 }
 \usage{
 numericDeriv(expr, theta, rho = parent.frame(), dir = 1,
@@ -31,8 +32,11 @@ numericDeriv(expr, theta, rho = parent.frame(), dir = 1,
     typically more accurate but need more evaluations of \eqn{f()}.}
 }
 \details{
-  This is a front end to the C function \code{numeric_deriv}, which is
-  described in \emph{Writing R Extensions}.
+  This is an all-R routine that replaces a front end to the C function 
+  \code{numeric_deriv}, which is described in \emph{Writing R Extensions}.
+  The description in \emph{Writing R Extensions} does not quite match the
+  actual code in base R, nor the present \code{nlsj} package, since the
+  \code{dir} and \code{central} arguments are ignored.
 
   The numeric variables must be of type \code{double} and not \code{integer}.
   %% checked in C code .. why not just coerce them?   (TODO?)
@@ -41,7 +45,11 @@ numericDeriv(expr, theta, rho = parent.frame(), dir = 1,
   The value of \code{eval(expr, envir = rho)} plus a matrix
   attribute \code{"gradient"}.  The columns of this matrix are
   the derivatives of the value with respect to the variables listed in
-  \code{theta}.
+  \code{theta}. This is structured for use by \code{nls()} style
+  Gauus-Newton programs. The term "gradient" is meaningful for 
+  derivatives of the individual functions in the residual vector,
+  but together these become the Jacobian matrix of the nonlinear
+  least squares problem. 
 }
 \author{Saikat DebRoy \email{saikat@stat.wisc.edu};
   tweaks and \code{eps}, \code{central} options by R Core Team.}

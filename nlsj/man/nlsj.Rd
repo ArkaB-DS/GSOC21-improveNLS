@@ -38,10 +38,8 @@ nlsj(formula, data, start, control, algorithm,
     values and their effect.}
   \item{algorithm}{character string specifying the algorithm to use.
     The default algorithm is a Gauss-Newton algorithm.  Other possible
-    values are \code{"plinear"} for the Golub-Pereyra algorithm for
-    partially linear least-squares models and \code{"port"} for the
-    \sQuote{nl2sol} algorithm from the Port library -- see the
-    references.  Can be abbreviated.}
+    values are \code{"marquardt"} for a form of the Levenberg-Marquardt
+    stabilization. "plinear" and "port" are NOT implemented as yet.}
   \item{trace}{logical value indicating if a trace of the iteration
     progress should be printed.  Default is \code{FALSE}.  If
     \code{TRUE} the residual (weighted) sum-of-squares, the convergence
