@@ -566,6 +566,8 @@ summary(fm4DNase1)
 
 ### Further comments on partially linear models
 
+?? should this be moved to the "Goals" for the future part of paper??
+
 Ideally, we believe it would be best to specify all models with a complete set of parameters.
 That is, the model is as it would be written down for use, rather than for estimation. Furthermore,
 we ask if it is possible for us to devise code that will detect linearity, rather than expecting 
@@ -573,8 +575,8 @@ the user to provide the special structure and `algorithm=plinear` setting. Some 
 Linear and Nonlinear Discoverer have been
 proposed by @Zhang2011LinNonlin, but these seem to relate to an independent (and hence
 confusing) use of the same term for a class of models that have almost nothing in common
-with the present issue). We have yet (end of July 2021) to consider how we might translate
-any ideas to code in an improved `nls()` or similar function.
+with the present issue. We have yet (end of July 2021) to consider how we might translate
+ideas for discovery of linearity to code in an improved `nls()` or similar function.
 
 
 ## Issue: code structure
@@ -594,21 +596,28 @@ could be much reduced by moving code entirely to R.
 
 The paucity of documentation is exacerbated by the mixed R/C/Fortran code base.
 
-Following is an email to Dr. Heather Turner from John Nash.
+Following is an email to John Nash from Doug Bates. This is NOT a criticism
+of Prof. Bates work, but a reflection on how difficult it is to develop code in this
+subject area and to keep it maintainable. We have experienced similar loss of understanding
+for some of our own codes.
 
 ```
-I'm afraid that I don't know the purpose of the recursive call either.  I know that I wrote the code to use a closure
-for the response, covariates, etc., but I don't recall anything like a recursive call being necessary.
+I'm afraid that I don't know the purpose of the recursive call either.  
+I know that I wrote the code to use a closure for the response, covariates, etc., 
+but I don't recall anything like a recursive call being necessary.
 
-If the R sources were in a git repository I might try to use `git blame` to find out when and by whom that was written
-but they are in an SVN repository, I think, and I haven't used it for a long, long time.
+If the R sources were in a git repository I might try to use `git blame` 
+to find out when and by whom that was written but they are in an SVN repository, 
+I think, and I haven't used it for a long, long time.
 
-I don't think I will be of much help.  My R skills have atrophied to the point where I wouldn't even know how to start
-exploring what is happening in the first call as opposed to the recursive call.
+I don't think I will be of much help.  My R skills have atrophied to the point 
+where I wouldn't even know how to start exploring what is happening in the first 
+call as opposed to the recursive call.
+```
 
+This was in response to an email to Dough bates on Jun 29, 2021 from John Nash.
 
-On Tue, Jun 29, 2021 at 11:50 AM John Nash <Nashjc@uottawa.ca <mailto:Nashjc@uottawa.ca>> wrote:
-
+```
     Thanks.
 
     https://gitlab.com/nashjc/improvenls/-/blob/master/Croucher-expandednlsnoc.R
@@ -643,30 +652,50 @@ On Tue, Jun 29, 2021 at 11:50 AM John Nash <Nashjc@uottawa.ca <mailto:Nashjc@uot
                 return(QR$rank < min(dim(QR$qr)))
             }
 
-
     In both there is the recursive call, which must have a purpose I don't understand.
-
-    Cheers, JN
-
-    On 2021-06-29 12:33 p.m., Douglas Bates wrote:
-    > *Attention : courriel externe | external email*
-    > Thanks for contacting me, John.  Can you point me to a file in the gitlab.com <http://gitlab.com>
-    <http://gitlab.com <http://gitlab.com>> repository that
-    > contains the definition of setPars?
-    >
-    > (By the way, it is probably best to use the email address dmbates@gmail.com <mailto:dmbates@gmail.com>
-    <mailto:dmbates@gmail.com <mailto:dmbates@gmail.com>> for me.  If email
-    > goes to bates@stat.wisc.edu <mailto:bates@stat.wisc.edu> <mailto:bates@stat.wisc.edu <mailto:bates@stat.wisc.edu>>
-    it should get forwarded to the gmail.com <http://gmail.com> <http://gmail.com <http://gmail.com>>
-    > address but sometimes gmail decides that such mail looks suspicious and puts it in the spam folder.  Not sure
-    why.  For
-    > a long time I used bates@stat.wisc.edu <mailto:bates@stat.wisc.edu> <mailto:bates@stat.wisc.edu
-    <mailto:bates@stat.wisc.edu>> as my "From:" address because it had been my address
-    > since the 80's but even gmail got suspicious of mail from that address that did not appear to originate in the
-    wisc.edu <http://wisc.edu>
-    > <http://wisc.edu <http://wisc.edu>> domain.)
-    >
 ```
+
+## Issue: indexed parameters
+
+The **man** file for `nls()` includes the following example of a situation in which
+parameters are indexed. It also uses the "plinear" option as an added complication.
+?? can we find a simpler example??
+Maybe take Hobbs or Croucher and modify the data and parameters??
+
+```{r nlsindx1}
+## The muscle dataset in MASS is from an experiment on muscle
+## contraction on 21 animals.  The observed variables are Strip
+## (identifier of muscle), Conc (Cacl concentration) and Length
+## (resulting length of muscle section).
+## IGNORE_RDIFF_BEGIN
+if(requireNamespace("MASS", quietly = TRUE)) withAutoprint({
+## The non linear model considered is
+##       Length = alpha + beta*exp(-Conc/theta) + error
+## where theta is constant but alpha and beta may vary with Strip.
+
+with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
+
+## We first use the plinear algorithm to fit an overall model,
+## ignoring that alpha and beta might vary with Strip.
+musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
+              start = list(th = 1), algorithm = "plinear")
+summary(musc.1)
+
+## Then we use nls' indexing feature for parameters in non-linear
+## models to use the conventional algorithm to fit a model in which
+## alpha and beta vary with Strip.  The starting values are provided
+## by the previously fitted model.
+## Note that with indexed parameters, the starting values must be
+## given in a list (with names):
+b <- coef(musc.1)
+musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
+              start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
+summary(musc.2)
+})
+```
+
+Note that the answers for the parameters are NOT indexed. e.g. `coef(musc.2)` is a
+long vectors, not separated by the `Strip` index.
 
 # Goals of our effort
 
