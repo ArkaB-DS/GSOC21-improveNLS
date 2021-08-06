@@ -119,6 +119,18 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+[2021-8-6] Worked on creating a package version of the runner folder called
+"nlscompare". Still messy. [To be discussed in the meeting.]
+Created a corresponding article using The R Journal template from
+"rticles" package in RStudio. Need suggestions on that. [To be discussed
+in the meeting. ]
+
+[2021-8-5] Did error handling on Testing part of the "run_JN.R" file. Made
+changes in how "NLSErrorLog" outputs - improved presentation and clarity
+of results.
+
+[2021-8-4] Looked into "RefactoringNLS" adn suggested minor fixes.
+
 [3-8-2021] Discussed problems with runner files and testthat files -
     1. NLSlower, NLSupper, NLSsubset, NLSweights not used - later
     2. gradient in run_JN causing problems - solved
