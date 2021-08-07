@@ -21,8 +21,8 @@ NLSstart <- list(A = A, lrc = lrc) # a starting vector (named!)
 
 ## MODEL
 NLSformula <- demand ~ A*(1-exp(-exp(lrc)*time))
-NLSlower<-c(0,0)
-NLSupper<-c(1.5, 1.5)
-NLSweights <- rep(0.25,length(time)) ## ?? Find better weights
-NLSsubset <- 1:8
+NLSlower<- c(-Inf,-Inf)
+NLSupper<- c(Inf,Inf)
+NLSweights <- rep(1,length(time)) ## ?? Find better weights
+NLSsubset <- 1:length(time)
 rm(demand,time,A,lrc) 

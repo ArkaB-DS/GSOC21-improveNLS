@@ -25,8 +25,8 @@ NLSstart <- c(Dose=Dose,lKa=lKa,lKe=lKe,lCl=lCl) # a starting vector (named!)
 
 ## MODEL
 NLSformula <-conc ~ Dose * exp(lKe+lKa-lCl) * (exp(-exp(lKe)*time) - exp(-exp(lKa)*time))/(exp(lKa) - exp(lKe))
-NLSlower <- NULL
-NLSupper <- NULL
-NLSweights <- rep(0.25,length(time))
-NLSsubset <- 1:8
+NLSlower<- c(-Inf,-Inf,-Inf,-Inf)
+NLSupper<- c(Inf,Inf,Inf,Inf)
+NLSweights <- rep(1,length(time))
+NLSsubset <- 1:length(time)
 rm(Dose,lKa,lKe,lCl,time,conc)

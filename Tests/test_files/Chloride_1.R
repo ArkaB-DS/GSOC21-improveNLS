@@ -31,8 +31,8 @@ NLSstart <- list(Asym = Asym, prop=prop, lrc = lrc) # a starting vector (named!)
 
 ## MODEL
 NLSformula <- conc ~ Asym*(1 - prop*exp(-exp(lrc)*time))
-NLSlower <- NULL
-NLSupper <- NULL
-NLSweights <- rep(0.25,length(time))
-NLSsubset <- 1:8
+NLSlower<- c(-Inf,-Inf,-Inf)
+NLSupper<- c(Inf,Inf,Inf)
+NLSweights <- rep(1,length(time))
+NLSsubset <- 1:length(time)
 rm(conc,time,Asym,prop,lrc)

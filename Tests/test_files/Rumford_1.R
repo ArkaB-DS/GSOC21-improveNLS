@@ -21,8 +21,8 @@ NLSstart <- list(tc = tc) # a starting vector (named!)
 
 ## MODEL
 NLSformula <-temp ~ 60 + 70 * exp(tc * time)
-NLSlower <- NULL
-NLSupper <- NULL
-NLSweights <- rep(0.25, length(time))
-NLSsubset<-1:8
+NLSlower<- c(-Inf)
+NLSupper<- c(Inf)
+NLSweights <- rep(1, length(time))
+NLSsubset<-1:length(time)
 rm(tc,time, temp)

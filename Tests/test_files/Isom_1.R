@@ -35,8 +35,8 @@ NLSstart <-c(b2 = b2, b3 = b3, b4 = b4) # a starting vector (named!)
 
 ## MODEL
 NLSformula <- rate ~ b3*(n.pent - iso.pen/1.632)/(1+b2*hyd+b3*n.pent+b4*iso.pen)
-NLSlower <- NULL
-NLSupper <- NULL
-NLSweights <- rep(0.25,length(n.pent))
-NLSsubset <- 1:8
+NLSlower<- c(-Inf,-Inf,-Inf)
+NLSupper<- c(Inf,Inf,Inf)
+NLSweights <- rep(1,length(n.pent))
+NLSsubset <- 1:length(n.pent)
 rm(b2,b3,b4,rate,hyd,iso.pen,n.pent)

@@ -24,8 +24,8 @@ NLSstart <-c(lrc1=lrc1,lrc2=lrc2,A1=A1,A2=A2) # a starting vector (named!)
 
 ## MODEL
 NLSformula <-conc ~ A1*exp(-exp(lrc1)*time)+A2*exp(-exp(lrc2)*time)
-NLSlower <- NULL
-NLSupper <- NULL
+NLSlower<- c(-Inf,-Inf,-Inf,-Inf)
+NLSupper<- c(Inf,Inf,Inf,Inf)
 NLSweights <- rep(0.25,length(time))
-NLSsubset <- 1:8
+NLSsubset <- 1:length(time)
 rm(lrc1,lrc2,A1,A2,time,conc)

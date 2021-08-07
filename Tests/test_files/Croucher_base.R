@@ -10,8 +10,8 @@ p2<-0.2
 NLSformula <- ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata)
 NLSstart<-list(p1=p1,p2=p2) # This is the default start given in the reference.
 NLSdata<-data.frame(xdata, ydata)
-NLSweights <- rep(0.25, length(xdata))
-NLSsubset<-1:8
-NLSlower<-c(0,0)
-NLSupper<-c(1.5, 1.5)
+NLSweights <- rep(1, length(xdata))
+NLSsubset<-1:length(xdata)
+NLSlower<- c(-Inf,-Inf)
+NLSupper<- c(Inf,Inf)
 rm(xdata, ydata, p1, p2) # Normally remove these as we don't want to pollute the workspace

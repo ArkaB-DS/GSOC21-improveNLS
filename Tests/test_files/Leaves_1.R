@@ -23,8 +23,8 @@ NLSstart <-list(Asym=Asym,xmid=xmid,scal=scal) # a starting vector (named!)
 
 ## MODEL
 NLSformula <-length ~ Asym/(1+exp((xmid-time)/scal))
-NLSlower <- NULL
-NLSupper <- NULL
-NLSsubset <- 1:8
-NLSweights <- rep(0.25,length(time))
+NLSlower<- c(-Inf,-Inf,-Inf)
+NLSupper<- c(Inf,Inf,Inf)
+NLSsubset <- 1:length(time)
+NLSweights <- rep(1,length(time))
 rm(time,length,Asym,xmid,scal)
