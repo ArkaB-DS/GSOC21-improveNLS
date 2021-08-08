@@ -14,4 +14,4 @@ and features of the nls() function, however, it is almost certain that only some
 possibilities will be addressed in the project. Our aim is to focus attention on 
 actions that can be realized in future versions of the installable R system.
 
-JN [2021-5-27]
+JN [2021-8-8]
