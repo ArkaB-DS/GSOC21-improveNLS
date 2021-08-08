@@ -655,93 +655,60 @@ This was in response to an email to Dough bates on Jun 29, 2021 from John Nash.
             }
 
     In both there is the recursive call, which must have a purpose I don't understand.
-<<<<<<< HEAD
 ```
 
 ## Issue: indexed parameters
 
 The **man** file for `nls()` includes the following example of a situation in which
 parameters are indexed. It also uses the "plinear" option as an added complication.
-?? can we find a simpler example??
-Maybe take Hobbs or Croucher and modify the data and parameters??
+Here we use a truncated version of the example to save display space.
 
 ```{r nlsindx1}
 ## The muscle dataset in MASS is from an experiment on muscle
 ## contraction on 21 animals.  The observed variables are Strip
 ## (identifier of muscle), Conc (Cacl concentration) and Length
 ## (resulting length of muscle section).
-## IGNORE_RDIFF_BEGIN
-if(requireNamespace("MASS", quietly = TRUE)) withAutoprint({
-## The non linear model considered is
-##       Length = alpha + beta*exp(-Conc/theta) + error
-## where theta is constant but alpha and beta may vary with Strip.
-
-with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
-
-## We first use the plinear algorithm to fit an overall model,
-## ignoring that alpha and beta might vary with Strip.
-musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
-              start = list(th = 1), algorithm = "plinear")
-summary(musc.1)
-
-## Then we use nls' indexing feature for parameters in non-linear
-## models to use the conventional algorithm to fit a model in which
-## alpha and beta vary with Strip.  The starting values are provided
-## by the previously fitted model.
-## Note that with indexed parameters, the starting values must be
-## given in a list (with names):
-b <- coef(musc.1)
-musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
-              start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-summary(musc.2)
+if(! requireNamespace("MASS", quietly = TRUE)) stop("Need MASS pkg")
+mm<- MASS::muscle[1:12,] # take only 1st few values of Strip
+str(mm)
+mm<-droplevels(mm)
+str(mm)
+nlev <- nlevels(mm)
+withAutoprint({
+  ## The non linear model considered is
+  ##       Length = alpha + beta*exp(-Conc/theta) + error
+  ## where theta is constant but alpha and beta may vary with Strip.
+  with(mm, table(Strip)) # 2, 3 or 4 obs per strip
+  nl <- nlevels(mm$Strip)
+  ## We first use the plinear algorithm to fit an overall model,
+  ## ignoring that alpha and beta might vary with Strip.
+  musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), mm,
+                start = list(th = 1), algorithm = "plinear")
+  summary(musc.1)
+  
+  ## Then we use nls' indexing feature for parameters in non-linear
+  ## models to use the conventional algorithm to fit a model in which
+  ## alpha and beta vary with Strip.  The starting values are provided
+  ## by the previously fitted model.
+  ## Note that with indexed parameters, the starting values must be
+  ## given in a list (with names):
+  ## ?? but why use b here AND in the new formula??
+  b <- coef(musc.1)
+  
+  musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), data=mm,
+                start = list(a = rep(b[2], nl), b = rep(b[3], nl), th = b[1]))
+  summary(musc.2)
 })
+
 ```
 
-Note that the answers for the parameters are NOT indexed. e.g. `coef(musc.2)` is a
-long vectors, not separated by the `Strip` index.
-=======
-```
+Note that the answers for the parameters are NOT indexed. e.g. `coef(musc.2)` is a single level
+vector of parameters. We do not see `a[1], a[2], a[3]` but `a1, a2, a3`. This is because the model
+must integrate all the parameters because `th` is a common parameter across the index `Strip`.
 
-## Issue: indexed parameters
+We believe this structure is quite likely to cause confusion and error, and propose an alternative
+approach below.
 
-The **man** file for `nls()` includes the following example of a situation in which
-parameters are indexed. It also uses the "plinear" option as an added complication.
-?? can we find a simpler example??
-Maybe take Hobbs or Croucher and modify the data and parameters??
-
-```{r nlsindx1}
-## The muscle dataset in MASS is from an experiment on muscle
-## contraction on 21 animals.  The observed variables are Strip
-## (identifier of muscle), Conc (Cacl concentration) and Length
-## (resulting length of muscle section).
-## IGNORE_RDIFF_BEGIN
-if(requireNamespace("MASS", quietly = TRUE)) withAutoprint({
-## The non linear model considered is
-##       Length = alpha + beta*exp(-Conc/theta) + error
-## where theta is constant but alpha and beta may vary with Strip.
-
-with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
-
-## We first use the plinear algorithm to fit an overall model,
-## ignoring that alpha and beta might vary with Strip.
-musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
-              start = list(th = 1), algorithm = "plinear")
-summary(musc.1)
-
-## Then we use nls' indexing feature for parameters in non-linear
-## models to use the conventional algorithm to fit a model in which
-## alpha and beta vary with Strip.  The starting values are provided
-## by the previously fitted model.
-## Note that with indexed parameters, the starting values must be
-## given in a list (with names):
-b <- coef(musc.1)
-musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
-              start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-summary(musc.2)
-})
-```
-
->>>>>>> 295cbfce65b61f5092eff5fa9112b9eafce01699
 
 # Goals of our effort
 
@@ -764,6 +731,34 @@ We want
   Since we are complaining about the lack of explanatory material for the current
   code, we feel it is incumbent on us to provide such material for our own work, and if
   possible for the existing code.
+
+### Rationalization of formula specification
+
+?? note automatic detection of linearity. (Birkisson / Driscoll)
+
+
+
+
+
+### Rationalization of indexed models
+
+Indexed models clearly have a place in some areas of research. However, the current
+approach in `nls()` is awkward. The user must use DIFFERENT formulas depending on 
+whether the `plinear` algorithm is chosen. This seems to be related to the need for
+that approach to use the `lm()` function or its infrastructure, thus employing 
+formulas that omit the parameters of models and simply give the variables or functions
+thereof, such as interaction terms. 
+
+Users, we believe, are much more likely to be comfortable with fully specified formulas.
+And such formulas are needed by nonlinear least squares functions such as `minpack.lm::nlsLM`
+and `nlsr::nlxb`. Thus we would like the identification of the linear parameters to be,
+if possible, automated. At the very least, we should be able to use a structure like
+
+```
+algorithm="plinear(parmx, thetaz)"
+```
+
+to allow for the full formula to be used with the linear parameters identified.
 
 ## Provide tests
 
@@ -885,8 +880,6 @@ These are documents used to discuss particular aspects of our work.
 - nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
   discovered as a result of this project. Need to add subset correctly and document
   changes e.g., to numerical derivatives. This is for JN rather than AB.
-
-
 
 
 ## Strategic choices in a nonlinear model estimation

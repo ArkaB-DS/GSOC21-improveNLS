@@ -11,11 +11,14 @@ mm <- length(x2)
 idx<-c(rep("ONE",mm), rep("TWO",mm))
 xx <- c(xdata, x2)
 yy <- c(ydata, y2)
-p1<- 1
-p2<-0.2
+p1a<- 1
+p2a<-0.2
 NLSformula <- ydata ~ p1[idx]*cos(p2[idx]*xdata) + p2[idx]*sin(p1[idx]*xdata)
 # Ccall<-call("-",Cform[[3]], Cform[[2]])
-NLSstart<-list(p1=p1,p2=p2) # This is the default start given in the reference.
+NLSstart<-list(p1=p1a,p2=p2a) # This is the default start given in the reference.
 NLSdata<-data.frame(xdata=xx, ydata=yy,idx=idx)
+with(NLSdata, table(idx))
 ## need right form of the start: e.g., start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-itry1<-nls(formula=NLSformula, data=NLSdata, start=c(1, 0.2)) ## fails
+istart<-list(p1=rep(p1a,2), p2=rep(p2a,2))
+
+itry1<-nls(formula=NLSformula, data=NLSdata, start=istart)
