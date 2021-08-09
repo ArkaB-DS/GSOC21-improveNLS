@@ -20,7 +20,6 @@ nlsj <- function (formula, data = parent.frame(), start, control = nlsj.control(
 #   tmp <- readline("cont.")
 #   control$watch<-TRUE
 
-
 # Algorithm
    if (is.null(algorithm)) algorithm<-"default"
    algchoice <- c("default", "port", "plinear", "marquardt")
@@ -301,14 +300,6 @@ getlen <- function(lnames) {
          J0 <- J # save raw Jacobian
          wresy <- wresb # needed for default
       }
-      if (marqalg) { # This is whether or not new Jacobian
-	 if (slam <= epsh) slam <- epsh*10. # ensure NOT too small
-         J <- rbind(J0, diag(slam, npar)) # augment the Jacobian
-         wresy <- c(wresb, rep(0,npar)) # and the residuals (y)
-         # ?? This does NOT use any scaling. To be considered??
-         # Could mean(abs(diag(QRJ$qr))) be used to scale epsh as slam?
-         haveQRJ <- FALSE # since J has changed
-      }
       gjty <- t(J0) %*% wresb   # Need gradient projection for bounds
       #?? Should this be wresb or wresy and J or J0. Probably J0 (original)
 #      print(bdmsk)
@@ -317,7 +308,7 @@ getlen <- function(lnames) {
 #        cat("i=",i," bmi=",bmi,"\n")
         if (bmi==0) {
            gjty[i]<-0 # masked
-           J[,i]<-0
+           J0[,i]<-0
         }
 # Following code works by using sign = 2+bdmsk = 1 for upper bd, -1 for lower bd
 # If gradient is negative (downhill) at LB, sign*gradient is > 0. OK if delta > 0
@@ -329,25 +320,30 @@ getlen <- function(lnames) {
              if (control$watch) cat("freeing parameter ",i," now at ",prm[i],"\n")
           } else {
              gjty[i]<-0 # active bound
-             J[,i]<-0
+             J0[,i]<-0
              if (control$watch) cat("active bound ",i," at ",prm[i],"\n") 
           }
         } # bmi < 0. bmi > 0 is free parameter, so no fuss
       } # end for loop on i
+      if (marqalg) { # This is whether or not new Jacobian
+	 if (slam <= epsh) slam <- epsh*10. # ensure NOT too small
+         J <- rbind(J0, diag(slam, npar)) # augment the Jacobian
+         wresy <- c(wresb, rep(0,npar)) # and the residuals (y)
+         # ?? This does NOT use any scaling. To be considered??
+         # Could mean(abs(diag(QRJ$qr))) be used to scale epsh as slam?
+         haveQRJ <- FALSE # since J has changed
+         cat("Adjusted J0 to J, haveQRJ=",haveQRJ,"\n")
+      }
 #      cat("haveQRJ:",haveQRJ," J:"); print(J)
 #      cat("wresb:"); print(as.numeric(wresb))
       if (! haveQRJ) QRJ <-qr(J)
       haveQRJ <- TRUE # Since we will have QRJ for sure here
+      singJ <- FALSE # singular Jacobian? ?? may not keep this indicator
       qrDim <- min(dim(QRJ$qr))
-      if (defalg) {
-         if (QRJ$rank < qrDim) {
-            if (trace) print(J)
-            # could have defalg and marqalg both TRUE if we allow switch method here
-            stop("Singular jacobian")
-         }
-         # ?? Don't continue with Gauss-Newton; delta can't be computed
-         # ?? Note that we could switch to Marquardt here! Better choice?
-      } 
+      if (QRJ$rank < qrDim) singJ <- TRUE
+      if (trace && singJ) {cat("Jacobian when rank<dim:\n"); print(J)}
+      if (defalg && singJ) stop("Singular jacobian")
+      # ?? Don't continue with Gauss-Newton; delta can't be computed
       # ?? marquardt is using J (augmented Jacobian) in convergence test. This may
       # ?? not be exactly what we want. Leave it there for now.
       convInfo <- convCrit() # This is the convergence test
@@ -359,33 +355,38 @@ getlen <- function(lnames) {
          keepgoing <- FALSE
          break # to escape the main loop
       }
-      delta <- try(qr.coef(QRJ, -wresy)) # LS solve of J delta ~= -wres
-      deltaOK <- TRUE
-      if (inherits(delta,"try-error")) {
+      if (! singJ) {
+        delta <- try(qr.coef(QRJ, -wresy)) # LS solve of J delta ~= -wres
+        deltaOK <- TRUE
+        if (inherits(delta,"try-error")) {
           if (! marqalg) stop("Cannot solve Gauss-Newton equations")
           # ?? again consider a switch to marquardt
           deltaOK <- FALSE # Tells program we want to increase lambda / slam
-      } 
+        }
+      }
+      else deltaOK <- FALSE # delta NOT OK if singJ
       if (deltaOK) {
          gproj <- as.numeric(crossprod(delta, gjty)) # ?? do we need as.numeric
          if (is.na(gproj) || (gproj >= 0) ) {
-           if (trace) cat("Uphill or NA step direction") 
+           if (trace) cat("Uphill or NA step direction\n") 
            # should NOT be possible, except possibly when converged??
-           keepgoing<-FALSE #?? may want cleaner exit
+           # keepgoing<-FALSE #?? may want cleaner exit
            # ??? do we want to increase slam if marquardt?
            xcmsg <- "Uphill search direction"
-           tmp <- readline("uphill search")
-           break #??
+##           tmp <- readline("uphill search")
+##           break #??  See what happens if we just continue
          }
          gangle <- gproj/sqrt(sum(gjty^2) * sum(delta^2))
          gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
          if (control$watch) cat("gradient projection = ",gproj,
                       " g-delta-angle=",gangle,"\n")
          step<-rep(1,npar)  # Check how far to bounds
+         print(delta)
          for (i in 1:npar){
             bd<-bdmsk[i]
             da<-delta[i]
-#            if (control$watch) cat(i," bdmsk=",bd,"  delta=",da,"\n")
+#            if (control$watch) 
+            cat(i," bdmsk=",bd,"  delta=",da,"\n")
             if (bd==0 || ((bd==-3) && (da<0)) ||((bd==-1) && (da>0))) {
                delta[i]<-0 # Cases where bounds or masks active
             } else {
@@ -463,8 +464,10 @@ getlen <- function(lnames) {
          } # don't need to use else
       } # deltaOK
       else { # delta NOT OK -- report
-         warning("delta NOT computed OK")
+         # warning("delta NOT computed OK")
+	 cat("delta NOT computed OK, haveJ=",haveJ,"\n")
          slam <- slinc * slam # will have stopped if not marqalg
+         tmp <- readline("cont.")
       }       
       # at this point, we have either made progress (new ssmin)
       # or we are going round again
