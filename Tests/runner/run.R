@@ -46,7 +46,9 @@ errorNumber <- 1
 
 for(i in 1:nrow(NLSproblems)){
 	source(paste("test_files\\",NLSproblems$Name[i],sep=""))
+        cat("Sourced problem number",i,"\n")
 	for(j in 1:nrow(NLSmethods)){
+        cat("Using method number",j,"\n")
 		errorNLSFlag <- 0
 		errorOtherFlag<-0
 		#if(NLSmethods[j,1]=="nlsr::nlxb"){
@@ -187,6 +189,7 @@ for(i in 1:nrow(NLSproblems)){
 								"Indeterminate"))
 		spreadsheet[problemNumber,1] <- format(Sys.time(), "%Y-%m-%d %H:%M")		
 		(problemNumber <- problemNumber +1)
+		cat("j is>>>>>>",j,"\n\n")
 	}
 	cat("Successful problem-->",i,"\n")
 }
