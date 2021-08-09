@@ -308,7 +308,11 @@ The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` 
 But if we return `ans` from `nls()` or `minpack.lm::nlsLM` or our new `nlsj` (interim package), 
 then `ans$m$resid()` is WEIGHTED.
 
-?? "port" gives 1/2 sumsquares in trace output.
+As the `nls()` **man** page states, when the "port" algorithm is used with the `trace` argument
+TRUE, the iterations display the objective function value which is 1/2 the sum of squares (or 
+deviance). It is likely that the trace display is embedded in the Fortran of the `nlminb`
+routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
+unfortunate for users.
 
 ## Issue: sources of data
 
