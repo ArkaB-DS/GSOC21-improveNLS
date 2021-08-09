@@ -308,6 +308,8 @@ The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` 
 But if we return `ans` from `nls()` or `minpack.lm::nlsLM` or our new `nlsj` (interim package), 
 then `ans$m$resid()` is WEIGHTED.
 
+?? "port" gives 1/2 sumsquares in trace output.
+
 ## Issue: sources of data
 
 `nls()` can be called without specifying the `data` argument. In this case, it will
@@ -736,7 +738,12 @@ We want
 
 ?? note automatic detection of linearity. (Birkisson / Driscoll)
 
+```
+y ~ x + z + x*z
+y ~ a + b*x +c*z + d * (x*z)  # <-- fully specified
+y ~ a*Fn1(b, c, x, z)/Fn2()
 
+```
 
 
 
