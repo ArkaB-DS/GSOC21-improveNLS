@@ -37,6 +37,10 @@ b1               196.186         11.31      17.35  3.167e-08  -1.334e-10        
 b2               49.0916         1.688      29.08  3.284e-10  -3.589e-09      0.4605  
 b3               0.31357      0.006863      45.69  5.768e-12    4.09e-07     0.04714"
 
+# ?? best answers
+bestss<-2.5873
+bestcoef<-c(196.186, 49.092, 0.314)
+bestref<-"From NashJC book??"
 ## Include a line to indicate the end of a problem. This lets us put
 ## many such files together if we wish.
 ## --------------------------------------------------------------- ##
