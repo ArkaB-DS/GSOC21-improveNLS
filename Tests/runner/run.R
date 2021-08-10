@@ -120,6 +120,9 @@ for(i in 1:nrow(NLSproblems)){
 		if(inherits(checker.resid,"try-error")){
 			Residuals <- attr(checker.resid,"condition")$message
 			}
+		if(grepl("Mean relative difference: ",Residuals)){
+			Residuals <- gsub("^.*: *","",Residuals)
+			}
 
 		#	## fitted
 		#	all.equal(as.vector(fitted(output_nls)),
@@ -133,28 +136,36 @@ for(i in 1:nrow(NLSproblems)){
 		if(inherits(checker.dev,"try-error")){
 			Deviance <- attr(checker.dev,"condition")$message
 			}
-
+		if(grepl("Mean relative difference: ",Deviance)){
+			Deviance <- gsub("^.*: *","",Deviance)
+			}
 		## gradient
 		checker.grad<-try(Gradient<-all.equal( output_nls$m$gradient(),
 			 	output$m$gradient()))
 		if(inherits(checker.grad,"try-error")){
 			Gradient <- attr(checker.grad,"condition")$message
 			}
-
+		if(grepl("Mean relative difference: ",Gradient)){
+			Gradient <- gsub("Mean relative difference: ","",Gradient)
+			}
 		## getPars # difference between getAllPars and getPars?
 		checker.pars<-try(Parameters<-all.equal( output_nls$m$getPars(),
 			  output$m$getPars()))
 		if(inherits(checker.pars,"try-error")){
 			Parameters <- attr(checker.pars,"condition")$message
 			}
-
+		if(grepl("Mean relative difference: ",Parameters)){
+			Parameters <- gsub("^.*: *","",Parameters)
+			}
 		## Rmat
 		checker.rmat<-try(Rmat<-all.equal( as.numeric(output_nls$m$Rmat()), #!!!!NOTE THIS
 			  as.numeric(output$m$Rmat())))
 		if(inherits(checker.rmat,"try-error")){
 			Rmat <- attr(checker.rmat,"condition")$message
 			}
-
+		if(grepl("Mean relative difference: ",Rmat)){
+			Rmat <- gsub("^.*: *","",Rmat)
+			}
 		#	## predict
 		#	all.equal( output_nls$m$predict(),
 		#			  output$m$predict())
@@ -166,7 +177,9 @@ for(i in 1:nrow(NLSproblems)){
 		if(inherits(checker.conv,"try-error")){
 			Convergence <- attr(checker.conv,"condition")$message
 			}
-
+		if(grepl("Mean relative difference: ",Convergence)){
+			Convergence <- gsub("^.*: *","",Convergence)
+			}
 		## write in spreadsheet
 		spreadsheet[problemNumber,3] <- NLSmethods[j,1]
 		spreadsheet[problemNumber,4] <- NLSmethods[j,2]
@@ -184,7 +197,7 @@ for(i in 1:nrow(NLSproblems)){
 									Gradient,
 									Parameters,Rmat,Convergence)),rep(1,6))),"Passed",
 							   ifelse(isTRUE(all.equal(as.numeric(c(Residuals,Deviance,
-									#radient,
+									Gradient,
 									Parameters,Rmat,Convergence)),rep(0,6))),"Failed",
 								"Indeterminate"))
 		spreadsheet[problemNumber,1] <- format(Sys.time(), "%Y-%m-%d %H:%M")		
