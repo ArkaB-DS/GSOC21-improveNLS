@@ -119,6 +119,12 @@ Here is an annotated listing of product of the project.
 
 * In reverse date order *
 
+[2021-8-7] - [2021-8-10] 
+- JN fix and test nlsj bounds -- needed to move marquardt stabilization
+  AFTER the bounds check.
+- AB worked on tester, modularizing code, checking and cleaning code.
+- both: meetings on Sunday Aug 8 and Tues Aug 10
+
 Heather's comment: 
 For the internal data sets like "problems.csv" you might use sysdata.rda: https://r-pkgs.org/data.html#data-sysdata
 

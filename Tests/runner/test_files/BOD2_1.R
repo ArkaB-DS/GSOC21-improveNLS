@@ -26,3 +26,5 @@ NLSupper<- c(Inf,Inf)
 NLSweights <- rep(1,length(time)) ## ?? Find better weights
 NLSsubset <- 1:length(time)
 rm(demand,time,A,lrc) 
+# bestsol<-nlxb(NLSformula,NLSstart,NLSdata,trace=TRUE)
+# coef(bestsol): c(A=2.4979, lrc=-1.5972), residual sumsquares =  0.026244
