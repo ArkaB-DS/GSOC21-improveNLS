@@ -1,0 +1,4 @@
+https://www.r-bloggers.com/2014/06/be-careful-with-using-model-design-in-r/
+
+https://stackoverflow.com/questions/9650335/model-frame-and-update
+

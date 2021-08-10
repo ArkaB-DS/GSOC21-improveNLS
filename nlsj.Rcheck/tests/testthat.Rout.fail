@@ -1,0 +1,541 @@
+
+R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"
+Copyright (C) 2021 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(testthat)
+> library(nlsj)
+
+Attaching package: 'nlsj'
+
+The following object is masked from 'package:stats':
+
+    numericDeriv
+
+> 
+> test_check("nlsj")
+[1]  0.2683275 -0.2152188
+1  bdmsk= 1   delta= 0.2683275 
+2  bdmsk= 1   delta= -0.2152188 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.02996708 
+[1] 0.029464472 0.004444959
+1  bdmsk= 1   delta= 0.02946447 
+2  bdmsk= 1   delta= 0.004444959 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.0262437 
+[1]  0.0001337018 -0.0001674977
+1  bdmsk= 1   delta= 0.0001337018 
+2  bdmsk= 1   delta= -0.0001674977 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.02624367 
+[1] -4.334864e-06  3.829819e-06
+1  bdmsk= 1   delta= -4.334864e-06 
+2  bdmsk= 1   delta= 3.829819e-06 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.02624367 
+[1] "End of test file 'BOD2_1.R' "
+[1] -12.7908815   0.1468292  -0.3980810
+1  bdmsk= 1   delta= -12.79088 
+2  bdmsk= 1   delta= 0.1468292 
+3  bdmsk= 1   delta= -0.398081 
+fac before = 1  after= 1 
+fac= 1  ssnew=46.95063 
+[1]  1.85571563  0.08513884 -0.06565131
+1  bdmsk= 1   delta= 1.855716 
+2  bdmsk= 1   delta= 0.08513884 
+3  bdmsk= 1   delta= -0.06565131 
+fac before = 1  after= 1 
+fac= 1  ssnew=3.500011 
+[1]  0.026657382 -0.003523207  0.008350509
+1  bdmsk= 1   delta= 0.02665738 
+2  bdmsk= 1   delta= -0.003523207 
+3  bdmsk= 1   delta= 0.008350509 
+fac before = 1  after= 1 
+fac= 1  ssnew=1.879327 
+[1]  3.459055e-03 -8.659493e-06 -1.868852e-04
+1  bdmsk= 1   delta= 0.003459055 
+2  bdmsk= 1   delta= -8.659493e-06 
+3  bdmsk= 1   delta= -0.0001868852 
+fac before = 1  after= 1 
+fac= 1  ssnew=1.879324 
+[1] "End of test file 'Chloride_1.R' "
+[1] 0.4951056 0.6604326
+1  bdmsk= 1   delta= 0.4951056 
+2  bdmsk= 1   delta= 0.6604326 
+fac before = 1  after= 1 
+fac= 1  ssnew=4.115544 
+[1]  0.2775152 -0.2379272
+1  bdmsk= 1   delta= 0.2775152 
+2  bdmsk= 1   delta= -0.2379272 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5524366 
+[1] 0.12037996 0.08086257
+1  bdmsk= 1   delta= 0.12038 
+2  bdmsk= 1   delta= 0.08086257 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.05525853 
+[1] -0.011815912 -0.003340459
+1  bdmsk= 1   delta= -0.01181591 
+2  bdmsk= 1   delta= -0.003340459 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.05381819 
+[1] 0.0007069045 0.0002136168
+1  bdmsk= 1   delta= 0.0007069045 
+2  bdmsk= 1   delta= 0.0002136168 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.05381272 
+[1] -4.341464e-05 -1.201151e-05
+1  bdmsk= 1   delta= -4.341464e-05 
+2  bdmsk= 1   delta= -1.201151e-05 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.0538127 
+[1] 2.578803e-06 7.196669e-07
+1  bdmsk= 1   delta= 2.578803e-06 
+2  bdmsk= 1   delta= 7.196669e-07 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.0538127 
+[1] "End of test file 'Croucher_base.R' "
+[1] -6.92357049 -1.59005030  0.01458144
+1  bdmsk= 1   delta= -6.92357 
+2  bdmsk= 1   delta= -1.59005 
+3  bdmsk= 1   delta= 0.01458144 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.642377 
+[1]  3.021617029  0.664553146 -0.000996221
+1  bdmsk= 1   delta= 3.021617 
+2  bdmsk= 1   delta= 0.6645531 
+3  bdmsk= 1   delta= -0.000996221 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.587689 
+[1]  8.728954e-02  1.702441e-02 -1.499594e-05
+1  bdmsk= 1   delta= 0.08728954 
+2  bdmsk= 1   delta= 0.01702441 
+3  bdmsk= 1   delta= -1.499594e-05 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.587277 
+[1]  9.195869e-04  1.112149e-04 -4.879545e-07
+1  bdmsk= 1   delta= 0.0009195869 
+2  bdmsk= 1   delta= 0.0001112149 
+3  bdmsk= 1   delta= -4.879545e-07 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.587277 
+[1] "End of test file 'Hobbs_1.R' "
+[1] 68.01431 69.11491 69.65523
+1  bdmsk= 1   delta= 68.01431 
+2  bdmsk= 1   delta= 69.11491 
+3  bdmsk= 1   delta= 69.65523 
+fac before = 1  after= 1 
+fac= 1  ssnew=578.736 
+[1] 30593884 31088940 31331896
+1  bdmsk= 1   delta= 30593884 
+2  bdmsk= 1   delta= 31088940 
+3  bdmsk= 1   delta= 31331896 
+fac before = 1  after= 1 
+fac= 1  ssnew=578.7335 
+[1] 1.373997e+14 1.396240e+14 1.407140e+14
+1  bdmsk= 1   delta= 1.373997e+14 
+2  bdmsk= 1   delta= 1.39624e+14 
+3  bdmsk= 1   delta= 1.40714e+14 
+fac before = 1  after= 1 
+fac= 1  ssnew=578.7333 
+[1] -1.072205e+21 -1.089558e+21 -1.098069e+21
+1  bdmsk= 1   delta= -1.072205e+21 
+2  bdmsk= 1   delta= -1.089558e+21 
+3  bdmsk= 1   delta= -1.098069e+21 
+fac before = 1  after= 1 
+fac= 1  ssnew=578.7334 
+fac= 0.5  ssnew=578.7334 
+fac= 0.25  ssnew=578.7334 
+fac= 0.125  ssnew=578.7334 
+fac= 0.0625  ssnew=578.7334 
+fac= 0.03125  ssnew=578.7334 
+fac= 0.015625  ssnew=578.7334 
+fac= 0.0078125  ssnew=578.7334 
+fac= 0.00390625  ssnew=578.7334 
+fac= 0.001953125  ssnew=578.7334 
+[1] "End of test file 'Isom_1.R' file."
+[1] 15.16295 12.89311 10.56393
+1  bdmsk= 1   delta= 15.16295 
+2  bdmsk= 1   delta= 12.89311 
+3  bdmsk= 1   delta= 10.56393 
+fac before = 1  after= 1 
+fac= 1  ssnew=1190.555 
+[1] -240.4529 -338.0483 -129.6994
+1  bdmsk= 1   delta= -240.4529 
+2  bdmsk= 1   delta= -338.0483 
+3  bdmsk= 1   delta= -129.6994 
+fac before = 1  after= 1 
+fac= 1  ssnew=10368.73 
+fac= 0.5  ssnew=5269.168 
+fac= 0.25  ssnew=3620.835 
+fac= 0.125  ssnew=3268.062 
+fac= 0.0625  ssnew=2251.251 
+fac= 0.03125  ssnew=1206.471 
+fac= 0.015625  ssnew=1162.87 
+[1]  -72.42488 -123.78794  -79.14569
+1  bdmsk= 1   delta= -72.42488 
+2  bdmsk= 1   delta= -123.7879 
+3  bdmsk= 1   delta= -79.14569 
+fac before = 0.03125  after= 0.03125 
+fac= 0.03125  ssnew=1073.622 
+[1]  -6.085187 -16.210909 -33.848218
+1  bdmsk= 1   delta= -6.085187 
+2  bdmsk= 1   delta= -16.21091 
+3  bdmsk= 1   delta= -33.84822 
+fac before = 0.0625  after= 0.0625 
+fac= 0.0625  ssnew=911.1875 
+[1]   8.185239   4.301073 -11.448025
+1  bdmsk= 1   delta= 8.185239 
+2  bdmsk= 1   delta= 4.301073 
+3  bdmsk= 1   delta= -11.44802 
+fac before = 0.125  after= 0.125 
+fac= 0.125  ssnew=676.9886 
+[1]  8.682125  2.672757 -4.155477
+1  bdmsk= 1   delta= 8.682125 
+2  bdmsk= 1   delta= 2.672757 
+3  bdmsk= 1   delta= -4.155477 
+fac before = 0.25  after= 0.25 
+fac= 0.25  ssnew=369.0896 
+[1]  6.5252473  0.7017366 -1.3504791
+1  bdmsk= 1   delta= 6.525247 
+2  bdmsk= 1   delta= 0.7017366 
+3  bdmsk= 1   delta= -1.350479 
+fac before = 0.5  after= 0.5 
+fac= 0.5  ssnew=90.95236 
+[1]  3.2987820  0.0875357 -0.2220092
+1  bdmsk= 1   delta= 3.298782 
+2  bdmsk= 1   delta= 0.0875357 
+3  bdmsk= 1   delta= -0.2220092 
+fac before = 1  after= 1 
+fac= 1  ssnew=6.258767 
+[1] -0.01204340 -0.01330582  0.02325713
+1  bdmsk= 1   delta= -0.0120434 
+2  bdmsk= 1   delta= -0.01330582 
+3  bdmsk= 1   delta= 0.02325713 
+fac before = 1  after= 1 
+fac= 1  ssnew=6.210528 
+[1]  3.372992e-03 -7.477189e-05  2.357851e-03
+1  bdmsk= 1   delta= 0.003372992 
+2  bdmsk= 1   delta= -7.477189e-05 
+3  bdmsk= 1   delta= 0.002357851 
+fac before = 1  after= 1 
+fac= 1  ssnew=6.210245 
+[1]  1.931809e-04 -3.531949e-05  1.705214e-04
+1  bdmsk= 1   delta= 0.0001931809 
+2  bdmsk= 1   delta= -3.531949e-05 
+3  bdmsk= 1   delta= 0.0001705214 
+fac before = 1  after= 1 
+fac= 1  ssnew=6.210243 
+[1]  1.684415e-05 -1.755724e-06  1.353581e-05
+1  bdmsk= 1   delta= 1.684415e-05 
+2  bdmsk= 1   delta= -1.755724e-06 
+3  bdmsk= 1   delta= 1.353581e-05 
+fac before = 1  after= 1 
+fac= 1  ssnew=6.210243 
+[1] "End of test file 'Leaves_1.R' "
+[1]    0.08299316    0.04996099  -28.09980517 -137.90604325
+1  bdmsk= 1   delta= 0.08299316 
+2  bdmsk= 1   delta= 0.04996099 
+3  bdmsk= 1   delta= -28.09981 
+4  bdmsk= 1   delta= -137.906 
+fac before = 1  after= 1 
+fac= 1  ssnew=59.48071 
+[1] 0.05131165 0.59730704 0.69172882 0.28195313
+1  bdmsk= 1   delta= 0.05131165 
+2  bdmsk= 1   delta= 0.597307 
+3  bdmsk= 1   delta= 0.6917288 
+4  bdmsk= 1   delta= 0.2819531 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.034338 
+[1]  0.0991702  0.2823412 -2.0681496  4.7739453
+1  bdmsk= 1   delta= 0.0991702 
+2  bdmsk= 1   delta= 0.2823412 
+3  bdmsk= 1   delta= -2.06815 
+4  bdmsk= 1   delta= 4.773945 
+fac before = 1  after= 1 
+fac= 1  ssnew=1.648489 
+[1]  0.055993948  0.007786133 -0.089450585  2.027266469
+1  bdmsk= 1   delta= 0.05599395 
+2  bdmsk= 1   delta= 0.007786133 
+3  bdmsk= 1   delta= -0.08945058 
+4  bdmsk= 1   delta= 2.027266 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5972993 
+[1] 0.008448171 0.004534951 0.279251775 0.152512602
+1  bdmsk= 1   delta= 0.008448171 
+2  bdmsk= 1   delta= 0.004534951 
+3  bdmsk= 1   delta= 0.2792518 
+4  bdmsk= 1   delta= 0.1525126 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5932582 
+[1] 0.001445495 0.001444962 0.013268573 0.045599670
+1  bdmsk= 1   delta= 0.001445495 
+2  bdmsk= 1   delta= 0.001444962 
+3  bdmsk= 1   delta= 0.01326857 
+4  bdmsk= 1   delta= 0.04559967 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.593195 
+[1] 0.0003046433 0.0003316454 0.0012810511 0.0101759715
+1  bdmsk= 1   delta= 0.0003046433 
+2  bdmsk= 1   delta= 0.0003316454 
+3  bdmsk= 1   delta= 0.001281051 
+4  bdmsk= 1   delta= 0.01017597 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5931921 
+[1] 6.626399e-05 7.337503e-05 2.384744e-04 2.232209e-03
+1  bdmsk= 1   delta= 6.626399e-05 
+2  bdmsk= 1   delta= 7.337503e-05 
+3  bdmsk= 1   delta= 0.0002384744 
+4  bdmsk= 1   delta= 0.002232209 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5931919 
+[1] 1.449884e-05 1.611222e-05 5.050843e-05 4.892324e-04
+1  bdmsk= 1   delta= 1.449884e-05 
+2  bdmsk= 1   delta= 1.611222e-05 
+3  bdmsk= 1   delta= 5.050843e-05 
+4  bdmsk= 1   delta= 0.0004892324 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5931919 
+[1] 3.191473e-06 3.550431e-06 1.098594e-05 1.077556e-04
+1  bdmsk= 1   delta= 3.191473e-06 
+2  bdmsk= 1   delta= 3.550431e-06 
+3  bdmsk= 1   delta= 1.098594e-05 
+4  bdmsk= 1   delta= 0.0001077556 
+fac before = 1  after= 1 
+fac= 1  ssnew=0.5931919 
+[1] "End of test file 'Lipo_1.R' "
+[1] 0.0005821842
+1  bdmsk= 1   delta= 0.0005821842 
+fac before = 1  after= 1 
+fac= 1  ssnew=44.15591 
+[1] 2.290336e-06
+1  bdmsk= 1   delta= 2.290336e-06 
+fac before = 1  after= 1 
+fac= 1  ssnew=44.15579 
+[1] 2.882198e-08
+1  bdmsk= 1   delta= 2.882198e-08 
+fac before = 1  after= 1 
+fac= 1  ssnew=44.15579 
+[1] "End of test file 'Rumford_1.R' "
+[1]  -3.473284   1.163690  38.633505 138.111259
+1  bdmsk= 1   delta= -3.473284 
+2  bdmsk= 1   delta= 1.16369 
+3  bdmsk= 1   delta= 38.63351 
+4  bdmsk= 1   delta= 138.1113 
+fac before = 1  after= 1 
+fac= 1  ssnew=672.6442 
+[1]   1.3078024   0.4789314 100.1228413 -96.4391315
+1  bdmsk= 1   delta= 1.307802 
+2  bdmsk= 1   delta= 0.4789314 
+3  bdmsk= 1   delta= 100.1228 
+4  bdmsk= 1   delta= -96.43913 
+fac before = 1  after= 1 
+fac= 1  ssnew=4870.089 
+fac= 0.5  ssnew=855.178 
+fac= 0.25  ssnew=558.6033 
+[1]    0.8802551    0.7388084  127.7010506 -120.8587642
+1  bdmsk= 1   delta= 0.8802551 
+2  bdmsk= 1   delta= 0.7388084 
+3  bdmsk= 1   delta= 127.7011 
+4  bdmsk= 1   delta= -120.8588 
+fac before = 0.5  after= 0.5 
+fac= 0.5  ssnew=391.5895 
+[1]   0.003327744   0.879557501  52.350826736 -42.517194797
+1  bdmsk= 1   delta= 0.003327744 
+2  bdmsk= 1   delta= 0.8795575 
+3  bdmsk= 1   delta= 52.35083 
+4  bdmsk= 1   delta= -42.51719 
+fac before = 1  after= 1 
+fac= 1  ssnew=1201.223 
+fac= 0.5  ssnew=145.4493 
+[1] -0.1106628  0.2398311 -9.5100290 17.1923661
+1  bdmsk= 1   delta= -0.1106628 
+2  bdmsk= 1   delta= 0.2398311 
+3  bdmsk= 1   delta= -9.510029 
+4  bdmsk= 1   delta= 17.19237 
+fac before = 1  after= 1 
+fac= 1  ssnew=47.67508 
+[1] -0.007406782 -0.072294451 -0.724663529  0.633509464
+1  bdmsk= 1   delta= -0.007406782 
+2  bdmsk= 1   delta= -0.07229445 
+3  bdmsk= 1   delta= -0.7246635 
+4  bdmsk= 1   delta= 0.6335095 
+fac before = 1  after= 1 
+fac= 1  ssnew=34.39959 
+[1] 0.001347127 0.007613301 0.172330640 0.088613692
+1  bdmsk= 1   delta= 0.001347127 
+2  bdmsk= 1   delta= 0.007613301 
+3  bdmsk= 1   delta= 0.1723306 
+4  bdmsk= 1   delta= 0.08861369 
+fac before = 1  after= 1 
+fac= 1  ssnew=34.3766 
+[1] -0.0002443522 -0.0008875600 -0.0371687876  0.0176883989
+1  bdmsk= 1   delta= -0.0002443522 
+2  bdmsk= 1   delta= -0.00088756 
+3  bdmsk= 1   delta= -0.03716879 
+4  bdmsk= 1   delta= 0.0176884 
+fac before = 1  after= 1 
+fac= 1  ssnew=34.37647 
+[1]  0.0000281968  0.0001028369  0.0042250112 -0.0018274060
+1  bdmsk= 1   delta= 2.81968e-05 
+2  bdmsk= 1   delta= 0.0001028369 
+3  bdmsk= 1   delta= 0.004225011 
+4  bdmsk= 1   delta= -0.001827406 
+fac before = 1  after= 1 
+fac= 1  ssnew=34.37647 
+[1] -3.277936e-06 -1.186429e-05 -4.908647e-04  2.160057e-04
+1  bdmsk= 1   delta= -3.277936e-06 
+2  bdmsk= 1   delta= -1.186429e-05 
+3  bdmsk= 1   delta= -0.0004908647 
+4  bdmsk= 1   delta= 0.0002160057 
+fac before = 1  after= 1 
+fac= 1  ssnew=34.37647 
+[1] "End of 'Sulfi_1.R' file."
+[1]  9.001062e-04  6.711336e-02 -1.473818e+02 -5.136677e+01
+1  bdmsk= 1   delta= 0.0009001062 
+2  bdmsk= 1   delta= 0.06711336 
+3  bdmsk= 1   delta= -147.3818 
+4  bdmsk= 1   delta= -51.36677 
+fac before = 1  after= 1 
+fac= 1  ssnew=2.175672 
+[1]  0.03862459 -2.93740644 -0.04296268  0.81077676
+1  bdmsk= 1   delta= 0.03862459 
+2  bdmsk= 1   delta= -2.937406 
+3  bdmsk= 1   delta= -0.04296268 
+4  bdmsk= 1   delta= 0.8107768 
+fac before = 1  after= 1 
+fac= 1  ssnew=1.62105 
+[1]  -20.92487   99.04689  154.11977 -156.12818
+1  bdmsk= 1   delta= -20.92487 
+2  bdmsk= 1   delta= 99.04689 
+3  bdmsk= 1   delta= 154.1198 
+4  bdmsk= 1   delta= -156.1282 
+fac before = 1  after= 1 
+fac= 1  ssnew=218481.3 
+fac= 0.5  ssnew=55806.91 
+fac= 0.25  ssnew=14403.57 
+fac= 0.125  ssnew=3420.164 
+fac= 0.0625  ssnew=690.8773 
+fac= 0.03125  ssnew=131.2164 
+fac= 0.015625  ssnew=12.94169 
+fac= 0.0078125  ssnew=1.629111 
+fac= 0.00390625  ssnew=1.411415 
+[1]  -141.6069   379.0759  4636.4268 -4638.4725
+1  bdmsk= 1   delta= -141.6069 
+2  bdmsk= 1   delta= 379.0759 
+3  bdmsk= 1   delta= 4636.427 
+4  bdmsk= 1   delta= -4638.473 
+fac before = 0.0078125  after= 0.0078125 
+fac= 0.0078125  ssnew=7474.411 
+fac= 0.00390625  ssnew=822.1239 
+fac= 0.001953125  ssnew=61.13603 
+══ Warnings ════════════════════════════════════════════════════════════════════
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(...)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): This is a singular gradient problem ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+── Warning (???): (code run outside of `test_that()`) ──────────────────────────
+Forcing numericDeriv
+Backtrace:
+ 1. nlsj::nlsj(formula = NLSformula, data = NLStestdata, start = NLSstart)
+
+══ Failed tests ════════════════════════════════════════════════════════════════
+── Failure (test-Isom_1.R:61:2): testing m objects ─────────────────────────────
+as.vector(resid(output_nls)) not equal to as.vector(resid(output_nlsj)).
+24/24 mismatches (average diff: 3.87)
+[1] -0.1236 - 3.335 == -3.459
+[2] -0.0428 - 2.263 == -2.306
+[3]  0.3116 - 6.358 == -6.047
+[4] -0.1946 - 4.468 == -4.662
+[5] -0.1358 - 0.543 == -0.679
+[6] -0.3049 - 0.231 == -0.536
+[7] -0.3114 - 2.600 == -2.912
+[8] -0.0494 - 2.300 == -2.349
+[9] -0.6885 - 2.954 == -3.643
+...
+── Failure (test-Isom_1.R:74:2): testing m objects ─────────────────────────────
+deviance(output_nls) not equal to deviance(output_nlsj).
+1/1 mismatches
+[1] 3.23 - 579 == -575
+── Failure (test-Isom_1.R:81:2): testing m objects ─────────────────────────────
+output_nls$m$gradient() not equal to attr(output_nlsj$m$resid(), "gradient").
+72/72 mismatches (average diff: 1.11)
+[1] -0.833 - -9.18e-16 == -0.833
+[2] -0.700 - -7.35e-16 == -0.700
+[3] -1.213 - -1.17e-15 == -1.213
+[4] -1.249 - -1.17e-15 == -1.249
+[5] -0.114 - -1.86e-16 == -0.114
+[6] -0.117 - -1.70e-16 == -0.117
+[7] -0.404 - -5.63e-16 == -0.404
+[8] -0.474 - -6.03e-16 == -0.474
+[9] -0.474 - -6.41e-16 == -0.474
+...
+── Failure (test-Isom_1.R:94:2): testing m objects ─────────────────────────────
+output_nls$m$getPars() not equal to output_nlsj$m$getPars().
+3/3 mismatches (average diff: 1.39e+14)
+[1] 0.0708 - 1.37e+14 == -1.37e+14
+[2] 0.0377 - 1.40e+14 == -1.40e+14
+[3] 0.1671 - 1.41e+14 == -1.41e+14
+── Failure (test-Isom_1.R:103:2): testing m objects ────────────────────────────
+output_nls$m$Rmat() not equal to output_nlsj$m$Rmat().
+Lengths differ: 16 is not 9
+── Failure (test-Sulfi_1.R:85:2): testing m objects ────────────────────────────
+output_nls$m$getPars() not equal to output_nlsj$m$getPars().
+4/4 mismatches (average diff: 9.34e-07)
+[1]  -1.821 -  -1.821 ==  1.62e-08
+[2]   0.267 -   0.267 ==  6.60e-08
+[3] 162.594 - 162.594 ==  2.60e-06
+[4]  81.244 -  81.244 == -1.05e-06
+
+[ FAIL 6 | WARN 11 | SKIP 0 | PASS 51 ]
+Error: Test failures
+Execution halted

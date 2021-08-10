@@ -1,0 +1,10 @@
+# NRAIA-badCl.R
+rm(list=ls())
+library(NRAIA)
+library(nlsr)
+Nform <- conc ~ Asym *( 1 - exp(-exp(lrc) * (Time - c0)))
+Nstart = c(Asym = 1, c0=1, lrc = log(0.25))
+badCl <- model2rjfun(modelformula=Nform, pvec=Nstart, data=Chloride)
+badCl(Nstart)
+N2 <- c(Asym = 1, c0=1, lrc = 5)
+badCl(N2)
