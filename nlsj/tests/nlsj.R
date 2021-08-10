@@ -102,17 +102,21 @@ stopifnot(all.equal(logLik(fit2), logLik(fit0), tolerance = 1e-8))
 DNase1 <- subset(DNase, Run == 1)
 DNase1$wts <- rep(8:1, each = 2)
 fm1 <- nlsj(density ~ SSlogis(log(conc), Asym, xmid, scal),
-           data = DNase1, weights = wts)
+           data = DNase1, weights = DNase1$wts)
 summary(fm1)
+fm1start <- getInitial(density ~ SSlogis(log(conc), Asym, xmid, scal), data = DNase1)
+fm1a<- nlsj(density ~ SSlogis(log(conc), Asym, xmid, scal), start<-fm1start,
+            data = DNase1, weights = DNase1$wts)
+summary(fm1a)
 
 ## directly
 fm2 <- nlsj(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
            data = DNase1, weights = wts,
            start = list(Asym = 3, xmid = 0, scal = 1))
 summary(fm2)
-stopifnot(all.equal(coef(summary(fm2)), coef(summary(fm1)), tolerance = 1e-6))
-stopifnot(all.equal(residuals(fm2), residuals(fm1), tolerance = 1e-5))
-stopifnot(all.equal(fitted(fm2), fitted(fm1), tolerance = 1e-6))
+stopifnot(all.equal(coef(summary(fm2)), coef(summary(fm1a)), tolerance = 1e-6))
+stopifnot(all.equal(residuals(fm2), residuals(fm1a), tolerance = 1e-5))
+stopifnot(all.equal(fitted(fm2), fitted(fm1a), tolerance = 1e-6))
 fm2a <- nlsj(density ~ Asym/(1 + exp((xmid - log(conc)))),
             data = DNase1, weights = wts,
             start = list(Asym = 3, xmid = 0))

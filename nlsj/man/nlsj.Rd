@@ -5,6 +5,7 @@
 
 \name{nlsj}
 \alias{nlsj}
+\alias{nlsgn}
 \title{Nonlinear Least Squares}
 \description{
   Determine the nonlinear (weighted) least-squares estimates of the
@@ -168,6 +169,8 @@ nlsj(formula, data, start, control, algorithm,
 }
 \examples{
 \dontshow{od <- options(digits=5)}
+## nlsj does NOT support selfStart models fully
+
 require(graphics)
 
 DNase1 <- subset(DNase, Run == 1)
@@ -296,6 +299,8 @@ try(nlm1 <- update(nlmod, control = list(tol = 1e-7))) # where central diff. wor
 ## --> convergence tolerance  4.997e-8 (in 11 iter.)
 ## IGNORE_RDIFF_END
 
+
+## INDEXEX PARAMETERS: not yet in nlsj -- so this is suppressed for now
 ## The muscle dataset in MASS is from an experiment on muscle
 ## contraction on 21 animals.  The observed variables are Strip
 ## (identifier of muscle), Conc (Cacl concentration) and Length
@@ -310,9 +315,9 @@ with(MASS::muscle, table(Strip)) # 2, 3 or 4 obs per strip
 
 ## We first use the plinear algorithm to fit an overall model,
 ## ignoring that alpha and beta might vary with Strip.
-musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
-              start = list(th = 1), algorithm = "plinear")
-summary(musc.1)
+#? musc.1 <- nls(Length ~ cbind(1, exp(-Conc/th)), MASS::muscle,
+#?               start = list(th = 1), algorithm = "plinear")
+#? summary(musc.1)
 
 ## Then we use nls' indexing feature for parameters in non-linear
 ## models to use the conventional algorithm to fit a model in which
@@ -320,10 +325,10 @@ summary(musc.1)
 ## by the previously fitted model.
 ## Note that with indexed parameters, the starting values must be
 ## given in a list (with names):
-b <- coef(musc.1)
-musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
-              start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
-summary(musc.2)
+#? b <- coef(musc.1)
+#? musc.2 <- nls(Length ~ a[Strip] + b[Strip]*exp(-Conc/th), MASS::muscle,
+#?               start = list(a = rep(b[2], 21), b = rep(b[3], 21), th = b[1]))
+#? summary(musc.2)
 })
 ## IGNORE_RDIFF_END
 \dontshow{options(od)}

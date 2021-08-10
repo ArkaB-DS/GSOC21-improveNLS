@@ -297,7 +297,7 @@ getlen <- function(lnames) {
    rhs <- eval(rhsexpr, envir=localdata)
    lhs <- eval(lhsexpr, envir=localdata)
 
-   m <- list(resfun = function(prm) resfun(prm), # ??
+   m <- list(resfun = function(prm) as.numeric(rjfun(prm)), # ??
              resid = function() {- wresb}, #  weighted. NOTE SIGN?? ??callable?
              rjfun = function(prm) rjfun(prm), # ??
              jacobian = function() attr(resb,"gradient"),

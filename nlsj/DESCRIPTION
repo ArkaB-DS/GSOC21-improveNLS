@@ -9,4 +9,4 @@ Description: More about what it does (maybe more than one line)
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 Suggests: MASS
-Imports: graphics, stats
+Imports: graphics, stats, testthat
