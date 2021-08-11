@@ -21,9 +21,9 @@ knitr::opts_chunk$set(echo = TRUE)
 This article reports the particular activities of our Google Summer of Code
 project "Improvements to nls()" that relate to the R code for that function, which
 is intended for the estimation of models written as a formula that has at least
-one parameter that is not estimable via solving a set of linear equations. A
-companion document "Variety in Nonlinear Least Squares Codes" presents an 
-overview of methods for the problem which takes a much wider view of the
+one parameter that is "nonlinear", that is, not estimable via solving a set of 
+linear equations. A companion document **Variety in Nonlinear Least Squares Codes** 
+presents an overview of methods for the problem which takes a much wider view of the
 problem of minimizing a function that can be written as a sum of squared
 terms.
 
@@ -55,7 +55,7 @@ and overly patched. It is, to
 our mind, essentially unmaintainable. Moreover, its underlying methods can and should be improved. Let
 us review some of the issues. We will then propose corrective actions, some of which we have carried out.
 
-## Issue: Convergence and termination tests
+## Feature: Convergence and termination tests
 
 Within the standard documentation (**man** or ".Rd" file) `nls()` warns
 
@@ -236,7 +236,7 @@ but that may simply reflect our history of dealing with more difficult problems 
 the tool-makers users consult when things go wrong. 
 
 
-## Issue: Failure when Jacobian is computationally singular
+## Feature: Failure when Jacobian is computationally singular
 
 This is the infamous "singular gradient" termination. A Google search of 
 
@@ -262,7 +262,7 @@ integration with other code structures and of complexity of the computations tha
 suggest we should use a simplified LM stabilization.)
 
 
-## Issue: Jacobian computation
+## Feature: Jacobian computation
 
 `nls()`, with the `numericDeriv()` function, computes the Jacobian as the "gradient"
 attribute of the residual vector. This is implemented as a mix of R and C code, but
@@ -279,7 +279,7 @@ model, and these Jacobians are the analytic forms. The `nls()` function, after c
 defined, and, if not, uses `numericDeriv` to compute a Jacobian into that attribute. This code
 is within the `nlsModel()` or `nlsModel.pliner()` functions. 
 
-## Issue: Subsetting
+## Feature: Subsetting
 
 `nls()` accepts an argument `subset`. Unfortunately, this acts through the mediation of
 `model.frame` and is not clearly obvious in the source code files `/src/library/stats/R/nls.R` and 
@@ -289,19 +289,22 @@ is within the `nlsModel()` or `nlsModel.pliner()` functions.
 - implementation via model.frame
 - other concerns
 
-## Issue: na.action
+## Feature: na.action
 
 `na.action` is an argument to the `nls()` function, but it does not appear in obviously in the
-source code ...??
+source code, ...??
 
-## Issue: model frame
+?? Need some examples. 
+?? Do na.omit and na.exclude work through model.frame? Seems likely, but should test.
+
+## Feature: model frame
 
 `model` is an argument to the `nls()` function, but it does not appear obviously in the
 source code ...??
 
 ## Issue: documentation of results
 
-We have noticed that there are some important issues relating to the documentation of residuals,
+We have noticed that there are some important details relating to the documentation of residuals,
 fits, and related objects computed by R modeling functions.
 
 The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` are UNWEIGHTED.
@@ -314,7 +317,7 @@ deviance). It is likely that the trace display is embedded in the Fortran of the
 routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
 unfortunate for users.
 
-## Issue: sources of data
+## Feature: sources of data
 
 `nls()` can be called without specifying the `data` argument. In this case, it will
 search in the available environments (i.e., workspaces) for suitable data objects. 
@@ -327,7 +330,7 @@ Nevertheless, to provide compatible behaviour with `nls()`, we will need to ensu
 that equivalent behaviour is guaranteed.
 
 
-## Issue: missing start vector and self-starting models
+## Feature: missing start vector and self-starting models
 
 Nonlinear estimation algorithms are almost all iterative and need a set of starting
 parameters. `nls()` offers a special class of modeling formulae called **selfStart** 
@@ -502,7 +505,7 @@ This is a much smaller result object than the one `nls()` returns. On the other 
 explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
 counts of evaluations are also returned.
 
-## Issue: partially linear models and their specification
+## Feature: partially linear models and their specification
 
 Specifying a model to a solver should, ideally, use the same syntax across
 solver tools. Unfortunately, R allows multiple approaches.
@@ -663,7 +666,7 @@ This was in response to an email to Dough bates on Jun 29, 2021 from John Nash.
     In both there is the recursive call, which must have a purpose I don't understand.
 ```
 
-## Issue: indexed parameters
+## Feature: indexed parameters
 
 The **man** file for `nls()` includes the following example of a situation in which
 parameters are indexed. It also uses the "plinear" option as an added complication.
@@ -818,7 +821,7 @@ Some questions ???
 ??? this is for the quick testing of sets of problems --- 
 documented in TestsDoc.
 
-# Output of the project
+# Outputs of the project
 
 The project output is available in the Git repository https://gitlab.com/nashjc/improvenls
 
