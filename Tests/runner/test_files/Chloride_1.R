@@ -36,3 +36,5 @@ NLSupper<- c(Inf,Inf,Inf)
 NLSweights <- rep(1,length(time))
 NLSsubset <- 1:length(time)
 rm(conc,time,Asym,prop,lrc)
+#  coef(bestsol)=c(Asym=39.09490, prop=  0.82844, lrc= -1.84186)
+#  residual sumsquares =  1.8793  on  54 observations

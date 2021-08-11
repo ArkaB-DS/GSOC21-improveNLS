@@ -24,3 +24,5 @@ NLSupper<- c(Inf,Inf,Inf)
 NLSsubset <- 1:length(y)
 NLSweights <- rep(1,length(y))
 rm(y,tt,b1,b2,b3)
+# best solution: residual sumsquares =  2.5873  on  12 observations
+#  coef(bestsol) = c(b1=196.18626,  b2=49.09164, b3= 0.31357)
