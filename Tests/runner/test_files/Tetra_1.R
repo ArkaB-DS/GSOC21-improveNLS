@@ -4,9 +4,7 @@
 # The two columns are:This data frame contains the following columns:
 # `time`:  a numeric vector of time since drug administration (hr).
 # `conc`:  a numeric vector of tetracycline concentrations.
-
 # }
-
 
 # Use the Tetra data from NRAIA package
 
@@ -29,3 +27,10 @@ NLSupper<- c(Inf,Inf,Inf,Inf)
 NLSweights <- rep(0.25,length(time))
 NLSsubset <- 1:length(time)
 rm(lrc1,lrc2,A1,A2,time,conc)
+# tnls <- nls(NLSformula, start=NLSstart, data=NLSdata, trace=TRUE)
+# tnls
+# library(nlsr)
+# tnlx <- nlxb(NLSformula, start=NLSstart, data=NLSdata, trace=TRUE)
+# tnlx
+# coef(tnlx)
+## best residual sumsquares =  0.62247  on  9 observations at -2.74624  3.46478  1.33361  0.89973 
