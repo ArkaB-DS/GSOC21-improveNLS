@@ -3,8 +3,7 @@
 # sulfisoxazole.
 # The two columns are:This data frame contains the following columns:
 # `time`:  a numeric vector giving the time since drug administration (min).
-# `conc`:  a numeric vector giving the observed concentration of sulfisoxazole (µg/ml).
-
+# `conc`:  a numeric vector giving the observed concentration of sulfisoxazole (?g/ml).
 # }
 
 
@@ -31,3 +30,5 @@ NLSupper<- c(Inf,Inf,Inf,Inf)
 NLSweights <- rep(1,length(time))
 NLSsubset <- 1:length(time)
 rm(time,conc,lrc1,lrc2,A1,A2)
+## tnls <- nls(NLSformula, data=NLSdata, start=NLSstart, trace=TRUE)
+## deviance(tnls) # [1] 34.37647 at -1.82148   0.26696 162.59436  81.24406
