@@ -4,9 +4,7 @@
 # The two columns are:This data frame contains the following columns:
 # `time`: a numeric vector giving the time since drug administration (min).
 # `conc`: a numeric vector giving the observed concentration of saccharin.
-
 # }
-
 
 # Use the Sacch2 data from NRAIA package
 
@@ -30,3 +28,38 @@ NLSupper<- c(Inf,Inf,Inf,Inf)
 NLSweights <- rep(1,length(time))
 NLSsubset <- 1:length(time)
 rm(Dose,lKa,lKe,lCl,time,conc)
+# library(nlsr)
+# rjsac<-model2rjfun(NLSformula, data=Sacch2, pvec=NLSstart)
+# tnlxb <- nlxb(NLSformula, data=NLSdata, start=NLSstart, trace=TRUE)
+# ormod<-rjsac(NLSstart)
+# ormod
+# NLSstart
+# 
+# print(tnlxb)
+# tnls<- nls(NLSformula, data=NLSdata, start=NLSstart)
+# print(tnls)
+# coef(tnlxb)
+# fm1 <- nls(conc ~ SSfol(1.0, time, lKe, lKa, lCl), data = NLSdata)
+# summary(fm1)
+# ## seems like not enough data to fit model
+# 
+# # str(Sacch2)
+# all.equal(Sacch2$time, time)
+# all.equal(Sacch2$conc, conc)
+# 
+# xyplot(conc ~ time, Sacch2, type = c("g", "b"),
+#        xlab = "Time since drug administration (min)",
+#        ylab = "Saccharin concentration", aspect = "xy")
+# xyplot(conc ~ time, data = Sacch2, type = c("g", "b"),
+#        scales = list(y = list(log = 2)), aspect = 'xy',
+#        xlab = "Time since drug administration (min)",
+#        ylab = "Saccharin concentration")
+# ## Not run: 
+# ## fm1 <- nls(conc ~ SSfol(1.0, time, lKe, lKa, lCl), data = Sacch2)
+# ## summary(fm1)
+# library(minpack.lm)
+# fm1 <- nlsLM(conc ~ SSfol(1.0, time, lKe, lKa, lCl), data = Sacch2)
+# summary(fm1)
+# xpred <- seq(0, 140, len = 51)
+# ypred <- predict(fm1, list(time = xpred, Dose = rep(1.0, length(xpred))))
+# lines(xpred, ypred)

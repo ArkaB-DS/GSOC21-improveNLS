@@ -11,3 +11,4 @@ NLSupper <- c(b1=500,b2=100,b3=.25)
 # residual sumsquares =  29.993  on  12 observations
 # coef(bestsol) = c(b1=500.000, b2=87.942, b3=0.250)
 # Note: nls(algorithm="port") gives residual sumsquares = 30, at 500.00  87.94   0.25 
+# minpack.lm::nlsLM failes miserably, but gives VERY strange intermediate output

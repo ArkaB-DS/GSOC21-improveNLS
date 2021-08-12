@@ -39,4 +39,23 @@ NLSlower<- c(-Inf,-Inf,-Inf)
 NLSupper<- c(Inf,Inf,Inf)
 NLSweights <- rep(1,length(n.pent))
 NLSsubset <- 1:length(n.pent)
+NLSstart1 <-c(b1=1, b2 = b2, b3 = b3, b4 = b4) # a starting vector (named!)
 rm(b2,b3,b4,rate,hyd,iso.pen,n.pent)
+##  tx <- nlxb(NLSformula, start=NLSstart, data=NLSdata)
+# residual sumsquares =  414.6, at b2=-0.045945, b3=  0.105282, b4 =0.010473 
+## Nonlinear regression model
+## model: rate ~ b3 * (n.pent - iso.pen/1.632)/(1 + b2 * hyd + b3 * n.pent +     b4 * iso.pen)
+## data: NLSdata
+## b2      b3      b4    .lin 
+## 0.0708  0.0377  0.1671 35.9201 
+## residual sum-of-squares: 3.23
+## Number of iterations to convergence: 7 
+## Achieved convergence tolerance: 6.24e-06
+## NLSformula1 <- rate ~ b1*b3*(n.pent - iso.pen/1.632)/(1+b2*hyd+b3*n.pent+b4*iso.pen)
+## txn0 <- nls(NLSformula, start=NLSstart, data=NLSdata) # singular gradient
+## txn <- nls(NLSformula, start=NLSstart, data=NLSdata, algorith="plinear") 
+## summary(txn) # shows that tx1 below gets SEs right
+## print(txn)
+## tx1 <- nlxb(NLSformula1, start=NLSstart1, data=NLSdata)
+## print(tx1)
+## coef(tx1)

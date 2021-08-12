@@ -4,9 +4,7 @@
 # The two columns are:This data frame contains the following columns:
 # `time`:  a numeric vector giving the time since the beginning of the experiment (hr)
 # `temp`:  a numeric vector giving the temperature (degrees Fahrenheit) of the cannon.
-
-# }
-
+# The model has just 1 parameter.}
 
 # Use the Rumford data from NRAIA package
 ## DATA
@@ -26,3 +24,18 @@ NLSupper<- c(Inf)
 NLSweights <- rep(1, length(time))
 NLSsubset<-1:length(time)
 rm(tc,time, temp)
+## tnls0 <- nls(NLSformula, start=NLSstart, data=NLSdata)
+## print(tnls0)
+## tc = -0.00942    residual sum-of-squares: 44.2
+## NLSformula1 <-temp ~ 60 + 70*lin* exp(tc * time)
+## NLSstart1<-c(lin=1, tc=-0.01)
+## NLSformula2 <-temp ~ 60 * lin + 70 * exp(tc * time)
+## NLSstart2<-c(lin=1, tc=-0.01)
+## library(nlsr)
+## tnlx0 <- nlxb(NLSformula, start=NLSstart, data=NLSdata)
+## print(tnlx0)
+## tnlx1 <- nlxb(NLSformula1, start=NLSstart1, data=NLSdata)
+## print(tnlx1)
+## tnlx2 <- nlxb(NLSformula2, start=NLSstart2, data=NLSdata)
+## print(tnlx2)
+
