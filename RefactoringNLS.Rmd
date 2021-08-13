@@ -285,9 +285,11 @@ is within the `nlsModel()` or `nlsModel.pliner()` functions.
 `model.frame` and is not clearly obvious in the source code files `/src/library/stats/R/nls.R` and 
 `/src/library/stats/src/nls.C`. 
 
-- implementation via weights
-- implementation via model.frame
-- other concerns
+While the implementation of subset at the level of the call to `nls()` has a certain
+attractiveness, it does mean that the programmer of the solver needs to be aware of the
+source (and value) of objects such as the data, residuals and Jacobian. By preference, 
+we would implement subsetting by means of zero-value weights, with observation counts
+(and degrees of freedom) computed via the non-zero weights.
 
 ## Feature: na.action
 
@@ -298,9 +300,10 @@ https://stats.idre.ucla.edu/r/faq/how-does-r-handle-missing-values/
 
 The typical default action, which can be seen by using the command `getOption("na.action")`
 is `na.omit`. This option essentially presents computations with data with all observations
-containing any missing values omitted. `na.exclude` does much the same for computations, 
-but keeps the rows with NA elements so that predictions are in the correct row position.
-We recommend that workers actually test output to verify behaviour is as wanted.
+containing any missing values (i.e. any row of a data frame with an NA) omitted. 
+`na.exclude` does much the same for computations, but keeps the rows with NA elements so 
+that predictions are in the correct row position. We recommend that workers actually test 
+output to verify behaviour is as wanted.
 
 A succinct answer is given in https://stats.stackexchange.com/questions/492955/should-i-use-na-omit-or-na-exclude-in-a-linear-model-in-r
 
@@ -313,64 +316,116 @@ rows so you won't as easily be able to compare.
 `na.pass` simply passes on data "as is", while `na.fail` will essentially stop if any missing
 values are present.
 
-?? Do na.omit and na.exclude work through model.frame? Seems likely, but could test.??
-
 ## Feature: model frame
 
-`model` is an argument to the `nls()` function, but it does not appear obviously in the
-source code ...??
+`model` is an argument to the `nls()` function, which is documented
 
-## Issue: documentation of results
+> **model** logical. If true, the model frame is returned as part of the object. Default is FALSE.
 
-We have noticed that there are some important details relating to the documentation of residuals,
-fits, and related objects computed by R modeling functions.
-
-The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` are UNWEIGHTED.
-But if we return `ans` from `nls()` or `minpack.lm::nlsLM` or our new `nlsj` (interim package), 
-then `ans$m$resid()` is WEIGHTED.
-
-As the `nls()` **man** page states, when the "port" algorithm is used with the `trace` argument
-TRUE, the iterations display the objective function value which is 1/2 the sum of squares (or 
-deviance). It is likely that the trace display is embedded in the Fortran of the `nlminb`
-routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
-unfortunate for users.
+Indeed, the argument only appears when `nls()` is about to return its result object, and the
+element `model` is NULL unless the calling argument `model` is TRUE. (Using the same name could
+be confusing.) However, the model frame is used within the function code in the form of an object
+`mf`. 
 
 ## Feature: sources of data
 
 `nls()` can be called without specifying the `data` argument. In this case, it will
 search in the available environments (i.e., workspaces) for suitable data objects. 
-We do NOT like this approach. R allows users to leave many objects in the default
-(.GlobalEnv) workspace. Moreover, users have to actively suppress saving this 
-workspace (`.RData`) on exit, and any such file in the path when R is launched will
-be loaded. 
+We do NOT like this approach, but it is "the R way". R allows users to leave many 
+objects in the default (.GlobalEnv) workspace. Moreover, users have to actively 
+suppress saving this workspace (`.RData`) on exit, and any such file in the path 
+when R is launched will be loaded. The overwhelming proportion of R users in our
+acquaintance avoid saving the workspace because of the danger of lurking data and
+functions which may cause unwanted results.
 
 Nevertheless, to provide compatible behaviour with `nls()`, we will need to ensure
-that equivalent behaviour is guaranteed.
-
+that equivalent behaviour is guaranteed. Furthermore, we need to test that the 
+operation is correct. 
 
 ## Feature: missing start vector and self-starting models
 
 Nonlinear estimation algorithms are almost all iterative and need a set of starting
-parameters. `nls()` offers a special class of modeling formulae called **selfStart** 
+parameters. `nls()` offers a special class of modeling functions called **selfStart** 
 models. There are a number of these in base R (see list below) and others in R packages
-such as CRAN package nlraa (@MiguezNLRAA2021). Unfortunately, the structure of the programming of 
+such as CRAN package `nlraa` (@MiguezNLRAA2021), as well as the now-archived package
+`NRAIA`. Unfortunately, the structure of the programming of 
 these is such that the methods by which initial parameters are computed is entangled
 with the particularities of the `nls()` code. Though there is a `getInitial()` function,
-this is not easy to use to simply compute the initial parameter estimates.
+this is not easy to use to simply compute the initial parameter estimates, in part 
+because it may call `nls()`. 
 
-The following example shows how the `SSlogis` selfStart function can generate a set
+In the example below, we show how the `SSlogis` selfStart function can generate a set
 of initial parameters for a 3-parameter logistic curve. The form used by `SSlogis`
 is
 
-```
-y ~ Asym/(1+exp((xmid-tt)/scal))
-```
+$$ y \sim Asym/(1+exp((xmid-tt)/scal)) $$
+
 The example shows how these starting parameters can be transformed to those of 
 another form of the model, namely,
 
+$$ y \sim b1/(1 + b2*exp(-b3*t)) $$
+
+Let us look at the actual code for `SSlogis()` in `R-devel/src/library/stats/R/zzModels.R`:
+
 ```
-y ~ b1/(1 + b2*exp(-b3*t))
+SSlogis <- # selfStart(~ Asym/(1 + exp((xmid - input)/scal)),
+    selfStart(
+        function(input, Asym, xmid, scal)
+        {
+              .expr1 <- xmid - input
+              .expr3 <- exp(.e2 <- .expr1/scal)
+              .expr4 <- 1 + .expr3
+              .value <- Asym/.expr4
+              .actualArgs <- as.list(match.call()[c("Asym", "xmid", "scal")])
+              if(all(vapply(.actualArgs, is.name, NA)))
+              {
+            		  .expr10 <- .expr4^2
+                  .grad <- array(0, c(length(.value), 3L), list(NULL, c("Asym", "xmid", "scal")))
+                  .grad[, "Asym"] <- 1/.expr4
+		              .grad[, "xmid"] <- - (xm <- Asym * .expr3/scal/.expr10)
+		              .grad[, "scal"] <- xm * .e2
+                  dimnames(.grad) <- list(NULL, .actualArgs)
+                  attr(.value, "gradient") <- .grad
+              }
+              .value
+        },
+        initial = function(mCall, data, LHS, ...) {
+              xy <- sortedXyData(mCall[["input"]], LHS, data)
+              if(nrow(xy) < 4) {
+                  stop("too few distinct input values to fit a logistic model")
+              }
+              z <- xy[["y"]]
+              ## transform to proportion, i.e. in (0,1) :
+              rng <- range(z); dz <- diff(rng)
+              z <- (z - rng[1L] + 0.05 * dz)/(1.1 * dz)
+              xy[["z"]] <- log(z/(1 - z))		# logit transformation
+              aux <- coef(lm(x ~ z, xy))
+              pars <- coef(nls(y ~ 1/(1 + exp((xmid - x)/scal)),
+                               data = xy,
+                               start = list(xmid = aux[[1L]], scal = aux[[2L]]),
+                               algorithm = "plinear", ...))
+              setNames(pars [c(".lin", "xmid", "scal")],
+                       mCall[c("Asym", "xmid", "scal")])
+        },
+        parameters = c("Asym", "xmid", "scal"))
 ```
+
+We note that the function includes analytic expressions for the Jacobian ("gradient").
+These could be possibly be useful to R users, especially if documented. Moreover, we
+wonder why the programmers have chosen to save so many quantities in "hidden"
+variables, i.e., with names preceded by ".". These are then not displayed by the `ls()`
+command, making them difficult to access.
+
+In the event that a selfStart model is not available, `nls()` sets all the starting parameters 
+to 1. This is, in our view, tolerable, but could possibly be improved by using a set of values
+that are slightly different e.g., in the case of a model 
+
+$$  y \sim a*exp(-b*x) + c*exp(-d*x)$$
+
+it would be useful to have $b$ and $d$ values different so the Jacobian is not singular. Thus
+some sort of sequence like  1.0, 1.1, 1.2, 1.3 for the four parameters might be better and it
+can be provided quite simply instead of all 1's. 
+
 
 ```{r hobbsSSlogis}
 weed <- c(5.308, 7.24, 9.638, 12.866, 17.069, 23.192, 31.443,
@@ -379,27 +434,24 @@ tt <- 1:12
 
 NLSformula0 <- y ~ b1/(1+b2*exp(-b3*tt))
 NLSformula <- y ~ SSlogis(tt, Asym, xmid, scal)
+NLSformulax <- y ~ Asym/(1+exp((xmid-tt)/scal))
 NLStestdata <- data.frame(y=weed, tt=tt) # should we use standard name?
-NLSstart <- getInitial(NLSformula, NLStestdata)
 s0 <- getInitial(NLSformula, NLStestdata)
 print(s0)
-library(nlsj)
 s1<-list(b1=s0[1], b2=exp(s0[2]/s0[3]), b3=1/s0[3])
 print(as.numeric(s1))
-
-hobblog<-nlsj(NLSformula0, data=NLStestdata, start=s1)
-hobblog
+# No actual improvement because nls() has been already used to get the starting values,
+# but we do get SEs
+hobblog<-nls(NLSformula0, data=NLStestdata, start=s1)
+summary(hobblog)
+deviance(hobblog)
+# nls fails without selfStart -- singular gradient
+try(hobblogx<-nls(NLSformulax, data=NLStestdata))
+# But Marquardt is able to get a solution easily
+library(nlsr)
+hobblogxx<-nlxb(NLSformulax, data=NLStestdata, start=c(Asym=1, xmid=1, scal=1))
+hobblogxx
 ```
-
-In the event that a selfStart model is not available, `nls()` sets all the starting parameters 
-to 1. This is, in our view, tolerable, but could possibly be improved by using a set of values
-that are slightly different e.g., in the case of a model 
-
-$$  y \tilde a*exp(-b*x) + c*exp(-d*x)$$
-
-it would be useful to have $b$ and $d$ values different so the Jacobian is not singular. Thus
-some sort of sequence like  1.0, 1.1, 1.2, 1.3 for the four parameters might be better and it
-can be provided quite simply instead of all 1s. 
 
 ### selfStart models in base R
 
@@ -425,8 +477,9 @@ Because the Gauss-Newton algorithm is rather unreliable from many starting sets
 of parameters, selfStart models are more than an accessory to `nls()` but a part
 of the infrastructure. However, creating such functions is a lot of work, and their
 documentation (file `./src/library/stats/man/selfStart.Rd`) is quite complicated.
-
-
+We believe that the focus would better be placed on getting good initial parameters,
+possibly with some interactive tools. That is, the emphasis should be on the 
+`getInitial()` function, though avoiding the current calls back to `nls()`.
 
 ## Issue: documentation of the results of running nls()
 
@@ -502,7 +555,7 @@ and if there is an element called `xdata`, it can be accessed as `result$model$x
 
 ### Information that is NOT in the nls result object
 
-`nlsr::nlxb()` solves ostensibly the same problem as `nls()` but only returns
+`nlsr::nlxb()` solves ostensibly the same problem as `nls()` but only claims to return
 
 ```
 coefficients    A named vector giving the parameter values at the supposed solution.
@@ -519,9 +572,51 @@ feval           The number of residual evaluations (sum of squares computations)
 jeval           The number of Jacobian evaluations used.
 ```
 
-This is a much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
+However, actually looking at the structure of a returned result gives a list of 11
+items:
+ $ resid       : num [1:12] 0.0119 -0.0328 0.092 0.2088 0.3926 ...
+  ..- attr(*, "gradient")= num [1:12, 1:3] 0.0271 0.0367 0.0496 0.0666 0.089 ...
+  .. ..- attr(*, "dimnames")=List of 2
+  .. .. ..$ : NULL
+  .. .. ..$ : chr [1:3] "Asym" "xmid" "scal"
+ $ jacobian    : num [1:12, 1:3] 0.0271 0.0367 0.0496 0.0666 0.089 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:3] "Asym" "xmid" "scal"
+ $ feval       : num 31
+ $ jeval       : num 23
+ $ coefficients: Named num [1:3] 196.19 12.42 3.19
+  ..- attr(*, "names")= chr [1:3] "Asym" "xmid" "scal"
+ $ ssquares    : num 2.59
+ $ lower       : num [1:3] -Inf -Inf -Inf
+ $ upper       : num [1:3] Inf Inf Inf
+ $ maskidx     : int(0) 
+ $ weights     : NULL
+ $ formula     :Class 'formula'  language y ~ Asym/(1 + exp((xmid - tt)/scal))
+  .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+ - attr(*, "class")= chr "nlsr"
+
+This is still much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
 explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
-counts of evaluations are also returned.
+counts of evaluations are also returned. We do, however, need to update the `nlsr`
+documentation.(??JN)
+
+### Weights in returned functions from nls()
+
+The functions `resid()` (an alias for `residuals()`) and `fitted()` and `lhs()` are UNWEIGHTED.
+But if we return `ans` from `nls()` or `minpack.lm::nlsLM` or our new `nlsj` (interim package), 
+then `ans$m$resid()` is WEIGHTED.
+
+### Interim output from the "port" algorithm
+
+As the `nls()` **man** page states, when the "port" algorithm is used with the `trace` argument
+TRUE, the iterations display the objective function value which is 1/2 the sum of squares (or 
+deviance). It is likely that the trace display is embedded in the Fortran of the `nlminb`
+routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
+unfortunate for users.
+
+
+
 
 ## Feature: partially linear models and their specification
 
