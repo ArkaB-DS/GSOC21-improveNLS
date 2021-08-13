@@ -292,10 +292,28 @@ is within the `nlsModel()` or `nlsModel.pliner()` functions.
 ## Feature: na.action
 
 `na.action` is an argument to the `nls()` function, but it does not appear in obviously in the
-source code, ...??
+source code, often being handled behind the scenes after referencing the option `na.action`.
+A useful, but possibly dated, description is given in
+https://stats.idre.ucla.edu/r/faq/how-does-r-handle-missing-values/  
 
-?? Need some examples. 
-?? Do na.omit and na.exclude work through model.frame? Seems likely, but should test.
+The typical default action, which can be seen by using the command `getOption("na.action")`
+is `na.omit`. This option essentially presents computations with data with all observations
+containing any missing values omitted. `na.exclude` does much the same for computations, 
+but keeps the rows with NA elements so that predictions are in the correct row position.
+We recommend that workers actually test output to verify behaviour is as wanted.
+
+A succinct answer is given in https://stats.stackexchange.com/questions/492955/should-i-use-na-omit-or-na-exclude-in-a-linear-model-in-r
+
+> The only benefit of `na.exclude` over `na.omit` is that the former will retain the 
+original number of rows in the data. This may be useful where you need to retain the 
+original size of the dataset - for example it is useful when you want to compare 
+predicted values to original values. With `na.omit` you will end up with fewer 
+rows so you won't as easily be able to compare.
+
+`na.pass` simply passes on data "as is", while `na.fail` will essentially stop if any missing
+values are present.
+
+?? Do na.omit and na.exclude work through model.frame? Seems likely, but could test.??
 
 ## Feature: model frame
 
