@@ -39,8 +39,8 @@ rm(Dose,lKa,lKe,lCl,time,conc)
 # tnls<- nls(NLSformula, data=NLSdata, start=NLSstart)
 # print(tnls)
 # coef(tnlxb)
-# fm1 <- nls(conc ~ SSfol(1.0, time, lKe, lKa, lCl), data = NLSdata)
-# summary(fm1)
+fm1 <- nls(conc ~ SSfol(1.0, time, lKe, lKa, lCl), data = NLSdata, trace=TRUE)
+summary(fm1)
 # ## seems like not enough data to fit model
 # 
 # xyplot(conc ~ time, NLSdata, type = c("g", "b"),

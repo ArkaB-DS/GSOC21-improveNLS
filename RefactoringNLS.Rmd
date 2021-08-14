@@ -615,9 +615,6 @@ deviance). It is likely that the trace display is embedded in the Fortran of the
 routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
 unfortunate for users.
 
-
-
-
 ## Feature: partially linear models and their specification
 
 Specifying a model to a solver should, ideally, use the same syntax across
@@ -643,12 +640,12 @@ second is to illustrate how one intuitive choice will not work. In this failed
 attempt, putting the `Asym` parameter in the model causes the `plinear` algorithm
 to try to add another term to the model. We believe this is unfortunate, and would
 like to see a consistent syntax. At the time of writing (end of July 2021) we do
-not have any resolution in mind for this issue.
+not have a resolution for this issue.
 
 ```{r log4ways, echo=TRUE}
 DNase1 <- subset(DNase, Run == 1)
 
-## using a selfStart model
+## using a selfStart model - do not specify the starting parameters
 fm1DNase1 <- nls(density ~ SSlogis(log(conc), Asym, xmid, scal), DNase1)
 summary(fm1DNase1)
 ## the coefficients only:
@@ -656,14 +653,14 @@ coef(fm1DNase1)
 ## including their SE, etc:
 coef(summary(fm1DNase1))
 
-## using conditional linearity
+## using conditional linearity - leave out the Asym parameter
 fm2DNase1 <- nls(density ~ 1/(1 + exp((xmid - log(conc))/scal)),
                  data = DNase1,
                  start = list(xmid = 0, scal = 1),
                  algorithm = "plinear")
 summary(fm2DNase1)
 
-## using conditional linearity AND Asym -- why should it be otherwise?? JN
+## using conditional linearity AND Asym does NOT work
 
 fm2aDNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
                  data = DNase1,
@@ -686,21 +683,6 @@ fm4DNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
 summary(fm4DNase1)
 ```
 
-?? comment this!!
-
-### Further comments on partially linear models
-
-?? should this be moved to the "Goals" for the future part of paper??
-
-Ideally, we believe it would be best to specify all models with a complete set of parameters.
-That is, the model is as it would be written down for use, rather than for estimation. Furthermore,
-we ask if it is possible for us to devise code that will detect linearity, rather than expecting 
-the user to provide the special structure and `algorithm=plinear` setting. Some ideas about a 
-Linear and Nonlinear Discoverer have been
-proposed by @Zhang2011LinNonlin, but these seem to relate to an independent (and hence
-confusing) use of the same term for a class of models that have almost nothing in common
-with the present issue. We have yet (end of July 2021) to consider how we might translate
-ideas for discovery of linearity to code in an improved `nls()` or similar function.
 
 
 ## Issue: code structure
@@ -1053,9 +1035,37 @@ are as follows:
   measuring ("profiling") the code, we can find bottlenecks and replace just those slower 
   parts of the reference code.
 
-- We believe that a setup, solve, and post-solution structure for complicated functions reduces
-  the number of objects that must be kept in appropriate alignment at any one stage in a set
-  of calculations.
+- We believe that a structure that isolates the setup, solve, and post-solution structures 
+  for complicated functions reduces the number of objects that must be kept in appropriate 
+  alignment at any one stage in a set of calculations.
+
+### Consistent specifications of partially linear models
+
+Ideally, we believe it would be best to specify all models with a complete set of parameters.
+That is, the model should be written down for as it would be used, rather than for estimation. 
+The `algorithm="plinear"` setting requires that we leave out the linear parameters. This
+means that we cannot simply change the `algorithm` argument without also changing the 
+`formula`. Moreover, the partially linear parameters appear in the result object
+as `.lin1`, `.lin2`, etc. 
+
+A possible syntax to provide consistency would be to specify the partially linear parameters
+when the `plinear` option is specified. For example, we could use
+
+```
+algorithm="plinear(Asym)"
+```
+
+which would allow for the partially linear algorithm to function and the output of different
+`algorithm` options to be consistent.
+
+Furthermore, we ask if it is possible for us to devise code that will detect linearity, 
+rather than expecting the user to provide the special structure and  setting. Work in this
+area appears to tbe quite limited, with @Birkisson2013 being seemingly a sole contribution.
+Unfortunately, the mention of a "Linear and Nonlinear Discoverer" in @Zhang2011LinNonlin 
+is about a class of models that have almost nothing in common
+with the present issue. The algorithm in @Birkisson2013 will need investigating further,
+but we suspect that it is complicated enough that it will not easily be adapted to 
+an `nls()` style program. Possibly a simpler algorithm may be found.
 
 
 # References
