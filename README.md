@@ -14,14 +14,20 @@ Given the very wide range of applications and features of the `nls()` function, 
 - Heather Turner, University of Warwick
 - Hans W. Borchers
 
+>
+
 ### Project Student 
 - Arkajyoti Bhattacharjee
+
+>
 
 ### Project Outcomes
 - **Final Reports:**
 
   1. [RefactoringNLS](https://gitlab.com/nashjc/improvenls/-/blob/master/RefactoringNLS.pdf)
-  
+
+>
+
 - **Other (informal) Reports:**
 
   2. [PkgFromRbase](https://gitlab.com/nashjc/improvenls/-/blob/master/PkgFromRbase.pdf): explanation of the construction of the [nlspkg](https://gitlab.com/nashjc/improvenls/-/tree/master/nlspkg) from the code in R-base.
@@ -30,7 +36,9 @@ Given the very wide range of applications and features of the `nls()` function, 
   5. [VarietyInNonlinearLeastSquaresCodes](https://gitlab.com/nashjc/improvenls/-/blob/master/VarietyInNonlinearLeastSquaresCodes.pdf): review of the different algorithms and the many choices in their implementation for nonlinear least squares.
   6. [ImproveNLS.bib](https://gitlab.com/nashjc/improvenls/-/blob/master/ImproveNLS.bib): consolidated BibTex bibliography for all documents in this project, possibly with wider application to nonlinear least squares in general
   7. [WorkingDocument4ImproveNLS](https://gitlab.com/nashjc/improvenls/-/blob/master/WorkingDocument4ImproveNLS.pdf): project diary
-  
+
+>
+
 - **Codes (and documentation):**
   
   8. [nlsj](https://gitlab.com/nashjc/improvenls/-/tree/master/nlsj): A refactoring of the `nls()` functionality
