@@ -15,10 +15,10 @@
    deprecated.
 }
 \usage{
-   nlxb(formula, start, trace=FALSE, data, lower=-Inf, upper=Inf,
+   nlxb(formula, start, trace=FALSE, data, subset=NULL, lower=-Inf, upper=Inf,
         masked=NULL, weights=NULL, control)
         
-   nlxbx(formula, start, trace=FALSE, data, lower=-Inf, upper=Inf,
+   nlxbx(formula, start, trace=FALSE, data, subset=NULL, lower=-Inf, upper=Inf,
         masked=NULL, weights=NULL, control)
 
 }
@@ -44,6 +44,11 @@
   \item{data}{
      A data frame containing the data of the variables in the formula. This data may,
      however, be supplied directly in the parent frame. 
+} 
+  \item{subset}{
+     A vector of integers defining the subset of the rows of the \code{data} to be
+     included in the estimation of the parameters. Default is NULL. WARNING: code for
+     subsets is still in testing 2021-8-18.
 } 
   \item{lower}{
      Lower bounds on the parameters. If a single number, this will be applied to all

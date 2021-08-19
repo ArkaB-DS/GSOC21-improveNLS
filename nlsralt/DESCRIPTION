@@ -1,8 +1,8 @@
 Package: nlsralt
 Type: Package
 Title: Functions for Nonlinear Least Squares Solutions -- alternative version
-Version: 2021.6.26
-Date: 2021-06-26
+Version: 2021.8.19
+Date: 2021-08-19
 Authors@R: c( person(given = c("John", "C"), family = "Nash", role =
         c("aut", "cre"), email = "nashjc@uottawa.ca"), 
 	person(given = "Duncan", family =

@@ -73,6 +73,11 @@
      Data frame of variables used by resfn and jacfn to compute the
      required residuals and Jacobian.
 }
+  \item{subset}{
+     A vector of integers defining the subset of the rows of the \code{data} to be
+     included in the estimation of the parameters. Default is NULL. WARNING: code for
+     subsets is still in testing 2021-8-18.
+} 
 
   \item{control}{ 
      A list of controls for the algorithm. These are:

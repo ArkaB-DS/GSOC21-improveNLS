@@ -99,10 +99,17 @@ summary.nlsr <- function(object, ...) {
 
 # coef() function
 coef.nlsr <- function(object, ...) {
-       out <- object$coefficients
-       attr(out,"pkgname")<-"nlsr"
-##       invisible(out)
-       out # JN 170109
+  out <- object$coefficients
+  attr(out,"pkgname")<-"nlsr"
+  ##       invisible(out)
+  out # JN 170109
+}
+
+# deviance() function
+deviance.nlsr <- function(object, ...) {
+  out <- object$ssquares
+  attr(out,"pkgname")<-"nlsr"
+  out
 }
 
 print.nlsr <- function(x, ...) {
