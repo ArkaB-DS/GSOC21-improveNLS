@@ -596,10 +596,10 @@ items:
   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
  - attr(*, "class")= chr "nlsr"
 
-This is still much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
+This is still a much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
 explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
 counts of evaluations are also returned. We do, however, need to update the `nlsr`
-documentation.(??JN)
+documentation. (??JN)
 
 ### Weights in returned functions from nls()
 
@@ -836,16 +836,23 @@ We want
   code, we feel it is incumbent on us to provide such material for our own work, and if
   possible for the existing code.
 
-### Rationalization of formula specification
+### Rationalization of formula specifications
 
-?? note automatic detection of linearity. (Birkisson / Driscoll)
+Below in "Consistent specifications of partially linear models" we point out that
+`nls()` uses a different formula specification from the default for a problem if the 
+`plinear` algorithm is used. This is unfortunate, since the user cannot then simply
+add `algorithm="plinear"` to the call. Moreover, we believe it makes errors more
+likely. We suggest a possible approach to avoiding this issue, but have yet to 
+cast this into working code (2021-8-19).
 
-```
-y ~ x + z + x*z
-y ~ a + b*x +c*z + d * (x*z)  # <-- fully specified
-y ~ a*Fn1(b, c, x, z)/Fn2()
 
-```
+
+<!-- ``` -->
+<!-- y ~ x + z + x*z -->
+<!-- y ~ a + b*x +c*z + d * (x*z)  # <-- fully specified -->
+<!-- y ~ a*Fn1(b, c, x, z)/Fn2() -->
+
+<!-- ``` -->
 
 
 
@@ -882,6 +889,8 @@ We need suitable tests in order:
 
 ### A test runner program
 
+?? Arkajyoti -- let's use some of your NLSCompare documentation here.
+
 When we have a "new" or trial solver function, we would like to know if it gives 
 acceptable results on a range of sample problems of different types, starting
 parameters, input conditions, constraints, subsets, weights or other settings. 
@@ -902,7 +911,7 @@ the pieces are not as complicated as the inter-related parts of the solvers, esp
 `nls()`, the categorization of tests, their documentation, and the structuring to make
 running them straightforward and easy requires much attention to detail.
 
-Some questions ???
+Some questions ??
 
 - do we need a "base" script for each family of test problem, with numbered particular
   cases?
@@ -912,8 +921,7 @@ Some questions ???
   
 - structure to output the results. AB's draft csv file and runner program.??
 
-
-??? this is for the quick testing of sets of problems --- 
+?? this is for the quick testing of sets of problems --- 
 documented in TestsDoc.
 
 # Outputs of the project
@@ -924,15 +932,17 @@ The project output is available in the Git repository https://gitlab.com/nashjc/
 
 - RefactoringNLS.Rms: this document which will become the main report of the project.
 
-- TestsDoc.Rmd: a survey of testing tools in R. ?? need to incorporate MachID and
-  the many tests. ?? Arkajyoti: should we think of working this up into a paper for
-  JSS or the R-Journal? It has more general possibilities and fits into the subject
-  of regression testing, but we would need to provide some literature review. My 
-  view is that this COULD be a long term side-interest for your academic work, but
-  that would depend on your own interests as well as opportunities. Note that this
+- TestsDoc.Rmd: a survey of testing tools in R. It has more general possibilities 
+  and fits into the subject of regression testing, in which case a 
+  more extensive literature review will be needed.  Note that this
   document reflects the work in the the "Problem sets and test infrastructure"
   below.
 
+  <!-- need to incorporate MachID and -->
+  <!-- the many tests. Arkajyoti: should we think of working this up into a paper for -->
+  <!-- JSS or the R-Journal? My  -->
+  <!-- view is that this COULD be a long term side-interest for your academic work, but -->
+  <!-- that would depend on your own interests as well as opportunities. -->
 
 
 ## Informal reports
@@ -966,7 +976,7 @@ These are documents used to discuss particular aspects of our work.
 
 ## Problem sets and test infrastructure
 
-- ?? we need to make sure these are well organized. 
+- ?? we need to make sure these are well organized. -- reference to NLScompare
 
 ## Code and documentation
 
@@ -987,8 +997,9 @@ These are documents used to discuss particular aspects of our work.
 - nlsj: A refactoring of the nls() functionality. `redesign2107.txt` gives some notes.
 
 - nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
-  discovered as a result of this project. Need to add subset correctly and document
-  changes e.g., to numerical derivatives. This is for JN rather than AB.
+  discovered as a result of this project. For example, `nlsr` does not currently
+  use the `subset` argument correctly. We also need to document
+  changes e.g., to numerical derivatives. However, these are tasks for JN rather than AB.
 
 
 ## Strategic choices in a nonlinear model estimation

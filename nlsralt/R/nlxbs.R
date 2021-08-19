@@ -1,4 +1,4 @@
-nlxbx <- function(formula, start, trace = FALSE, data=NULL, subset=NULL, lower = -Inf,
+nlxbs <- function(formula, start, trace = FALSE, data=NULL, subset=NULL, lower = -Inf,
                  upper = Inf, masked = NULL, weights=NULL, control=list()) {
     # A simplified and hopefully robust alternative to finding
     # the nonlinear least squares minimizer that causes
@@ -120,7 +120,7 @@ nlxbx <- function(formula, start, trace = FALSE, data=NULL, subset=NULL, lower =
     ## Call the nlfb function here
 ## ?? problem is getting the data into the tresfn and tjacfn?? How?
 ## which gets data into the functions
-    resfb <- nlfbx(start=pnum, resfn=trjfn, jacfn=trjfn, trace=trace, 
+    resfb <- nlfbs(start=pnum, resfn=trjfn, jacfn=trjfn, trace=trace, 
             data=data, subset, lower=lower, upper=upper, maskidx=maskidx, 
             weights=weights, control=ctrl)
 ##	    control=ctrl, ...)

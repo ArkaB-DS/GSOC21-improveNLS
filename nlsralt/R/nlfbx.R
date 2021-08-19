@@ -1,6 +1,6 @@
 nlfbx <-function(start, resfn, jacfn = NULL, trace = FALSE, 
 		lower = -Inf, upper = Inf, maskidx = NULL, weights=NULL,
-		data=NULL, subset, control=list(), ...){
+		data=NULL, subset=NULL, control=list(), ...){
 #
 #  A simplified and hopefully robust alternative to finding the 
 #  nonlinear least squares minimizer that causes 'formula' to 
@@ -92,7 +92,7 @@ if (trace) {
       }
       ctrl[onename]<-control[onename]
    }
-   # print(ctrl)
+##!   cat("ctrl:"); print(ctrl)
    phiroot<-sqrt(ctrl$phi)
    lamda<-ctrl$lamda
    offset<-ctrl$offset
@@ -111,13 +111,7 @@ if (trace) {
     }
     bdmsk[maskidx]<-0 # fixed parameters
 
-## 140718 get data set up
-#    varnames<-attr(resfn,"varnames")
-#    nvar<-length(varnames)
-#    for (i in 1:nvar){
-#       cmd<-paste(varnames[i],"<-data$",varnames[i],sep='')
-#       eval(parse(text=cmd))
-#    }
+##!     cat("maskidx:"); print(maskidx)
 
 # Change so we can get different numerical
 #   approximations -- and make it possible to get this into jacfn!!??
@@ -144,16 +138,20 @@ if (trace) {
     } else { 
        numjac<-FALSE
     }
-# cat("Starting pnum=")
-# print(pnum)  ?? add with trace??
+##!  cat("Starting pnum=")
+##!  print(pnum)  ##?? add with trace??
 
     if ( is.null(weights) ) {resbest<-resfn(pnum, ...) }
     else {resbest <- resfn(pnum, ...) * sqrt(weights) }
     mres <- length(resbest) # get the number of residuals
-    if (! missing(subset)){
+    cat("subset:")
+    print(subset)
+    if ((! missing(subset)) && (! is.null(subset))){
         nsub <- length(subset)
         if ((nsub < 1) || (nsub > mres)) stop("Subset error")
-    }
+    } else { subset<-1:mres }
+    cat("subsetnew:"); print(subset)
+##!     tmp<-readline()
 
 #??    resbest <- resbest[subset] # LATER!
 #    cat("resbest:")

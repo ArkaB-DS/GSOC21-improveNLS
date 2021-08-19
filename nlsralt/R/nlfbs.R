@@ -1,12 +1,14 @@
-nlfb <-function(start, resfn, jacfn = NULL, trace = FALSE, subset=NULL, 
+nlfbs <-function(start, resfn, jacfn = NULL, trace = FALSE, 
 		lower = -Inf, upper = Inf, maskidx = NULL, weights=NULL,
-		data=NULL, control=list(), ...){
+		data=NULL, subset=NULL, control=list(), ...){
 #
-#  A simplified and hopefully robust alternative to finding the 
+#  An svd-based Gauss-Newton style and hopefully robust alternative to finding the 
 #  nonlinear least squares minimizer that causes 'formula' to 
 #  give a minimal residual sum of squares. 
 #
-#  nlfb is particularly intended to allow for the resolution of 
+## 2021-8-19: modify to only use Identity matrix in Marquardt stabilization
+#
+#  nlfbs is particularly intended to allow for the resolution of 
 #  very ill-conditioned or else near zero-residual problems for 
 #  which the regular nls() function is ill-suited. 
 #  
@@ -24,11 +26,11 @@ nlfb <-function(start, resfn, jacfn = NULL, trace = FALSE, subset=NULL,
 #  ... will need to contain data for other variables that appear in
 #  the functions
 #
-#  This variant uses a qr solution without forming the sum of squares and cross
+#  This variant uses an svd solution without forming the sum of squares and cross
 #  products t(J)%*%J 
 # 
 # Function to display SS and point
-showprms<-function(SS, pnum){
+  showprms<-function(SS, pnum){
     pnames<-names(pnum)
     npar<-length(pnum)
     cat("lamda:",lamda," SS=",SS," at")
@@ -37,7 +39,7 @@ showprms<-function(SS, pnum){
     }
     cat(" ",feval,"/",jeval)
     cat("\n")
-} # end showprms
+  } # end showprms
 
 if (trace) {
    if (is.null(weights)) {
@@ -60,6 +62,7 @@ if (length(lower)!=npar) stop("Wrong length: lower")
 if (length(upper)!=npar) stop("Wrong length: upper")
 if (any(start<lower) || any(start>upper)) stop("Infeasible start")
 if ((! is.null(weights) ) && any(is.na(weights)) ){ stop("Undefined weights") }
+
 if (trace) {
    cat("lower:")
    print(lower)
@@ -89,7 +92,7 @@ if (trace) {
       }
       ctrl[onename]<-control[onename]
    }
-   # print(ctrl)
+##!   cat("ctrl:"); print(ctrl)
    phiroot<-sqrt(ctrl$phi)
    lamda<-ctrl$lamda
    offset<-ctrl$offset
@@ -108,13 +111,7 @@ if (trace) {
     }
     bdmsk[maskidx]<-0 # fixed parameters
 
-## 140718 get data set up
-#    varnames<-attr(resfn,"varnames")
-#    nvar<-length(varnames)
-#    for (i in 1:nvar){
-#       cmd<-paste(varnames[i],"<-data$",varnames[i],sep='')
-#       eval(parse(text=cmd))
-#    }
+##!     cat("maskidx:"); print(maskidx)
 
 # Change so we can get different numerical
 #   approximations -- and make it possible to get this into jacfn!!??
@@ -141,14 +138,25 @@ if (trace) {
     } else { 
        numjac<-FALSE
     }
-# cat("Starting pnum=")
-# print(pnum)  ?? add with trace??
+##!  cat("Starting pnum=")
+##!  print(pnum)  ##?? add with trace??
 
     if ( is.null(weights) ) {resbest<-resfn(pnum, ...) }
     else {resbest <- resfn(pnum, ...) * sqrt(weights) }
+    mres <- length(resbest) # get the number of residuals
+    cat("subset:")
+    print(subset)
+    if ((! missing(subset)) && (! is.null(subset))){
+        nsub <- length(subset)
+        if ((nsub < 1) || (nsub > mres)) stop("Subset error")
+    } else { subset<-1:mres }
+    cat("subsetnew:"); print(subset)
+##!     tmp<-readline()
+
+#??    resbest <- resbest[subset] # LATER!
 #    cat("resbest:")
 #    print(resbest)
-    ssbest<-as.numeric(crossprod(resbest))
+    ssbest<-sum(resbest[subset]^2)
     ssminval <- ssbest*epstol^4
     if (watch) cat("ssminval =",ssminval,"\n")
     feval<-1
@@ -186,7 +194,7 @@ if (trace) {
           ## fn for gradient and residual
           jeval<-jeval+1 # count Jacobians
           if (any(is.na(Jac))) stop("NaN in Jacobian")
-          JTJ<-crossprod(Jac)
+##          JTJ<-crossprod(Jac)
 ##          cat("Jac:\n")
 ##          print(Jac)
 ##          cat("resbest:\n")
@@ -209,25 +217,26 @@ if (trace) {
                 }
              } # bmi
           } # end for loop
-          if (npar == 1) dee <- diag(as.matrix(sqrt(diag(crossprod(Jac)))))
-          else dee <- diag(sqrt(diag(crossprod(Jac))))  # to append to Jacobian
+#          if (npar == 1) dee <- diag(as.matrix(sqrt(diag(crossprod(Jac)))))
+#          else dee <- diag(sqrt(diag(crossprod(Jac))))  # to append to Jacobian
        } # end newjac
        lamroot<-sqrt(lamda)
-       JJ<-rbind(Jac,lamroot*dee, lamroot*phiroot*diag(npar)) # build the matrix
+##       JJ<-rbind(Jac,lamroot*dee, lamroot*phiroot*diag(npar)) # build the matrix
+         JJ<-rbind(Jac, lamroot*phiroot*diag(npar)) # build the matrix -- modified 2021-6-26
        if (watch) {
          cat("JJ\n")
          print(JJ)
        }
-       JQR<-qr(JJ)# ??try
-## ?? need to document more
-       rplus<-c(resbest, rep(0,2*npar))
-# 190809 -- add sqrt and use ssbest. ?? add 1 to avoid 0
-       roff <- max(abs(as.numeric(crossprod(qr.Q(JQR), rplus))))/sqrt(ssbest+1.0)
+       JS <- svd(JJ) # get 
+##?? fix!       roff <- max(abs(as.numeric(crossprod(qr.Q(JQR), rplus))))/sqrt(ssbest+1.0)
        if (watch) cat("roff =", roff,"  converged = ",(roff <= sqrt(epstol)),"\n")
        if (ctrl$rofftest && (roff <= sqrt(epstol))) roffstop <- TRUE
-#        tmp <- readline('cont')
+       if (watch) { cat("rplus:");print(rplus) }
+
+
+## Here compute the delta
        delta<-try(qr.coef(JQR,-rplus)) # Note appended rows of y)
-       if (class(delta)=="try-error") {
+       if (inherits(delta,"try-error")) { ## ?? was (class(delta)=="try-error") 
           if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
           lamda<-laminc*lamda
           newjac<-FALSE # increasing lamda -- don't re-evaluate
@@ -238,6 +247,7 @@ if (trace) {
           gangle <- gproj/sqrt(crossprod(gjty) * crossprod(delta))
           gangle <- 180 * acos(sign(gangle)*min(1, abs(gangle)))/pi
           if (watch) cat("gradient projection = ",gproj," g-delta-angle=",gangle,"\n")
+# ?? wrong position. Need BEFORE gangle calculated
           if (is.na(gproj) || (gproj >= 0) ) { # uphill direction -- should NOT be possible
             if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
             lamda<-laminc*lamda
@@ -245,7 +255,7 @@ if (trace) {
             if (trace) cat(" Uphill search direction\n")
           } else { # downhill
             delta[maskidx]<-0
-            delta<-as.numeric(delta)
+            delta<-as.numeric(delta) ## ?? necessary?
             if (watch) {
               cat("delta:")
               print(delta)
@@ -281,7 +291,8 @@ if (trace) {
               feval<-feval+1 # count evaluations
               resid <- resfn(pnum, ...)
               if (! is.null(weights)) {resid <- resid * sqrt(weights)}
-              ssquares<-as.numeric(crossprod(resid))
+              resid <- resid # ?? necessary?
+              ssquares<-sum(resid[subset]^2)
               if (is.na(ssquares)) ssquares<-.Machine$double.xmax
               if (ssquares>=ssbest) {
                 if (lamda<1000*.Machine$double.eps) lamda<-1000*.Machine$double.eps
@@ -310,7 +321,7 @@ if (trace) {
      } # end main while loop 
     pnum<-as.vector(pnum)
     names(pnum) <- pnames
-    result <- list(resid = resbest, jacobian = Jac, feval = feval, 
+    result <- list(resid = resbest[subset], jacobian = Jac[subset,], feval = feval, 
         jeval = jeval, coefficients = pnum, ssquares = ssbest, lower=lower, upper=upper, 
         maskidx=maskidx, weights=weights, formula=NULL) # chg 190805
 ##    attr(result, "pkgname") <- "nlsr"

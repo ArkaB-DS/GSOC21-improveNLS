@@ -6,8 +6,10 @@
 export(
    nlxb,
    nlxbx,
+   nlxbs,
    nlfb,
    nlfbx,
+   nlfbs,
    wrapnlsr,
    resss,
    resgr,
@@ -20,6 +22,7 @@ export(
    res,
    summary.nlsr,
    coef.nlsr,
+   deviance.nlsr,
    rjfundoc,
    nlsDeriv, 
    codeDeriv,
@@ -43,6 +46,7 @@ importFrom("stats", "deriv", "nls", "pt")
 
 S3method(print, rjfundoc)
 S3method(coef, nlsr)
+S3method(deviance, nlsr)
 S3method(print, nlsr)
 S3method(summary, nlsr)
 S3method(predict, nlsr)
