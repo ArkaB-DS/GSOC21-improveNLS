@@ -1,0 +1,437 @@
+% !TeX root = RJwrapper.tex
+\title{nlsCompare: An R package for comparing nonlinear least squares
+packages in R}
+\author{by Arkajyoti Bhattacharjee\(^1\), John C. Nash\(^2\), and Heather
+Turner\(^3\)}
+
+\maketitle
+
+\abstract{%
+Nonlinear least squares (nls) is extensively used in nonlinear modeling.
+This paper introduces the package \textbf{nlsCompare} that attempts to
+compare the best values of parameters and sum-of-squares in nls problems
+with existing packages' fiunctions for nls like
+\texttt{nls}(\textbf{base}), \texttt{nlsLM}(\textbf{minpack.lm}) and a
+new package \textbf{nlsj} developed by the authors as a product of
+Google Summer of Code (GSoC), 2021.
+}
+
+\hypertarget{introduction}{%
+\subsection{Introduction}\label{introduction}}
+
+While working on the GSoC project \textbf{Improvements to nls()} under
+The R Project for Statistical Computing, the authors realized that to be
+able to compare the improvements made via \texttt{nlsj} and in general,
+to help future developers in the sphere of nls , one needs to compare
+existing packages for nls in R with the best observed reference values.
+
+\textbf{nlsCompare}:
+
+\begin{itemize}
+\tightlist
+\item
+  contains test data files based on packages like \textbf{NRAIA}
+\item
+  contains spreadsheets containing the methods (solvers, algorithms,
+  control settings) to compare
+\item
+  generates easy-to-read spreadsheets that compare existing or new
+  packages for nls with the best reference values yet observed
+\item
+  gives appropriate messages to understand errors or where to do
+  improvements
+\end{itemize}
+
+\textbf{nlscompare} draws inspiration from R's testing library
+\textbf{testthat} and uses ideas from packages like
+\textbf{benchmarkme}. Currently, this has been developed keeping the R
+environment in mind.
+
+\hypertarget{need-for-nlscompare}{%
+\subsection{Need for nlsCompare}\label{need-for-nlscompare}}
+
+Regression testing is useful not only to validate correctness of a
+program but often also for tracking the quality of its output. While
+working on improving \texttt{nls}, author\(^2\) noted that to compare
+the improvements made over \texttt{nls} via \textbf{nlsj}, unit testing
+via \textbf{testthat} is not enough. To be able to add more improvements
+to \textbf{nlsj}, it is required to compare it with other existing
+packages' nls functions. This would allow us to note which methods are
+supported by one function, but not in another and to check the
+consistency of same results from different functions.
+
+\textbf{nlscompare} attempts to achieve the above, outputting a simple
+informative spreadsheet that indicates whether an existing or new
+package's function provides consistent results with the current best
+obseved values. Further, it outputs an error log that indicates whether
+a solver (viz.~\texttt{nls} or \texttt{nlsLM}, etc.) fail in a
+particular problem with particular methods (algorithms, starting points,
+etc.)
+
+\hypertarget{workflow}{%
+\subsection{Workflow}\label{workflow}}
+
+The \textbf{nlscompare} needs to be run in the following hierarchical
+steps -
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \texttt{setup\_dir()}: choose and set the working directory save final
+  csv outputs.
+\item
+  \texttt{machineId()}: create the machine ID to be used in the output
+  csv files.
+\item
+  \texttt{create\_db()}: create dataframe to store database of nls
+  problems
+\item
+  \texttt{create\_elog()}: create dataframe to store error-log in
+  solving the nls problems
+\item
+  \texttt{csv\_exists}: check if the csv files \textbf{nlsDatabase.csv}
+  and \textbf{nlsErrorLog.csv} exist already in the directory chosen in
+  1. Create them if not present
+\item
+  \texttt{run()}: this uses the problem names - \textbf{Name} , the
+  reference values - \textbf{nPars}, \textbf{Parameters} and
+  \textbf{ssquares} from \textbf{problems.csv} , the methods from
+  \textbf{methods.csv}, does the comparisons and error logging and edits
+  the dataframes accordingly.
+\item
+  \texttt{write\_csvs}: write the dataframes returned by \texttt{run}
+  into \textbf{nlsDatabase.csv} and \textbf{nlsErrorLog.csv}
+\item
+  \texttt{rm\_nls} : delete the global variables created due to running
+  of the above functions
+\end{enumerate}
+
+A detailed explanation on how to install and use the package is
+available in the package vignette -
+\href{https://github.com/ArkaB-DS/nlsCompare/blob/master/inst/docs/nlsCompare-Usage.pdf}{nlsCompare:
+How to Use it?}
+
+\hypertarget{package-content-details}{%
+\subsection{Package content details}\label{package-content-details}}
+
+\hypertarget{methods.csv}{%
+\subsubsection{methods.csv}\label{methods.csv}}
+
+This csv file contains three columns:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{solver:} This is the name of the function to be used to solve
+  the nls problem. Currently, it supports \texttt{nlsj::nlsj},
+  \texttt{nls}, \texttt{nlsr::nlxb} and \texttt{minpack.lm::nlsLM}.
+\item
+  \textbf{algorithm:} This is the name of the algorithm used. Currently,
+  supports \texttt{default}, \texttt{plinear}, \texttt{port},
+  \texttt{LM} and \texttt{marquardt}.
+\item
+  \textbf{control:} This contains the package function and its
+  associated control settings to control the iterations
+\end{enumerate}
+
+The \textbf{methods.csv} file is used only extenstively inside the
+\texttt{run} function.
+
+Users can add new solvers, algorithms and controls as in the existing
+csv file.
+
+\hypertarget{problems.csv}{%
+\subsubsection{problems.csv}\label{problems.csv}}
+
+This csv file contains four columns:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Name:} This contains the names of files present in the
+  \textbf{./nlsCompare/inst/scripts} of the package and is used by the
+  \texttt{run()} function to source the \textbf{Name}-ed files inside
+  the function.
+\item
+  \textbf{ssquares:} This contains the best (least) possible sum of
+  squares achievable in the nls problem as present in the
+  \textbf{Name}-ed file.
+\item
+  \textbf{nPars:} The number of parameters in the nls problem present in
+  a \textbf{Name}-ed file.
+\item
+  \textbf{Pars:} This and the adjacent columns contain the best
+  parameter values of the nls problem present in the \textbf{Name}-ed
+  file. The number of adjacent columns that contain parameter values are
+  \textbf{nPars}-1.
+\end{itemize}
+
+The ``best'' values are based on the observations made by the authors on
+using different nls packages. These ``best'' values serve as a reference
+that is used inside the \texttt{run} function to compare with a
+\textbf{solver}'s output using the corresponding \textbf{algorithm} and
+\textbf{control}. In case a user finds a ``better'' (see below) value,
+the values inside this csv should be changed manually by the user.
+
+\hypertarget{nlscompareinstscripts}{%
+\subsubsection{./nlsCompare/inst/scripts}\label{nlscompareinstscripts}}
+
+This directory contains the R scripts for numeriou problems in nls that
+are sourced inside the \texttt{run} function. Each file has a naming
+structure: ``problemName\_x'' where x is a integer number. ``1'' means
+that it is a parent test file of the ``problemName'' family of test
+files. The parent file mainly contains -
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{NLSdata}: A dataframe that contains the data
+\item
+  \texttt{NLSformula}: nonlinear model formula
+\item
+  \texttt{NLSstart}: Starting values for the nls problem
+\item
+  \texttt{NLSlower}: An lower bound for the nls problem
+\item
+  \texttt{NLSupper}: An upper bound for the nls problem
+\item
+  \texttt{NLSweights}: weights for the nls problem
+\item
+  \texttt{NLSsubset}: for subsetting the dataframe
+\item
+  \texttt{NLSmethods}: a dataframe that stores the contents of
+  \textbf{methods.csv}
+\item
+  \texttt{NLSproblems}: a dataframe that stores the contents of
+  \textbf{problems.csv}
+\item
+  \texttt{refsol}: the package name that gives the best results to an
+  nls problem listed in \textbf{problems.csv}
+\item
+  \texttt{NLSssquares}: the sum of squares produced by \textbf{refsol}.
+  This is derived from \textbf{problems.csv}'s \textbf{ssquares} column
+\item
+  \texttt{NLSpars}: the parameters produced by \textbf{refsol}. This is
+  derived from \textbf{problems.csv}'s \textbf{Pars} and its adjacent
+  columns
+\item
+  \texttt{NLStag}: a tag to classify the nls problem
+\item
+  \texttt{NLSref}: nls object created using \textbf{refsol} to a problem
+\end{itemize}
+
+If x in "\_x" is greater than 1, it means that it is a children test
+file belonging to the same "problemName family of test files. It
+contains a subset of the contents as mentioned above. For example,
+\emph{NLSprob\_2.R} may contain just a new \texttt{NLSstart} or may
+contain \texttt{NLSupper} and \texttt{NLSlower} and so on.
+
+To add ``children'' scripts, the naming convention is compulsory.
+``NLSproblemName.x'' must have the x value just succeeding the last x
+value for the same \emph{problemName}.
+
+\hypertarget{coverage}{%
+\subsection{Coverage}\label{coverage}}
+
+The idea of hierarchy in test files allows to cover -
+
+\begin{itemize}
+\tightlist
+\item
+  multiple starting values that may be good, or infeasible
+\item
+  bounded problems having a good or silly bounds
+\item
+  multiple weights for the same problem that comprise of good or bad
+  weights
+\item
+  ability to work with subsets of the problem's data
+\end{itemize}
+
+The \textbf{methods.csv} allows the possibility to cover existing and
+new packages' -
+
+\begin{itemize}
+\tightlist
+\item
+  functions as \textbf{solver}s viz.~\texttt{nlsj::nlsj},
+  \texttt{nlsr::nlxb} and \texttt{minpack.lm::nlsLM}
+\item
+  existing and new \textbf{algorithm}s viz.~``marquardt'', ``plinear'',
+  ``port'' and ``Gauss-Newton'' and its variants
+\end{itemize}
+
+The \texttt{run()} function compares essential estimation quantities
+like -
+
+\begin{itemize}
+\tightlist
+\item
+  parameters
+\item
+  sum of squares
+\end{itemize}
+
+\hypertarget{package-output-files}{%
+\subsection{Package Output Files}\label{package-output-files}}
+
+\hypertarget{nlsdatabase.csv}{%
+\subsubsection{nlsDatabase.csv}\label{nlsdatabase.csv}}
+
+This csv file stores a final output of the \texttt{run()} function. It
+has 11 columns -
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{DateTime}: the data and time (space-separated) the program
+  runs a particular \textbf{FileName}
+\item
+  \texttt{MachID}: a one-line machine summary useful for characterizing
+  different machines
+\item
+  \texttt{FileName}: the name of the file run inside the \texttt{run()}
+  function. It is used from \textbf{Problems.csv}
+\item
+  \texttt{Solver}: the nls function used from \textbf{methods.csv} to
+  solve a nonlinear problem
+\item
+  \texttt{Algorithm}: the algorithm used from \textbf{methods.csv} to
+  solve a nonlinear problem
+\item
+  \texttt{Control}: the control settings used from \textbf{methods.csv}
+  to solve a nonlinear problem
+\item
+  \texttt{Parameters}: result on comparing \textbf{Refsol} parameter
+  values with that of \textbf{Solver}'s. It is \texttt{TRUE} if both are
+  equal, a \texttt{NUMERIC} indicating a ``Mean relative difference''
+  and \texttt{NA} if the \textbf{solver} fails to run.
+\item
+  \texttt{SSquares}: result on comparing \textbf{Refsol} sum of squares
+  value with that of \textbf{Solver}'s. It is \texttt{TRUE} if both are
+  equal, a \texttt{NUMERIC} indicating a ``Mean relative difference''
+  and \texttt{NA} if the \textbf{solver} fails to run.
+\item
+  \texttt{Better}: comment based on \textbf{Parameters} and
+  \textbf{SSquares}. It is \texttt{EQUAL} if both are \texttt{TRUE},
+  \texttt{BETTER} if \emph{SSquares(Solver)} is less than
+  \emph{SSquares(refsol)} and \texttt{Worse} otherwise.
+\item
+  \texttt{RefSol}: the package that gives the best parameter and sum of
+  squares value for a problem. \texttt{NLStag} is used here.
+\item
+  \texttt{Tags}: the tag used to classifiy the problem. \texttt{NLStag}
+  value is used here.
+\end{itemize}
+
+\hypertarget{nlserrorlog.csv}{%
+\subsubsection{nlsErrorLog.csv}\label{nlserrorlog.csv}}
+
+This csv file stores a final output of the \texttt{run()} function and
+is essentially an error-log. Further, it is a subset of the
+\textbf{nlsDatabase.csv} which stores information of only those files
+which on which a particular \emph{solver} does not run. It has 7 columns
+-
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{DateTime}: the data and time (space-separated) the program
+  runs a particular \textbf{FileName}
+\item
+  \texttt{MachID}: a one-line machine summary useful for characterizing
+  different machines
+\item
+  \texttt{FileName}: the name of the file run inside the \texttt{run()}
+  function that observed an error.
+\item
+  \texttt{Solver}: the nls function used from \textbf{methods.csv} that
+  caused the error in solving \textbf{FileName} problem
+\item
+  \texttt{Algorithm}: the algorithm used from \textbf{methods.csv} to
+  solve the nonlinear problem
+\item
+  \texttt{Control}: the control settings used from \textbf{methods.csv}
+  to solve the nonlinear problem
+\item
+  \texttt{Message}: the error message associated with the problem that
+  comes from the \texttt{Solver}
+\end{itemize}
+
+\hypertarget{some-observations}{%
+\subsection{Some observations}\label{some-observations}}
+
+On using \textbf{nlsCompare}, we have made some observations that point
+towards the usefulness of the package -
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{nlsDatabase.csv} gave us an example (Croucher\_1.R,
+  Croucher\_2.R, etc.) where a solver indeed turned out to be better
+  than the reference solver that was known to be the best to us
+\item
+  ??hex problem
+\item
+  \textbf{nlsDatabase.csv} shows which packages fail in a problem and
+  which succeed
+\end{itemize}
+
+\hypertarget{future-work}{%
+\subsection{Future work}\label{future-work}}
+
+A few things we would like to incorporate in \textbf{nlsCompare} -
+
+\begin{itemize}
+\tightlist
+\item
+  add other estimation quantities like \textbf{Convergence},
+  \textbf{Rmat} and \textbf{Jacobian}
+\item
+  add \texttt{run\_specific} that runs a particular file or a list of
+  files rather than all files as is listed in \textbf{problems.csv}
+\item
+  automatically update the reference values in the R scripts in
+  ./nlsCompare/inst/scripts on encountering with ``better'' values and
+  use \textbf{pkgVersion} and\textbf{LastUpdated} columns in
+  \textbf{problems.csv} to keep track
+\item
+  add robust bound checking mechanisms like \texttt{optimx::bmchk}
+\item
+  include more problems in the database; for example, from
+  \textbf{NISTnls}
+\end{itemize}
+
+\bibliography{RJreferences.bib}
+
+\address{%
+Arkajyoti Bhattacharjee\(^1\)\\
+Mathematics and Statistics Department\\%
+Indian Institute of Technology, Kanpur\\ India\\
+%
+%
+%
+\href{mailto:arkastat98@gmail.com}{\nolinkurl{arkastat98@gmail.com}}%
+}
+
+\address{%
+John C. Nash\(^2\)\\
+University of Ottawa\\%
+\\
+%
+\url{https://journal.r-project.org}\\%
+\textit{ORCiD: \href{https://orcid.org/0000-0002-9079-593X}{0000-0002-9079-593X}}\\%
+\href{mailto:nashjc@uottawa.ca}{\nolinkurl{nashjc@uottawa.ca}}%
+}
+
+\address{%
+Heather Turner\(^3\)\\
+Department of Statistics\\%
+University of Warwick\\ Coventry\\ United Kingdom\\
+%
+%
+\textit{ORCiD: \href{https://orcid.org/0000-0002-1256-3375}{0000-0002-1256-3375}}\\%
+\href{mailto:ht@heatherturner.net}{\nolinkurl{ht@heatherturner.net}}%
+}
