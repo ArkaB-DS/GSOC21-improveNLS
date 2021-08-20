@@ -3,7 +3,7 @@ title: "Refactoring the `nls()` function in R"
 author: 
    - John C. Nash \thanks{ retired professor, Telfer School of Management, University of Ottawa}
    - Arkajyoti Bhattacharjee \thanks{Department of Mathematics and Statistics, Indian Institute of Technology, Kanpur}
-date: "2021-7-17"
+date: "2021-8-20"
 output: 
     pdf_document:
         keep_tex: false
@@ -23,7 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Abstract
 
 This article reports the particular activities of our Google Summer of Code
-project "Improvements to nls()" that relate to the R code for that function, which
+project "Improvements to `nls()`" that relate to the R code for that function, which
 is intended for the estimation of models written as a formula that has at least
 one parameter that is "nonlinear", that is, not estimable via solving a set of 
 linear equations. A companion document **Variety in Nonlinear Least Squares Codes** 
@@ -38,7 +38,7 @@ An important overall consideration in our work has been the maintainability of
 the code base that supports the `nls()` functionality, as we believe that the
 existing code makes maintenance and improvement very difficult.
 
-# The existing nls() function: strengths and shortcomings
+# The existing `nls()` function: strengths and shortcomings
 
 `nls()` is the tool in base R (the distributed software package from [CRAN](https://cran.r-project.org)
 for estimating nonlinear statistical models. The function was developed mainly in the 1980s and
@@ -364,7 +364,7 @@ another form of the model, namely, $$ y \sim b1/(1 + b2*exp(-b3*t)) $$
 Let us look at the actual code for `SSlogis()` in `R-devel/src/library/stats/R/zzModels.R`:
 
 ```
-SSlogis <- # selfStart(~ Asym/(1 + exp((xmid - input)/scal)),
+SSlogis <- selfStart(~ Asym/(1 + exp((xmid - input)/scal)),
     selfStart(
         function(input, Asym, xmid, scal)
         {
@@ -476,7 +476,7 @@ possibly with some interactive tools. That is, the emphasis should be on the
 
 ## Issue: documentation of the results of running nls()
 
-The output of nls() is an object of class "nls" which has the following structure:
+The output of `nls()` is an object of class "nls" which has the following structure:
 
 ### nls() result output according to the documentation
 
@@ -512,7 +512,11 @@ NLSdata<-data.frame(xdata, ydata)
 # Try full output version of nls
 library(nlspkg) # use the packaged version of nls()
 result<-nls(NLSformula, data=NLSdata, start=NLSstart, model=TRUE)
-str(result)
+# str(result) -- displays large amount of material - suppressed here
+#    as it is too wide for the page
+result
+ls(result) # to list the elements of the output
+ls(result$m) # and in particular the "m" object
 ```
 
 ### Concerns with content of the nls result object
@@ -622,7 +626,7 @@ print(tryit)
 
 Note that the sum of squares has been reduced from 61216 to 1.6211, but 
 unless `trace` is invoked, the user will not get any information about this.
-This would be an almost trivial change to the nls() function and could be 
+This would be an almost trivial change to the `nls() function and could be 
 useful to R users.
 
 ## Feature: partially linear models and their specification
@@ -649,7 +653,7 @@ following FOUR different calling sequences for the same problem, though the
 second is to illustrate how one intuitive choice will not work. In this failed
 attempt, putting the `Asym` parameter in the model causes the `plinear` algorithm
 to try to add another term to the model. We believe this is unfortunate, and would
-like to see a consistent syntax. At the time of writing (end of July 2021) we do
+like to see a consistent syntax. At the time of writing (end of August 2021) we do
 not have a resolution for this issue.
 
 ```{r log4ways, echo=TRUE}
@@ -706,7 +710,7 @@ could be much reduced by moving code entirely to R.
 
 ## Issue: code documentation for maintenance 
 
-`setPars()` -- explain weaknesses. Only used by profile.nls()
+`setPars()` -- explain weaknesses. Only used by `profile.nls()`
 
 The paucity of documentation is exacerbated by the mixed R/C/Fortran code base.
 
@@ -978,8 +982,10 @@ of the repository https://gitlab.com/nashjc/improvenls.
   a DRAFT at 2021-8-20.
 
 - PkgFromRbase.Rmd: an explanation of the construction of the `nlspkg` from the
-  code in R-base. We could think of putting this in R-bloggers or similar. Or if
-  we came up with a more general template, then an R-Journal article.
+  code in R-base. 
+  
+  <!-- We could think of putting this in R-bloggers or similar. Or if -->
+  <!-- we came up with a more general template, then an R-Journal article. -->
 
 - WorkingDocument4ImproveNLS.Rmd: essentially a way to record what we have worked on.
   A project diary.
@@ -1006,9 +1012,9 @@ the minimum sum of squares and the associated model parameters.
 
 A summary of our main results:
 
-- nlspkg: a packaged version of the nls() code from R-base. Thanks to Duncan Murdoch
+- nlspkg: a packaged version of the `nls() code from R-base. Thanks to Duncan Murdoch
 
-- nlsalt: attempt to mirror nls() behaviour entirely in R. This is UNFINISHED. 
+- nlsalt: attempt to mirror `nls() behaviour entirely in R. This is UNFINISHED. 
   The effort showed that the structure of the programs was difficult to follow, 
   undocumented, and unsuited to adding improvements like the Marquardt stabilization. 
   We were able to get a pure-R version of numericDeriv() and rework most of the functions 
@@ -1018,9 +1024,9 @@ A summary of our main results:
 
 - nls-changes-for-small-residuals-in-nls-R-4.0.2.zip: collected material for the 
   fix by JN to the relative offset convergence criterion failure when there are small 
-  residuals in problems sent to `nls()`. Now part of R.
+  residuals in problems sent to ``nls()`. Now part of R.
   
-- nlsj: A refactoring of the nls() functionality. `redesign2107.txt` gives some notes.
+- nlsj: A refactoring of the `nls() functionality. `redesign2107.txt` gives some notes.
   This is an interim package for exploration of ideas and will NOT, as it currently
   is presented, become a distributed package.
 
