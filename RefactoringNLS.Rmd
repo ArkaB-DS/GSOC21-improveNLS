@@ -14,6 +14,7 @@ linkcolor: red
 urlcolor: blue
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ## require(bookdown) # language engine to display text - does not seem necessary
@@ -84,13 +85,13 @@ possibility of an exact fit and the sum of squares is (almost) zero and we get t
 zero-divide failure. 
 
 The issue is easily resolved by adding a small quantity to the loss function. To preserve legacy behaviour,
-in 2021, one of us (JN) proposed that `nls.control()` have an additional parameter `scaleOffset` with a
-default value of zero for legacy behaviour. Setting it to a small number -- 1.0 is a reasonable choice --
+in 2021, one of us (J. Nash) proposed that `nls.control()` have an additional parameter `scaleOffset` 
+with a default value of zero for legacy behaviour. Setting it to a small number -- 1.0 is 
+a reasonable choice --
 allows small-residual problems (i.e., near-exact fits) to be dealt with easily. We call this the
 **safeguarded relative offset convergence criterion**.
 
-We are pleased to report that this improvement is in the R-devel distributed code at the time of writing
-and will migrate to the base R distribution when updated.
+We are pleased to report that this improvement is now in the R distributed code.
 
 ### Example of a small-residual problem
 
@@ -581,10 +582,10 @@ items:
   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
  - attr(*, "class")= chr "nlsr"
 ```
-This is still a much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
+This is still a smaller result object than the one `nls()` returns. Moreover, `nlxb`
 explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
-counts of evaluations are also returned. We do, however, need to update the `nlsr`
-documentation. (??JN)
+counts of evaluations are also returned. Working on this project showed several potential
+updates to the `nlsr` documentation.
 
 ### Weights in returned functions from nls()
 
@@ -599,6 +600,30 @@ TRUE, the iterations display the objective function value which is 1/2 the sum o
 deviance). It is likely that the trace display is embedded in the Fortran of the `nlminb`
 routine that is called to execute the "port" algorithm, but the discrepancy is nonetheless
 unfortunate for users.
+
+### Failure to return best result achieved
+
+If `nls()` reaches a point where it cannot continue but has not found a point where the
+relative offset convergence criterion is met, it may simply exit, especially if a 
+"singular gradient" (singular Jacobian) is found. However, this may occur AFTER the 
+function has made considerable progress in reducing the sum of squared residuals. 
+An example is to be found in the `Tetra_1.R` example from the `nlsCompare` package.
+Here is an abbreviated version of that problem and the `nls()` output:
+
+```{r tetrarun}
+time=c( 1,  2,  3,  4,  6 , 8, 10, 12, 16)
+conc = c( 0.7, 1.2, 1.4, 1.4, 1.1, 0.8, 0.6, 0.5, 0.3)
+NLSdata <- data.frame(time,conc)
+NLSstart <-c(lrc1=-2,lrc2=0.25,A1=150,A2=50) # a starting vector (named!)
+NLSformula <-conc ~ A1*exp(-exp(lrc1)*time)+A2*exp(-exp(lrc2)*time)
+tryit <- try(nls(NLSformula, data=NLSdata, start=NLSstart, trace=TRUE))
+print(tryit)
+```
+
+Note that the sum of squares has been reduced from 61216 to 1.6211, but 
+unless `trace` is invoked, the user will not get any information about this.
+This would be an almost trivial change to the nls() function and could be 
+useful to R users.
 
 ## Feature: partially linear models and their specification
 
@@ -667,8 +692,6 @@ fm4DNase1 <- try(nls(density ~ Asym/(1 + exp((xmid - log(conc))/scal)),
                  algorithm = "port"))
 summary(fm4DNase1)
 ```
-
-
 
 ## Issue: code structure
 
@@ -874,7 +897,7 @@ We need suitable tests in order:
 
 ### A test runner program
 
-?? Arkajyoti -- let's use some of your NLSCompare documentation here.
+?? Arkajyoti -- do you want to expand?
 
 When we have a "new" or trial solver function, we would like to know if it gives 
 acceptable results on a range of sample problems of different types, starting
@@ -896,26 +919,27 @@ the pieces are not as complicated as the inter-related parts of the solvers, esp
 `nls()`, the categorization of tests, their documentation, and the structuring to make
 running them straightforward and easy requires much attention to detail.
 
-Some questions ??
+Some considerations for our test scrips:
 
-- do we need a "base" script for each family of test problem, with numbered particular
-  cases?
+- Is it useful to have a "base" script for each family of test problem, with numbered particular
+  cases? That is, if we run the scripts in order, we can avoid some duplication of code and
+  data.
   
-- how should we document the families and cases? What tags do we need to allow us to
-  quickly select lists of tests
+- While we have developed some tags to document the test problem families and cases, we believe
+  that such tags (essentially summary documentation) will continue to need revision as different
+  tools and problems are included in scope of `nlsCompare`.
   
-- structure to output the results. AB's draft csv file and runner program.??
+- Similarly, we expect that there will be ongoing review of the structure of the result files.
 
-?? this is for the quick testing of sets of problems --- 
-documented in TestsDoc.
 
 # Outputs of the project
 
 The project output is available in the Git repository https://gitlab.com/nashjc/improvenls
+?? Arkajyoti -- do you want to change to Github
 
 ## Formal reports or documentation 
 
-- RefactoringNLS.Rms: this document which will become the main report of the project.
+- RefactoringNLS.Rmd: this document which will become the main report of the project.
 
 - TestsDoc.Rmd: a survey of testing tools in R. It has more general possibilities 
   and fits into the subject of regression testing, in which case a 
@@ -932,11 +956,12 @@ The project output is available in the Git repository https://gitlab.com/nashjc/
 
 ## Informal reports
 
-These are documents used to discuss particular aspects of our work.
+These are documents used to discuss particular aspects of our work. These are part
+of the repository https://gitlab.com/nashjc/improvenls.
 
 - DerivsNLS.Rmd: a document to explain different ways in which Jacobian information
   is supplied to nonlinear least squares computation in R. File `ExDerivs.R` is
-  intended to provide examples.?? needs documentation??
+  a DRAFT of a script to provide examples.
 
 - ImproveNLS.bib: a consolidated BibTex bibliography for all documents in this
   project, possibly with wider application to nonlinear least squares in general
@@ -944,13 +969,13 @@ These are documents used to discuss particular aspects of our work.
 - MachineSummary.Rmd: an informal investigation of ways to report the characteristics
   and identity of machines running tests. `MachID.R` offers a concise summary function
   to identify a particular computational system used for tests. 
-  ?? Note that there remains the get_ram() open issue for Windows 10 in the `benchmarkme`
-  package.
+  Note that there remains an open issue that the get_ram() for Windows 10 in the `benchmarkme`
+  package may report the RAM size as "NA". We are collaborating with Colin Gillespie, 
+  maintainer of `benchmarkme` to seek a workaround.
 
 - VarietyInNonlinearLeastSquaresCodes.Rmd: a review of the different algorithms and
-  the many choices in their implementation for nonlinear least squares. ??unfinished
-  but getting there. This is more a JN career interest, and a follow up to the 2014
-  book. 
+  the many choices in their implementation for nonlinear least squares. This is still
+  a DRAFT at 2021-8-20.
 
 - PkgFromRbase.Rmd: an explanation of the construction of the `nlspkg` from the
   code in R-base. We could think of putting this in R-bloggers or similar. Or if
@@ -961,9 +986,25 @@ These are documents used to discuss particular aspects of our work.
 
 ## Problem sets and test infrastructure
 
-- ?? we need to make sure these are well organized. -- reference to NLScompare
+We have several test problems and variants thereof in the `inst/scripts/` directory of
+the `nlsCompare` package available on Github (https://github.com/ArkaB-DS/nlsCompare).
+We direct the reader to that package for documentation of the test infrastructure, 
+in particular the problems and methods files (`problems.csv` and `methods.csv`) and
+the various functions invoked by `run.R` to produce an output file in CSV form also.
+
+Towards the end of the project, we have focused our attention on the `nlsCompare`
+package, which looks at evaluating and comparing functions for nonlinear least
+squares problems. We use many of the same tests as checks that are or will be 
+built into our packages for such problems e.g., `nlsalt`. These use the `testthat`
+structure and may include verification of outputs that are specific to a package,
+such as the upper triangular matrix R of the QR decomposition that has been 
+computed for a Jacobian. Since such an object will not be computed by all methods, 
+testing it in `nlsCompare` makes no sense, and in that package we concentrate on
+the minimum sum of squares and the associated model parameters.
 
 ## Code and documentation
+
+A summary of our main results:
 
 - nlspkg: a packaged version of the nls() code from R-base. Thanks to Duncan Murdoch
 
@@ -977,14 +1018,19 @@ These are documents used to discuss particular aspects of our work.
 
 - nls-changes-for-small-residuals-in-nls-R-4.0.2.zip: collected material for the 
   fix by JN to the relative offset convergence criterion failure when there are small 
-  residuals in problems sent to `nls()`. 
+  residuals in problems sent to `nls()`. Now part of R.
   
 - nlsj: A refactoring of the nls() functionality. `redesign2107.txt` gives some notes.
+  This is an interim package for exploration of ideas and will NOT, as it currently
+  is presented, become a distributed package.
 
-- nlsralt: a modified version of Nash and Murdoch package `nlsr` with improvements
-  discovered as a result of this project. For example, `nlsr` does not currently
-  use the `subset` argument correctly. We also need to document
-  changes e.g., to numerical derivatives. However, these are tasks for JN rather than AB.
+- nlsralt: this is intended to be a modified version of Nash and Murdoch package 
+  `nlsr` with improvements discovered as a result of this project. At the close of
+  this project, this is still a work in progress.
+  
+  <!-- For example,  -->
+  <!-- `nlsr` does not currently use the `subset` argument correctly. We also need to document -->
+  <!-- changes e.g., to numerical derivatives. However, these are tasks for JN rather than AB. -->
 
 
 ## Strategic choices in a nonlinear model estimation
@@ -1034,6 +1080,10 @@ are as follows:
 - We believe that a structure that isolates the setup, solve, and post-solution structures 
   for complicated functions reduces the number of objects that must be kept in appropriate 
   alignment at any one stage in a set of calculations.
+  
+- We feel that all codes should return the best fit they have found so far, even if there
+  are untoward conditions reached, such as a singular Jacobian. This modification could be
+  made to `nls()` even in the short term. 
 
 ### Consistent specifications of partially linear models
 
@@ -1063,5 +1113,8 @@ with the present issue. The algorithm in @Birkisson2013 will need investigating 
 but we suspect that it is complicated enough that it will not easily be adapted to 
 an `nls()` style program. Possibly a simpler algorithm may be found.
 
+# Acknowledgement
+
+Hans Werner Borchers was helpful in developing the proposal for this project.
 
 # References

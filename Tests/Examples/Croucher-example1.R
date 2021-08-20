@@ -31,13 +31,13 @@ fitjm<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, algorithm="marquardt",c
 fitn<-nls(Cform, data=Cdata, start=Cstart, trace=TRUE, control=nls.control(printEval=FALSE))
 fitr<-nlxb(Cform, data=Cdata, start=Cstart, trace=TRUE)
 # sink()
-sink("test4.txt", split=TRUE)
+#sink("test4.txt", split=TRUE)
 fitj<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, control=nlsj.control(watch=TRUE))
 fitjm<-nlsj(Cform, data=Cdata, start=Cstart, trace=TRUE, algorithm="marquardt",control=nlsj.control(watch=TRUE))
 fitn<-nls(Cform, data=Cdata, start=Cstart, trace=TRUE)
 fitr<-nlxb(Cform, data=Cdata, start=Cstart, trace=TRUE)
-sink()
->>>>>>> 024e1ed7c8beea77cd284d2c20974e0c2463f567
+#sink()
+## >>>>>>> 024e1ed7c8beea77cd284d2c20974e0c2463f567
 tmp<-readline("done topfits")
 # 
 # print(nlsj.control())
