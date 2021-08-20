@@ -35,7 +35,7 @@ Given the very wide range of applications and features of the `nls()` function, 
 
 - **Codes (and documentation):**<br/>
 
-  8. [nlsj](https://gitlab.com/nashjc/improvenls/-/tree/master/nlsj): A refactoring of the `nls()` functionality
+  8. [nlsj](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
   9. [nlsCompare](): an R package to compare existing and new packages' functions for nonlinear least squares 
   10. [nlspkg](https://gitlab.com/nashjc/improvenls/-/tree/master/nlspkg): a packaged version of the `nls()` code from R-base.
   11. [nlsalt](https://gitlab.com/nashjc/improvenls/-/tree/master/nlsalt): attempt to mirror `nls()` behaviour **entirely in R**
