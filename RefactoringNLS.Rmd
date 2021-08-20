@@ -1,14 +1,17 @@
 ---
-title: "Refactoring the nls() function in R"
+title: "Refactoring the `nls()` function in R"
 author: 
-   - John C Nash, retired professor, University of Ottawa
-   - Arkajyoti Bhattacharjee, Indian Institute of Technology, Kanpur
+   - John C. Nash \thanks{ retired professor, Telfer School of Management, University of Ottawa}
+   - Arkajyoti Bhattacharjee \thanks{Department of Mathematics and Statistics, Indian Institute of Technology, Kanpur}
 date: "2021-7-17"
 output: 
     pdf_document:
         keep_tex: false
         toc: true
 bibliography: ImproveNLS.bib
+link-citations: yes
+linkcolor: red
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
@@ -36,9 +39,9 @@ existing code makes maintenance and improvement very difficult.
 
 # The existing nls() function: strengths and shortcomings
 
-`nls()` is the tool in base R (the distributed software package from https://cran.r-project.org)
+`nls()` is the tool in base R (the distributed software package from [CRAN](https://cran.r-project.org)
 for estimating nonlinear statistical models. The function was developed mainly in the 1980s and
-1990s by Doug Bates et al., initially for S (https://en.wikipedia.org/wiki/S_%28programming_language%29). 
+1990s by Doug Bates et al., initially for S (see https://en.wikipedia.org/wiki/S_%28programming_language%29) . 
 The ideas spring primarily from the book by @bateswatts.
 
 The `nls()` function has a remarkable and quite comprehensive set of capabilities for estimating
@@ -62,13 +65,9 @@ Within the standard documentation (**man** or ".Rd" file) `nls()` warns
 >  **The default settings of nls generally fail on artificial “zero-residual” data problems.**
 
 >  The nls function uses a relative-offset convergence criterion that compares the numerical imprecision at
-  the current parameter estimates to the residual sum-of-squares. This performs well on data of the form
+  the current parameter estimates to the residual sum-of-squares. This performs well on data of the form $$y = f(x, \theta) + eps$$
 
->  $$y = f(x, \theta) + eps$$
-
->  (with var(eps) > 0). It fails to indicate convergence on data of the form
-
->  $$y = f(x, \theta)$$
+>  (with var(eps) > 0). It fails to indicate convergence on data of the form $$y = f(x, \theta)$$
 
 >  because the criterion amounts to comparing two components of the round-off error. To avoid a zero-divide in
   computing the convergence testing value, a positive constant `scaleOffset` should be added to the denominator
@@ -254,8 +253,8 @@ improvement. See below in the section **Jacobian computation**.
 However, the more common source of the issue is that the Jacobian is very close
 to singular for some values of the model parameters. In such cases we need to find
 an alternative algorithm to the Gauss-Newton iteration of `nls()`. The most common
-work-around is the Levenberg-Marquardt stabilization (@Marquardt1963, Levenberg1944, 
-jn77ima). Versions of this have been implemented in packages `minpack.lm` and `nlsr`.
+work-around is the Levenberg-Marquardt stabilization (see @Marquardt1963, @Levenberg1944, 
+@jn77ima). Versions of this have been implemented in packages `minpack.lm` and `nlsr`.
 and we have preliminary versions of an `nls` replacement that can incorporate a
 version of the Levenberg-Marquardt stabilization. (There are some issues of 
 integration with other code structures and of complexity of the computations that
@@ -295,7 +294,7 @@ we would implement subsetting by means of zero-value weights, with observation c
 
 `na.action` is an argument to the `nls()` function, but it does not appear in obviously in the
 source code, often being handled behind the scenes after referencing the option `na.action`.
-A useful, but possibly dated, description is given in
+A useful, but possibly dated, description is given in:
 https://stats.idre.ucla.edu/r/faq/how-does-r-handle-missing-values/  
 
 The typical default action, which can be seen by using the command `getOption("na.action")`
@@ -305,7 +304,7 @@ containing any missing values (i.e. any row of a data frame with an NA) omitted.
 that predictions are in the correct row position. We recommend that workers actually test 
 output to verify behaviour is as wanted.
 
-A succinct answer is given in https://stats.stackexchange.com/questions/492955/should-i-use-na-omit-or-na-exclude-in-a-linear-model-in-r
+A succinct answer is given in: https://stats.stackexchange.com/questions/492955/should-i-use-na-omit-or-na-exclude-in-a-linear-model-in-r
 
 > The only benefit of `na.exclude` over `na.omit` is that the former will retain the 
 original number of rows in the data. This may be useful where you need to retain the 
@@ -356,14 +355,10 @@ because it may call `nls()`.
 
 In the example below, we show how the `SSlogis` selfStart function can generate a set
 of initial parameters for a 3-parameter logistic curve. The form used by `SSlogis`
-is
-
-$$ y \sim Asym/(1+exp((xmid-tt)/scal)) $$
+is $$ y \sim Asym/(1+exp((xmid-tt)/scal)) $$
 
 The example shows how these starting parameters can be transformed to those of 
-another form of the model, namely,
-
-$$ y \sim b1/(1 + b2*exp(-b3*t)) $$
+another form of the model, namely, $$ y \sim b1/(1 + b2*exp(-b3*t)) $$
 
 Let us look at the actual code for `SSlogis()` in `R-devel/src/library/stats/R/zzModels.R`:
 
@@ -418,11 +413,8 @@ command, making them difficult to access.
 
 In the event that a selfStart model is not available, `nls()` sets all the starting parameters 
 to 1. This is, in our view, tolerable, but could possibly be improved by using a set of values
-that are slightly different e.g., in the case of a model 
-
-$$  y \sim a*exp(-b*x) + c*exp(-d*x)$$
-
-it would be useful to have $b$ and $d$ values different so the Jacobian is not singular. Thus
+that are slightly different e.g., in the case of a model $$  y \sim a*exp(-b*x) + c*exp(-d*x)$$
+it would be useful to have $b$ and $d$ values different so the Jacobian is not singular. Thus,
 some sort of sequence like  1.0, 1.1, 1.2, 1.3 for the four parameters might be better and it
 can be provided quite simply instead of all 1's. 
 
@@ -490,23 +482,15 @@ The output of nls() is an object of class "nls" which has the following structur
 ```
 A list of:
 
-m	          an nlsModel object incorporating the model.
-
+m	        an nlsModel object incorporating the model.
 data  	    the expression that was passed to nls as the data argument. The actual data values 
-            are present in the environment of the m components, e.g., environment(m$conv).
-
-call	      the matched call with several components, notably algorithm.
-
+              are present in the environment of the m components, e.g., environment(m$conv).
+call	    the matched call with several components, notably algorithm.
 na.action 	the "na.action" attribute (if any) of the model frame.
-
 dataClasses	the "dataClasses" attribute (if any) of the "terms" attribute of the model frame.
-
-model	      if model = TRUE, the model frame.
-
+model	    if model = TRUE, the model frame.
 weights	    if weights is supplied, the weights.
-
-convInfo	  a list with convergence information.
-
+convInfo	a list with convergence information.
 control	    the control list used, see the control argument.
 
 There are also two deprecated items if algorithm = "port" fit only. These are
@@ -574,6 +558,7 @@ jeval           The number of Jacobian evaluations used.
 
 However, actually looking at the structure of a returned result gives a list of 11
 items:
+```
  $ resid       : num [1:12] 0.0119 -0.0328 0.092 0.2088 0.3926 ...
   ..- attr(*, "gradient")= num [1:12, 1:3] 0.0271 0.0367 0.0496 0.0666 0.089 ...
   .. ..- attr(*, "dimnames")=List of 2
@@ -595,7 +580,7 @@ items:
  $ formula     :Class 'formula'  language y ~ Asym/(1 + exp((xmid - tt)/scal))
   .. ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
  - attr(*, "class")= chr "nlsr"
-
+```
 This is still a much smaller result object than the one `nls()` returns. On the other hand, `nlxb`
 explicitly returns the sum of squares as well as the residual vector and Jacobian. The 
 counts of evaluations are also returned. We do, however, need to update the `nlsr`
