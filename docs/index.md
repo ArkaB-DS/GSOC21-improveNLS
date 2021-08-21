@@ -1,37 +1,51 @@
-## Welcome to GitHub Pages
+# ImproveNLS
+Efforts to improve the functioning of the R `nls()` function for nonlinear least 
+squares estimation. This is part of the [***`Google Summer of Code`***](https://summerofcode.withgoogle.com/) program for 2021.
 
-You can use the [editor on GitHub](https://github.com/ArkaB-DS/GSOC21-improveNLS/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+## Aim of the Project
+Our aim is to focus attention on actions that can be realized in future versions of the installable R system.
+Given the very wide range of applications and features of the `nls()` function, however, it is almost certain that only some possibilities will be addressed in the project. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Project Title
+**Improvements to nls()**
 
-### Markdown
+## Project Organization
+[**The R Project for Statistical Computing**](https://www.r-project.org/)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Project Mentors
+- John C. Nash, Telfer School of Management, University of Ottawa
+- Heather Turner, University of Warwick
 
-```markdown
-Syntax highlighted code block
+## Project Student 
+- Arkajyoti Bhattacharjee
 
-# Header 1
-## Header 2
-### Header 3
+## Project Outcomes
+### **Final Reports:**
+ 
+  1. [RefactoringNLS](https://gitlab.com/nashjc/improvenls/-/blob/master/RefactoringNLS.pdf)
+  2. [nlsCompareArticle](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nlsCompareArticle/nlsCompareArticle.pdf)
 
-- Bulleted
-- List
+### **Other (informal) Reports:**
+ 
+  3. [PkgFromRbase](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the [nlspkg](https://gitlab.com/nashjc/improvenls/-/tree/master/nlspkg) from the code in R-base.
+  4. [DerivsNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/DerivsNLS.pdf): document to explain different ways in which Jacobian information is supplied to nonlinear least squares computation in R.
+  5. [MachineSummary](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/MachineSummary.pdf): informal investigation of ways to report the characteristics and identity of machines running tests.
+  6. [VarietyInNonlinearLeastSquaresCodes](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/VarietyInNonlinearLeastSquaresCodes.pdf): review of the different algorithms and the many choices in their implementation for nonlinear least squares.
+  7. [ImproveNLS.bib](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/ImproveNLS.bib): consolidated BibTex bibliography for all documents in this project, possibly with wider application to nonlinear least squares in general
+  8. [WorkingDocument4ImproveNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/WorkingDocument4ImproveNLS.pdf): project diary
 
-1. Numbered
-2. List
+### **Codes (and documentation):**
+  
+  9. [nlsj](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
+  10. [nlsCompare](https://github.com/ArkaB-DS/nlsCompare): an R package to compare existing and new packages' functions for nonlinear least squares 
+  11. [nlspkg](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlspkg): a packaged version of the `nls()` code from R-base.
+  12. [nlsalt](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsalt): attempt to mirror `nls()` behaviour **entirely in R**
+  13. [nls-changes-for-small-residuals-in-nls-R-4.0.2.zip](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nls-changes-for-small-residuals-in-nls-R-4.0.2.zip): collected material for the fix by JN to the **relative
+offset convergence criterion failure** when there are small residuals in problems sent to `nls()`. 
+  14. [nlsralt](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsralt): a modified version of Nash and Murdoch package `nlsr` with improvements discovered as a result of this project.
 
-**Bold** and _Italic_ and `Code` text
+## Mentions
 
-[Link](url) and ![Image](src)
-```
+We would like to thank -
+- **Hans Werner Borchers** for the contributions to the proposal of the project
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ArkaB-DS/GSOC21-improveNLS/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
