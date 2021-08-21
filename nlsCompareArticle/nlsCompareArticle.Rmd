@@ -1,40 +1,14 @@
 ---
 title: "nlsCompare: An R package for comparing nonlinear least squares packages in R"
 author:
-  # see ?rjournal_article for more information
-  - name: Arkajyoti Bhattacharjee$^1$
-    affiliation: Mathematics and Statistics Department
-    address:
-    - Indian Institute of Technology, Kanpur
-    - India
-    #url: https://journal.r-project.org
-    #orcid: 0000-0002-9079-593X
-    email:  arkastat98@gmail.com
-  - name: John C. Nash$^2$
-    url: https://journal.r-project.org
-    email: nashjc@uottawa.ca
-    orcid: 0000-0002-9079-593X
-    affiliation: University of Ottawa
-  - name: Heather Turner$^3$
-    #url: ht@heatherturner.net
-    email: ht@heatherturner.net
-    orcid: 0000-0002-1256-3375
-    affiliation: 
-    - Department of Statistics
-    address:
-    - University of Warwick
-    - Coventry 
-    - United Kingdom
+  - Arkajyoti Bhattacharjee\thanks{Mathematics and Statistics Department, Indian Institute of Technology, Kanpur}
+  - John C. Nash \thanks{Telfer School of Management, University of Ottawa}
+  - Heather Turner\thanks{Department of Statistics, University of Warwick}
     
 abstract: >
-  Nonlinear least squares (nls) is extensively used in nonlinear modeling. This paper introduces the package **nlsCompare** that attempts to compare the best values of parameters and sum-of-squares in nls problems with existing tools for nls like `nls`(**base**), `nlxb` (**nlsr**), `nlsLM`(**minpack.lm**) and a new experimental package **nlsj** developed by the authors as a product of Google Summer of Code (GSoC), 2021.
-preamble: |
-  % Any extra LaTeX you need in the preamble
-  
-# per R journal requirement, the bib filename should be the same as the output 
-# tex file. Don't forget to rename the bib file and change this example value.
-bibliography: RJreferences.bib
-output: rticles::rjournal_article
+  Nonlinear least squares (nls) is extensively used in nonlinear modeling. This paper introduces the package **nlsCompare** that attempts to compare the best values of parameters and sum-of-squares in nls problems with existing tools for nls like `nls` (**base**), `nlxb`  (**nlsr**), `nlsLM` (**minpack.lm**) and a new experimental package **nlsj** developed by the authors as a product of Google Summer of Code (GSoC), 2021.
+output: pdf_document
+toc: true
 ---
 
 ## Introduction
