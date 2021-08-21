@@ -27,7 +27,7 @@ Given the very wide range of applications and features of the `nls()` function, 
 
 ### **Other (informal) Reports:**
  
-  3. [PkgFromRbase](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the [nlspkg](https://gitlab.com/nashjc/improvenls/-/tree/master/nlspkg) from the code in R-base.
+  3. [PkgFromRbase](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the **nlspkg** from the code in R-base.
   4. [DerivsNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/DerivsNLS.pdf): document to explain different ways in which Jacobian information is supplied to nonlinear least squares computation in R.
   5. [MachineSummary](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/MachineSummary.pdf): informal investigation of ways to report the characteristics and identity of machines running tests.
   6. [VarietyInNonlinearLeastSquaresCodes](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/VarietyInNonlinearLeastSquaresCodes.pdf): review of the different algorithms and the many choices in their implementation for nonlinear least squares.
