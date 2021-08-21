@@ -1,6 +1,6 @@
 # GSoC21-improveNLS
 Efforts to improve the functioning of the R `nls()` function for nonlinear least 
-squares estimation. This is part of the [***`Google Summer of Code`***](https://summerofcode.withgoogle.com/) program for 2021.
+squares estimation. This is part of the [**Google Summer of Code**](https://summerofcode.withgoogle.com/) program for 2021.
 
 ## Aim of the Project
 Our aim is to focus attention on actions that can be realized in future versions of the installable R system.
@@ -22,7 +22,7 @@ Given the very wide range of applications and features of the `nls()` function, 
 ## Project Outcomes
 ### **Final Reports:**
  
-  1. [RefactoringNLS](https://gitlab.com/nashjc/improvenls/-/blob/master/RefactoringNLS.pdf)
+  1. [RefactoringNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/RefactoringNLS.pdf)
   2. [nlsCompareArticle](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nlsCompareArticle/nlsCompareArticle.pdf)
 
 ### **Other (informal) Reports:**
