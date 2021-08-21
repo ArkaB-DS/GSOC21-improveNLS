@@ -1,6 +1,6 @@
 # ImproveNLS
 Efforts to improve the functioning of the R `nls()` function for nonlinear least 
-squares estimation. This is part of the ***`Google Summer of Code`*** program for 2021.
+squares estimation. This is part of the [***`Google Summer of Code`***](https://summerofcode.withgoogle.com/) program for 2021.
 
 ## Aim of the Project
 Our aim is to focus attention on actions that can be realized in future versions of the installable R system.
@@ -10,7 +10,7 @@ Given the very wide range of applications and features of the `nls()` function, 
 **Improvements to nls()**
 
 ## Project Organization
-**The R Project for Statistical Computing**
+[**The R Project for Statistical Computing**](https://www.r-project.org/)
 
 ## Project Mentors
 - John C. Nash, Telfer School of Management, University of Ottawa
@@ -20,12 +20,12 @@ Given the very wide range of applications and features of the `nls()` function, 
 - Arkajyoti Bhattacharjee
 
 ## Project Outcomes
-- **Final Reports:**
+### **Final Reports:**
  
   1. [RefactoringNLS](https://gitlab.com/nashjc/improvenls/-/blob/master/RefactoringNLS.pdf)
   2. [nlsCompareArticle](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nlsCompareArticle/nlsCompareArticle.pdf)
 
-- **Other (informal) Reports:**
+### **Other (informal) Reports:**
  
   3. [PkgFromRbase](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the [nlspkg](https://gitlab.com/nashjc/improvenls/-/tree/master/nlspkg) from the code in R-base.
   4. [DerivsNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/DerivsNLS.pdf): document to explain different ways in which Jacobian information is supplied to nonlinear least squares computation in R.
@@ -34,7 +34,7 @@ Given the very wide range of applications and features of the `nls()` function, 
   7. [ImproveNLS.bib](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/ImproveNLS.bib): consolidated BibTex bibliography for all documents in this project, possibly with wider application to nonlinear least squares in general
   8. [WorkingDocument4ImproveNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/WorkingDocument4ImproveNLS.pdf): project diary
 
-- **Codes (and documentation):**
+### **Codes (and documentation):**
   
   9. [nlsj](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
   10. [nlsCompare](https://github.com/ArkaB-DS/nlsCompare): an R package to compare existing and new packages' functions for nonlinear least squares 
