@@ -48,11 +48,10 @@ battery of problems.
   problem/cases are based on packages like **NRAIA** with data, models, constraints and starting values.
 - has a spreadsheet containing the methods (solvers, algorithms, control settings) to be tested
 - generates easy-to-read spreadsheets that compare results (sum of squared residuals and model
-  parameters with the best reference values yet observed. Since there can be multiple methods, these
+  parameters) with the best reference values yet observed. Since there can be multiple methods, these
   spreadsheets allow for fairly rapid comparisons. Moreover, the columns can be sorted to allow 
   specific features to be compared more easily.
 - gives appropriate messages to assist the understanding of errors or where to do improvements
-  ?? does it do this.
 
 **nlscompare** draws inspiration from R's testing library **testthat** and uses ideas from packages like **benchmarkme** to identify the computing environment. Currently, we have restricted our attention 
 to the R computing environment.
@@ -64,8 +63,7 @@ features such as bounds constraints within the default Gauss-Newton method is no
 are trying to provide for a result currently unavailable in `nls()`. While we did for some time pursue
 the use of other nls functions, we eventually moved to using reference values from our problems 
 spreadsheet. 
-?? needed?? To be able to add more improvements to **nlsj**, it is required to compare it with other existing packages' nls functions. 
-?? but keep this?? This would allow us to note which methods are supported by a particular function
+**nlsCompare** allows us to note which methods are supported by a particular function
 that are not in another and to check the consistency of supposedly equivalent results from different functions.
 
 **nlscompare** attempts to achieve the above, outputting a simple informative spreadsheet that indicates whether an existing or new package's function provides consistent results with the current best obseved values. Further, it outputs an error log that indicates whether a solver (viz. `nls` or `nlsLM`, etc.) fail in a particular problem with particular methods (algorithms, starting points, etc.)

@@ -38,13 +38,13 @@ best known reference values for each of a battery of problems.
   settings) to be tested
 \item
   generates easy-to-read spreadsheets that compare results (sum of
-  squared residuals and model parameters with the best reference values
+  squared residuals and model parameters) with the best reference values
   yet observed. Since there can be multiple methods, these spreadsheets
   allow for fairly rapid comparisons. Moreover, the columns can be
   sorted to allow specific features to be compared more easily.
 \item
   gives appropriate messages to assist the understanding of errors or
-  where to do improvements ?? does it do this.
+  where to do improvements
 \end{itemize}
 
 \textbf{nlscompare} draws inspiration from R's testing library
@@ -64,12 +64,10 @@ features such as bounds constraints within the default Gauss-Newton
 method is not provided. That is, we are trying to provide for a result
 currently unavailable in \texttt{nls()}. While we did for some time
 pursue the use of other nls functions, we eventually moved to using
-reference values from our problems spreadsheet. ?? needed?? To be able
-to add more improvements to \textbf{nlsj}, it is required to compare it
-with other existing packages' nls functions. ?? but keep this?? This
-would allow us to note which methods are supported by a particular
-function that are not in another and to check the consistency of
-supposedly equivalent results from different functions.
+reference values from our problems spreadsheet. \textbf{nlsCompare}
+allows us to note which methods are supported by a particular function
+that are not in another and to check the consistency of supposedly
+equivalent results from different functions.
 
 \textbf{nlscompare} attempts to achieve the above, outputting a simple
 informative spreadsheet that indicates whether an existing or new
