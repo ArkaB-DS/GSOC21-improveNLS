@@ -1,7 +1,6 @@
-Testing something
-<!--# Google Summer of Code, 2021: Improvements to nls()-->
-Efforts to improve the functioning of the R `nls()` function for nonlinear least 
-squares estimation. This is part of the [***`Google Summer of Code`***](https://summerofcode.withgoogle.com/) program for 2021.
+# Google Summer of Code, 2021: Improvements to nls()
+This page documents the efforts made to improve the functioning of the R `nls()` function for nonlinear least 
+squares estimation during the [***`Google Summer of Code`***](https://summerofcode.withgoogle.com/) program for 2021.
 
 ## Aim of the Project
 Our aim is to focus attention on actions that can be realized in future versions of the installable R system.
