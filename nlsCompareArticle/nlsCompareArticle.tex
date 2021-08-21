@@ -10,10 +10,10 @@ Turner\(^3\)}
 Nonlinear least squares (nls) is extensively used in nonlinear modeling.
 This paper introduces the package \textbf{nlsCompare} that attempts to
 compare the best values of parameters and sum-of-squares in nls problems
-with existing packages' fiunctions for nls like
-\texttt{nls}(\textbf{base}), \texttt{nlsLM}(\textbf{minpack.lm}) and a
-new package \textbf{nlsj} developed by the authors as a product of
-Google Summer of Code (GSoC), 2021.
+with existing tools for nls like \texttt{nls}(\textbf{base}),
+\texttt{nlxb} (\textbf{nlsr}), \texttt{nlsLM}(\textbf{minpack.lm}) and a
+new experimental package \textbf{nlsj} developed by the authors as a
+product of Google Summer of Code (GSoC), 2021.
 }
 
 \hypertarget{introduction}{%
@@ -21,31 +21,36 @@ Google Summer of Code (GSoC), 2021.
 
 While working on the GSoC project \textbf{Improvements to nls()} under
 The R Project for Statistical Computing, the authors realized that to be
-able to compare the improvements made via \texttt{nlsj} and in general,
-to help future developers in the sphere of nls , one needs to compare
-existing packages for nls in R with the best observed reference values.
+able to observe improvements made via experimental packages such as
+\texttt{nlsj}, developers needed to quickly compare results with the
+best known reference values for each of a battery of problems.
 
 \textbf{nlsCompare}:
 
 \begin{itemize}
 \tightlist
 \item
-  contains test data files based on packages like \textbf{NRAIA}
+  has a spreadsheet with pointers to test problem files along with
+  reference solutions. These problem/cases are based on packages like
+  \textbf{NRAIA} with data, models, constraints and starting values.
 \item
-  contains spreadsheets containing the methods (solvers, algorithms,
-  control settings) to compare
+  has a spreadsheet containing the methods (solvers, algorithms, control
+  settings) to be tested
 \item
-  generates easy-to-read spreadsheets that compare existing or new
-  packages for nls with the best reference values yet observed
+  generates easy-to-read spreadsheets that compare results (sum of
+  squared residuals and model parameters with the best reference values
+  yet observed. Since there can be multiple methods, these spreadsheets
+  allow for fairly rapid comparisons. Moreover, the columns can be
+  sorted to allow specific features to be compared more easily.
 \item
-  gives appropriate messages to understand errors or where to do
-  improvements
+  gives appropriate messages to assist the understanding of errors or
+  where to do improvements ?? does it do this.
 \end{itemize}
 
 \textbf{nlscompare} draws inspiration from R's testing library
-\textbf{testthat} and uses ideas from packages like
-\textbf{benchmarkme}. Currently, this has been developed keeping the R
-environment in mind.
+\textbf{testthat} and uses ideas from packages like \textbf{benchmarkme}
+to identify the computing environment. Currently, we have restricted our
+attention to the R computing environment.
 
 \hypertarget{need-for-nlscompare}{%
 \subsection{Need for nlsCompare}\label{need-for-nlscompare}}
@@ -54,11 +59,17 @@ Regression testing is useful not only to validate correctness of a
 program but often also for tracking the quality of its output. While
 working on improving \texttt{nls}, author\(^2\) noted that to compare
 the improvements made over \texttt{nls} via \textbf{nlsj}, unit testing
-via \textbf{testthat} is not enough. To be able to add more improvements
-to \textbf{nlsj}, it is required to compare it with other existing
-packages' nls functions. This would allow us to note which methods are
-supported by one function, but not in another and to check the
-consistency of same results from different functions.
+via \textbf{testthat} is not enough, largely because some desirable
+features such as bounds constraints within the default Gauss-Newton
+method is not provided. That is, we are trying to provide for a result
+currently unavailable in \texttt{nls()}. While we did for some time
+pursue the use of other nls functions, we eventually moved to using
+reference values from our problems spreadsheet. ?? needed?? To be able
+to add more improvements to \textbf{nlsj}, it is required to compare it
+with other existing packages' nls functions. ?? but keep this?? This
+would allow us to note which methods are supported by a particular
+function that are not in another and to check the consistency of
+supposedly equivalent results from different functions.
 
 \textbf{nlscompare} attempts to achieve the above, outputting a simple
 informative spreadsheet that indicates whether an existing or new
@@ -130,14 +141,16 @@ This csv file contains three columns:
 \item
   \textbf{algorithm:} This is the name of the algorithm used. Currently,
   supports \texttt{default}, \texttt{plinear}, \texttt{port},
-  \texttt{LM} and \texttt{marquardt}.
+  \texttt{LM} and \texttt{marquardt}, but only when these are
+  appropriate to a given solver.
 \item
   \textbf{control:} This contains the package function and its
-  associated control settings to control the iterations
+  associated control settings to control the iterations or other
+  features of the solver and/or problem.
 \end{enumerate}
 
-The \textbf{methods.csv} file is used only extenstively inside the
-\texttt{run} function.
+The \textbf{methods.csv} file is essentially a list of detailed methods
+for use inside the \texttt{run} function.
 
 Users can add new solvers, algorithms and controls as in the existing
 csv file.
@@ -145,7 +158,7 @@ csv file.
 \hypertarget{problems.csv}{%
 \subsubsection{problems.csv}\label{problems.csv}}
 
-This csv file contains four columns:
+This csv file contains four sets of columns:
 
 \begin{itemize}
 \tightlist
@@ -162,10 +175,9 @@ This csv file contains four columns:
   \textbf{nPars:} The number of parameters in the nls problem present in
   a \textbf{Name}-ed file.
 \item
-  \textbf{Pars:} This and the adjacent columns contain the best
-  parameter values of the nls problem present in the \textbf{Name}-ed
-  file. The number of adjacent columns that contain parameter values are
-  \textbf{nPars}-1.
+  \textbf{Pars:} This and the adjacent (\textbf{nPars} - 1) columns
+  contain the best parameter values of the nls problem present in the
+  \textbf{Name}-ed file.
 \end{itemize}
 
 The ``best'' values are based on the observations made by the authors on
@@ -178,7 +190,7 @@ the values inside this csv should be changed manually by the user.
 \hypertarget{nlscompareinstscripts}{%
 \subsubsection{./nlsCompare/inst/scripts}\label{nlscompareinstscripts}}
 
-This directory contains the R scripts for numeriou problems in nls that
+This directory contains the R scripts for numerous problems in nls that
 are sourced inside the \texttt{run} function. Each file has a naming
 structure: ``problemName\_x'' where x is a integer number. ``1'' means
 that it is a parent test file of the ``problemName'' family of test
@@ -235,23 +247,28 @@ value for the same \emph{problemName}.
 \hypertarget{coverage}{%
 \subsection{Coverage}\label{coverage}}
 
-The idea of hierarchy in test files allows to cover -
+The idea of hierarchy in test files allows the diverse cases of:
 
 \begin{itemize}
 \tightlist
 \item
-  multiple starting values that may be good, or infeasible
+  multiple starting values that may be acceptable or \textbf{infeasible}
+  (i.e., outside constraints)
 \item
-  bounded problems having a good or silly bounds
+  bounded problems having a good or \textbf{inadmissible} (hence silly)
+  bounds where one or more lower bounds is greater than the
+  corresponding upper bound. For such problems all other inputs are
+  irrelevant. The problem is not well-posed.
 \item
-  multiple weights for the same problem that comprise of good or bad
-  weights
+  multiple sets of weights for the same problem. Some of these may
+  render a problem more or less difficult to solve.
 \item
-  ability to work with subsets of the problem's data
+  ability to work with subsets of the problem's data. At the time of
+  writing we have not pursued subsets beyond a few trial cases.
 \end{itemize}
 
-The \textbf{methods.csv} allows the possibility to cover existing and
-new packages' -
+The \textbf{methods.csv} allows the possibility for adding more solvers
+to the existing set:
 
 \begin{itemize}
 \tightlist
@@ -263,16 +280,9 @@ new packages' -
   ``port'' and ``Gauss-Newton'' and its variants
 \end{itemize}
 
-The \texttt{run()} function compares essential estimation quantities
-like -
-
-\begin{itemize}
-\tightlist
-\item
-  parameters
-\item
-  sum of squares
-\end{itemize}
+The \texttt{run()} function currently only compares essential estimation
+quantities, that is the sum of squares and the parameters that generate
+this value.
 
 \hypertarget{package-output-files}{%
 \subsection{Package Output Files}\label{package-output-files}}
@@ -364,19 +374,24 @@ which on which a particular \emph{solver} does not run. It has 7 columns
 \subsection{Some observations}\label{some-observations}}
 
 On using \textbf{nlsCompare}, we have made some observations that point
-towards the usefulness of the package -
+towards the usefulness of a package.
 
 \begin{itemize}
 \tightlist
 \item
-  \textbf{nlsDatabase.csv} gave us an example (Croucher\_1.R,
-  Croucher\_2.R, etc.) where a solver indeed turned out to be better
-  than the reference solver that was known to be the best to us
+  \textbf{nlsDatabase.csv} gave us an example (Tetra\_1.R) where a
+  solver indeed turned out to be better than our perceived reference
+  solver. In this case, the problem has some quite extreme properties
+  that were not obvious, and the output from \textbf{nlsCompare} is
+  leading hopefully to some new functionality.
 \item
-  ??hex problem
+  Sometimes the reference values, reported in decimal notation are not
+  sufficiently precise and a ``better'' sum of squares is tagged. As we
+  discover such ``better'' instances, we will deal with them on a case
+  by case basis by replacing the references values appropriately.
 \item
-  \textbf{nlsDatabase.csv} shows which packages fail in a problem and
-  which succeed
+  \textbf{nlsDatabase.csv} shows which packages fail in a problem case
+  and which succeed
 \end{itemize}
 
 \hypertarget{future-work}{%
@@ -388,20 +403,22 @@ A few things we would like to incorporate in \textbf{nlsCompare} -
 \tightlist
 \item
   add other estimation quantities like \textbf{Convergence},
-  \textbf{Rmat} and \textbf{Jacobian}
+  \textbf{Jacobian}, and some characteristics of the solutions related
+  to uncertainty in the parameters.
 \item
   add \texttt{run\_specific} that runs a particular file or a list of
-  files rather than all files as is listed in \textbf{problems.csv}
+  files rather than all files as is listed in\\
+  \textbf{problems.csv}
 \item
   automatically update the reference values in the R scripts in
-  ./nlsCompare/inst/scripts on encountering with ``better'' values and
-  use \textbf{pkgVersion} and\textbf{LastUpdated} columns in
-  \textbf{problems.csv} to keep track
+  ./nlsCompare/inst/scripts on encountering ``better'' values and use
+  \textbf{pkgVersion} and\textbf{LastUpdated} columns in
+  \textbf{problems.csv} to keep track of such changes.
 \item
-  add robust bound checking mechanisms like \texttt{optimx::bmchk}
+  add more robust bound checking mechanisms like \texttt{optimx::bmchk}
 \item
   include more problems in the database; for example, from
-  \textbf{NISTnls}
+  \textbf{NISTnls} or other collections in the literature.
 \end{itemize}
 
 \bibliography{RJreferences.bib}

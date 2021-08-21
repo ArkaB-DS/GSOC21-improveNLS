@@ -27,7 +27,7 @@ author:
     - United Kingdom
     
 abstract: >
-  Nonlinear least squares (nls) is extensively used in nonlinear modeling. This paper introduces the package **nlsCompare** that attempts to compare the best values of parameters and sum-of-squares in nls problems with existing packages' fiunctions for nls like `nls`(**base**), `nlsLM`(**minpack.lm**) and a new package **nlsj** developed by the authors as a product of Google Summer of Code (GSoC), 2021.
+  Nonlinear least squares (nls) is extensively used in nonlinear modeling. This paper introduces the package **nlsCompare** that attempts to compare the best values of parameters and sum-of-squares in nls problems with existing tools for nls like `nls`(**base**), `nlxb` (**nlsr**), `nlsLM`(**minpack.lm**) and a new experimental package **nlsj** developed by the authors as a product of Google Summer of Code (GSoC), 2021.
 preamble: |
   % Any extra LaTeX you need in the preamble
   
@@ -39,21 +39,34 @@ output: rticles::rjournal_article
 
 ## Introduction
 
-While working on the GSoC project **Improvements to nls()** under The R Project for Statistical Computing, the authors realized that to be able to compare the improvements made via `nlsj` and in general, to help future developers in the sphere of nls , one needs to compare existing packages for nls in R with the best observed reference values. 
+While working on the GSoC project **Improvements to nls()** under The R Project for Statistical Computing, the authors realized that to be able to observe improvements made via experimental packages such as `nlsj`, developers needed to quickly compare results with the best known reference values for each of a 
+battery of problems.
 
 **nlsCompare**:
 
-- contains test data files based on packages like **NRAIA**
-- contains spreadsheets containing the methods (solvers, algorithms, control settings) to compare
-- generates easy-to-read spreadsheets that compare existing or new packages for nls with the best reference values yet observed
-- gives appropriate messages to understand errors or where to do improvements
+- has a spreadsheet with pointers to test problem files along with reference solutions. These 
+  problem/cases are based on packages like **NRAIA** with data, models, constraints and starting values.
+- has a spreadsheet containing the methods (solvers, algorithms, control settings) to be tested
+- generates easy-to-read spreadsheets that compare results (sum of squared residuals and model
+  parameters with the best reference values yet observed. Since there can be multiple methods, these
+  spreadsheets allow for fairly rapid comparisons. Moreover, the columns can be sorted to allow 
+  specific features to be compared more easily.
+- gives appropriate messages to assist the understanding of errors or where to do improvements
+  ?? does it do this.
 
-**nlscompare** draws inspiration from R's testing library **testthat** and uses ideas from packages like **benchmarkme**. Currently, this has been developed keeping the R environment in mind.
+**nlscompare** draws inspiration from R's testing library **testthat** and uses ideas from packages like **benchmarkme** to identify the computing environment. Currently, we have restricted our attention 
+to the R computing environment.
 
 ## Need for nlsCompare
 
-Regression testing is useful not only to validate correctness of a program but often also for tracking the quality of its output. While working on improving `nls`, author$^2$ noted that to  compare the improvements made over `nls` via **nlsj**, unit testing via **testthat** is not enough.
-To be able to add more improvements to **nlsj**, it is required to compare it with other existing packages' nls functions. This would allow us to note which methods are supported by one function, but not in another and to check the consistency of same results from different functions.
+Regression testing is useful not only to validate correctness of a program but often also for tracking the quality of its output. While working on improving `nls`, author$^2$ noted that to  compare the improvements made over `nls` via **nlsj**, unit testing via **testthat** is not enough, largely because some desirable
+features such as bounds constraints within the default Gauss-Newton method is not provided. That is, we
+are trying to provide for a result currently unavailable in `nls()`. While we did for some time pursue
+the use of other nls functions, we eventually moved to using reference values from our problems 
+spreadsheet. 
+?? needed?? To be able to add more improvements to **nlsj**, it is required to compare it with other existing packages' nls functions. 
+?? but keep this?? This would allow us to note which methods are supported by a particular function
+that are not in another and to check the consistency of supposedly equivalent results from different functions.
 
 **nlscompare** attempts to achieve the above, outputting a simple informative spreadsheet that indicates whether an existing or new package's function provides consistent results with the current best obseved values. Further, it outputs an error log that indicates whether a solver (viz. `nls` or `nlsLM`, etc.) fail in a particular problem with particular methods (algorithms, starting points, etc.)
 
@@ -79,28 +92,28 @@ A detailed explanation on how to install and use the package is available in the
 This csv file contains three columns: 
 
 1. **solver:** This is the name of the function to be used to solve the nls problem. Currently, it supports `nlsj::nlsj`, `nls`, `nlsr::nlxb` and `minpack.lm::nlsLM`.
-2. **algorithm:**  This is the name of the algorithm used. Currently, supports `default`, `plinear`, `port`, `LM` and `marquardt`.
-3. **control:** This contains the package function and its associated control settings to control the iterations 
+2. **algorithm:**  This is the name of the algorithm used. Currently, supports `default`, `plinear`, `port`, `LM` and `marquardt`, but only when these are appropriate to a given solver.
+3. **control:** This contains the package function and its associated control settings to control the iterations or other features of the solver and/or problem.
 
-The **methods.csv** file is used only extenstively inside the `run` function.
+The **methods.csv** file is essentially a list of detailed methods for use inside the `run` function.
 
 Users can add new solvers, algorithms and controls as in the existing csv file.
 
 ### problems.csv
 
-This csv file contains four columns:
+This csv file contains four sets of columns:
 
 - **Name:** This contains the names of files present in the **./nlsCompare/inst/scripts** of the package and is used by the `run()` function to source the **Name**-ed files inside the function. 
 - **ssquares:** This contains the best (least) possible sum of squares achievable in the nls problem as present in the **Name**-ed file. 
 - **nPars:** The number of parameters in the nls problem present in a **Name**-ed file.
-- **Pars:** This and the adjacent columns contain the best parameter values of the nls problem present in the **Name**-ed file. The number of adjacent columns that contain parameter values are **nPars**-1.
+- **Pars:** This and the adjacent (**nPars** - 1) columns contain the best parameter values of the nls problem present in the **Name**-ed file. 
 
 The "best" values are based on the observations made by the authors on using different nls packages.
 These "best" values serve as a reference that is used inside the `run` function to compare with a **solver**'s output using the corresponding **algorithm** and **control**. In case a user finds a "better" (see below) value, the values inside this csv should be changed manually by the user.
 
 ### ./nlsCompare/inst/scripts
 
-This directory contains the R scripts for numeriou problems in nls that are sourced inside the `run` function. Each file has a naming structure: "problemName_x" where x is a integer number. "1" means that it is a parent test file of the "problemName" family of test files. The parent file mainly contains -
+This directory contains the R scripts for numerous problems in nls that are sourced inside the `run` function. Each file has a naming structure: "problemName_x" where x is a integer number. "1" means that it is a parent test file of the "problemName" family of test files. The parent file mainly contains -
 
 - `NLSdata`: A dataframe that contains the data
 - `NLSformula`: nonlinear model formula
@@ -123,22 +136,24 @@ To add "children" scripts, the naming convention is compulsory. "NLSproblemName.
 
 ## Coverage
 
-The idea of hierarchy in test files allows to cover - 
+The idea of hierarchy in test files allows the diverse cases of:
 
-* multiple starting values that may be good, or infeasible
-* bounded problems having a good or silly bounds
-* multiple weights for the same problem that comprise of good or bad weights
-* ability to work with subsets of the problem's data
+* multiple starting values that may be acceptable or **infeasible** (i.e., outside constraints)
+* bounded problems having a good or **inadmissible** (hence silly) bounds where one or more
+  lower bounds is greater than the corresponding upper bound. For such problems all other
+  inputs are irrelevant. The problem is not well-posed.
+* multiple sets of weights for the same problem. Some of these may render a problem more or
+  less difficult to solve.
+* ability to work with subsets of the problem's data. At the time of writing we have not
+  pursued subsets beyond a few trial cases.
 
-The **methods.csv** allows the possibility to cover existing and new packages' -
+The **methods.csv** allows the possibility for adding more solvers to the existing set:
 
 * functions as **solver**s viz. `nlsj::nlsj`, `nlsr::nlxb` and `minpack.lm::nlsLM`
 * existing and new **algorithm**s viz. "marquardt", "plinear", "port" and "Gauss-Newton" and its variants
 
-The `run()` function compares essential estimation quantities like - 
-
-* parameters
-* sum of squares
+The `run()` function currently only compares essential estimation quantities, that
+is the  sum of squares and the parameters that generate this value.
 
 ## Package Output Files
 
@@ -173,19 +188,26 @@ This csv file stores a final output of the `run()` function and is essentially a
 
 ## Some observations
 
-On using **nlsCompare**, we have made some observations that point towards the usefulness of the package -
+On using **nlsCompare**, we have made some observations that point towards the usefulness of a package.
 
-- **nlsDatabase.csv** gave us an example (Croucher_1.R, Croucher_2.R, etc.) where a solver indeed turned out to be better than the reference solver that was known to be the best to us
-- ??hex problem
-- **nlsDatabase.csv** shows which packages fail in a problem and which succeed 
+- **nlsDatabase.csv** gave us an example (Tetra_1.R) where a solver indeed turned out to be better than our   perceived reference solver. In this case, the problem has some quite extreme properties that were not
+  obvious, and the output from **nlsCompare** is leading hopefully to some new functionality.
+- Sometimes the reference values, reported in decimal notation are not sufficiently precise and
+  a "better" sum of squares is tagged. As we discover such "better" instances, we will deal with them on a
+  case by case basis by replacing the references values appropriately.
+- **nlsDatabase.csv** shows which packages fail in a problem case and which succeed 
 
 
 ## Future work
 
 A few things we would like to incorporate in **nlsCompare** - 
 
-* add other estimation quantities like **Convergence**, **Rmat** and **Jacobian** 
-* add `run_specific` that runs a particular file or a list of files rather than all files as is listed in **problems.csv**
-* automatically update the reference values in the R scripts in ./nlsCompare/inst/scripts on encountering with "better" values and use **pkgVersion** and**LastUpdated** columns in **problems.csv** to keep track
-* add robust bound checking mechanisms like `optimx::bmchk`
-* include more problems in the database; for example, from **NISTnls**
+* add other estimation quantities like **Convergence**, **Jacobian**, and some characteristics
+  of the solutions related to uncertainty in the parameters. 
+* add `run_specific` that runs a particular file or a list of files rather than all files as is listed in  
+  **problems.csv**
+* automatically update the reference values in the R scripts in ./nlsCompare/inst/scripts on encountering     "better" values and use **pkgVersion** and**LastUpdated** columns in **problems.csv** to keep track
+  of such changes.
+* add more robust bound checking mechanisms like `optimx::bmchk`
+* include more problems in the database; for example, from **NISTnls** or other collections in the
+  literature.
