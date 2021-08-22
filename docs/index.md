@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/GSOC.png" width="250" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/@.png" width="200" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/R.pmg" width="250" height="200">
+<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/GSOC.png" width="250" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/@.png" width="200" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/R.png" width="250" height="200">
 </div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
 
