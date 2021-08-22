@@ -1,8 +1,6 @@
 <div align="center">
-<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/uploads/GSOC.png" width="800" height="150">
-<!--
-<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/Images/@.png" width="200" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/Images/R.png" width="250" height="200">
--->
+<img src="uploads/GSOC.png" width="200" height="250"><img src="uploads/@.png" width="200" height="200"><img src="uploads/R.png" width="250" height="200">
+
 </div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
 # Improvements to nls()
