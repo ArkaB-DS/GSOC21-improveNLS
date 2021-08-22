@@ -44,7 +44,7 @@ Given the very wide range of applications and features of the `nls()` function, 
 ### **Codes (and documentation):**
   
   9. [**nlsj**](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
-  10. [nlsCompare](https://github.com/ArkaB-DS/nlsCompare): an R package to compare existing and new packages' functions for nonlinear least squares 
+  10. [**nlsCompare**](https://github.com/ArkaB-DS/nlsCompare): an R package to compare existing and new packages' functions for nonlinear least squares 
   11. [**nlspkg**](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlspkg): a packaged version of the `nls()` code from R-base.
   12. [**nlsalt**](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsalt): attempt to mirror `nls()` behaviour **entirely in R**
   13. [**nls-changes-for-small-residuals-in-nls-R-4.0.2.zip**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nls-changes-for-small-residuals-in-nls-R-4.0.2.zip): collected material for the fix by JN to the **relative
