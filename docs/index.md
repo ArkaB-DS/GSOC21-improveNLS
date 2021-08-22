@@ -1,5 +1,8 @@
 <div align="center">
-<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/GSOC.png" width="250" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/@.png" width="200" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/R.png" width="250" height="200">
+<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/GSOC.png" width="250" height="200">
+<!--
+<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/Images/@.png" width="200" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/Images/R.png" width="250" height="200">
+-->
 </div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
 
@@ -17,36 +20,36 @@ Given the very wide range of applications and features of the `nls()` function, 
 [**The R Project for Statistical Computing**](https://www.r-project.org/)
 
 ## Project Mentors
-- [John C. Nash, Telfer School of Management, University of Ottawa](https://github.com/nashjc)
-- [Heather Turner, University of Warwick](https://github.com/hturner)
+- [**John C. Nash**, *Telfer School of Management, University of Ottawa*](https://github.com/nashjc)
+- [**Heather Turner**, *Department of Statistics, University of Warwick*](https://github.com/hturner)
 
 ## Project Student 
-- [Arkajyoti Bhattacharjee](https://github.com/ArkaB-DS)
+- [**Arkajyoti Bhattacharjee**, *Mathematics and Statistics Department, Indian Institute of Technology, Kanpur*](https://github.com/ArkaB-DS)
 
 ## Project Outcomes
 ### **Final Reports:**
  
-  1. [RefactoringNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/RefactoringNLS.pdf)
-  2. [nlsCompareArticle](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nlsCompareArticle/nlsCompareArticle.pdf)
+  1. [**RefactoringNLS**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/RefactoringNLS.pdf)
+  2. [**nlsCompareArticle**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nlsCompareArticle/nlsCompareArticle.pdf)
 
 ### **Other (informal) Reports:**
  
-  3. [PkgFromRbase](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the **nlspkg** from the code in R-base.
-  4. [DerivsNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/DerivsNLS.pdf): document to explain different ways in which Jacobian information is supplied to nonlinear least squares computation in R.
-  5. [MachineSummary](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/MachineSummary.pdf): informal investigation of ways to report the characteristics and identity of machines running tests.
-  6. [VarietyInNonlinearLeastSquaresCodes](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/VarietyInNonlinearLeastSquaresCodes.pdf): review of the different algorithms and the many choices in their implementation for nonlinear least squares.
-  7. [ImproveNLS.bib](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/ImproveNLS.bib): consolidated BibTex bibliography for all documents in this project, possibly with wider application to nonlinear least squares in general
-  8. [WorkingDocument4ImproveNLS](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/WorkingDocument4ImproveNLS.pdf): project diary
+  3. [**PkgFromRbase**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/PkgFromRbase.pdf): explanation of the construction of the **nlspkg** from the code in R-base.
+  4. [**DerivsNLS**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/DerivsNLS.pdf): document to explain different ways in which Jacobian information is supplied to nonlinear least squares computation in R.
+  5. [**MachineSummary**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/MachineSummary.pdf): informal investigation of ways to report the characteristics and identity of machines running tests.
+  6. [**VarietyInNonlinearLeastSquaresCodes**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/VarietyInNonlinearLeastSquaresCodes.pdf): review of the different algorithms and the many choices in their implementation for nonlinear least squares.
+  7. [**ImproveNLS.bib**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/ImproveNLS.bib): consolidated BibTex bibliography for all documents in this project, possibly with wider application to nonlinear least squares in general
+  8. [**WorkingDocument4ImproveNLS**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/WorkingDocument4ImproveNLS.pdf): project diary
 
 ### **Codes (and documentation):**
   
-  9. [nlsj](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
+  9. [**nlsj**](https://github.com/ArkaB-DS/nlsj): A refactoring of the `nls()` functionality
   10. [nlsCompare](https://github.com/ArkaB-DS/nlsCompare): an R package to compare existing and new packages' functions for nonlinear least squares 
-  11. [nlspkg](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlspkg): a packaged version of the `nls()` code from R-base.
-  12. [nlsalt](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsalt): attempt to mirror `nls()` behaviour **entirely in R**
-  13. [nls-changes-for-small-residuals-in-nls-R-4.0.2.zip](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nls-changes-for-small-residuals-in-nls-R-4.0.2.zip): collected material for the fix by JN to the **relative
+  11. [**nlspkg**](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlspkg): a packaged version of the `nls()` code from R-base.
+  12. [**nlsalt**](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsalt): attempt to mirror `nls()` behaviour **entirely in R**
+  13. [**nls-changes-for-small-residuals-in-nls-R-4.0.2.zip**](https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/nls-changes-for-small-residuals-in-nls-R-4.0.2.zip): collected material for the fix by JN to the **relative
 offset convergence criterion failure** when there are small residuals in problems sent to `nls()`. 
-  14. [nlsralt](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsralt): a modified version of Nash and Murdoch package `nlsr` with improvements discovered as a result of this project.
+  14. [**nlsralt**](https://github.com/ArkaB-DS/GSOC21-improveNLS/tree/master/nlsralt): a modified version of Nash and Murdoch package `nlsr` with improvements discovered as a result of this project.
 
 ## Mentions
 
