@@ -1,5 +1,5 @@
 <div align="center">
-<img src="uploads/GSOC.png" width="200" height="250"><img src="uploads/@.png" width="200" height="200"><img src="uploads/R.png" width="250" height="200">
+<img src="uploads/GSOC.png" width="250" height="200"><img src="uploads/@.png" width="200" height="200"><img src="uploads/R.png" width="250" height="200">
 
 </div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
