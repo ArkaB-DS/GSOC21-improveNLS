@@ -1,5 +1,8 @@
-<img src="images/GSOC.png" width="800" height="150">
+<div align="center">
+<img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/GSOC.png" width="300" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/@.png" width="300" height="200"><img src="https://github.com/ArkaB-DS/GSOC21-improveNLS/blob/master/images/R.jpg" width="300" height="200">
+</div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
+
 > This page summarizes the efforts made to improve the functioning of the R `nls()` function for nonlinear least 
 squares estimation during the [**Google Summer of Code**](https://summerofcode.withgoogle.com/) program for 2021.
 
@@ -14,11 +17,11 @@ Given the very wide range of applications and features of the `nls()` function, 
 [**The R Project for Statistical Computing**](https://www.r-project.org/)
 
 ## Project Mentors
-- John C. Nash, Telfer School of Management, University of Ottawa
-- Heather Turner, University of Warwick
+- [John C. Nash, Telfer School of Management, University of Ottawa](https://github.com/nashjc)
+- [Heather Turner, University of Warwick](https://github.com/hturner)
 
 ## Project Student 
-- Arkajyoti Bhattacharjee
+- [Arkajyoti Bhattacharjee](https://github.com/ArkaB-DS)
 
 ## Project Outcomes
 ### **Final Reports:**
