@@ -1,11 +1,10 @@
-
+# Improvements to nls()
 
 <div align="center">
 <img src="uploads/GSOC.png" width="250" height="200"><img src="uploads/@.png" width="200" height="200"><img src="uploads/R.png" width="250" height="200">
 
 </div>
 <!--# Google Summer of Code, 2021: Improvements to nls()-->
-# Improvements to nls()
 
 > This page summarizes the efforts made to improve the functioning of the R `nls()` function for nonlinear least 
 squares estimation during the [**Google Summer of Code**](https://summerofcode.withgoogle.com/) program for 2021.
